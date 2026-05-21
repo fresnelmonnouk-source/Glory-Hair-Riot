@@ -1,0 +1,174 @@
+/* ─── RIOT Design System — Glory Hair Edition N°01 ─── */
+
+:root {
+  /* Palette principale */
+  --forest:        #0E1B14;
+  --forest-light:  #1A2E1F;
+  --forest-mid:    #243D29;
+  --lime:          #D4FF3E;
+  --lime-dim:      #B8E035;
+  --orange:        #FF7A1A;
+  --paper:         #F4ECD8;
+  --pink:          #FF4D8D;
+  --ink:           #0A0A0A;
+  --ink-soft:      #2A2A2A;
+  --cream:         #FAF7F0;
+  --white:         #FFFFFF;
+
+  /* Typographie */
+  --font-impact:    var(--font-anton), 'Rubik Mono One', Impact, sans-serif;
+  --font-marker:    var(--font-permanent-marker), cursive;
+  --font-type:      var(--font-special-elite), 'Courier New', monospace;
+  --font-editorial: var(--font-yeseva-one), Georgia, serif;
+  --font-terminal:  var(--font-vt323), monospace;
+  --font-mono:      var(--font-rubik-mono-one), monospace;
+  --font-hand:      var(--font-caveat), cursive;
+  --font-bold:      var(--font-archivo-black), sans-serif;
+
+  /* Bordures RIOT */
+  --border-ink:    2px solid var(--ink);
+  --border-thick:  3px solid var(--ink);
+  --border-heavy:  4px solid var(--ink);
+
+  /* Shadows brutales */
+  --shadow-riot:        4px 4px 0px var(--ink);
+  --shadow-riot-lime:   4px 4px 0px var(--lime);
+  --shadow-riot-orange: 4px 4px 0px var(--orange);
+  --shadow-riot-lg:     8px 8px 0px var(--ink);
+  --shadow-riot-sm:     2px 2px 0px var(--ink);
+
+  /* Transitions */
+  --ease-riot: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Z-index */
+  --z-topbar:  100;
+  --z-nav:     90;
+  --z-modal:   200;
+  --z-toast:   300;
+}
+
+/* Reset brutal */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--forest);
+  color: var(--paper);
+  font-family: var(--font-bold);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Sélection */
+::selection {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+/* Scrollbar RIOT */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--forest);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--lime);
+}
+
+/* ─── Utilitaires globaux ─── */
+
+.riot-border {
+  border: var(--border-ink);
+}
+
+.riot-shadow {
+  box-shadow: var(--shadow-riot);
+}
+
+.riot-shadow-lg {
+  box-shadow: var(--shadow-riot-lg);
+}
+
+.text-impact {
+  font-family: var(--font-impact);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.text-marker {
+  font-family: var(--font-marker);
+}
+
+.text-type {
+  font-family: var(--font-type);
+}
+
+.text-hand {
+  font-family: var(--font-hand);
+}
+
+.text-terminal {
+  font-family: var(--font-terminal);
+}
+
+/* ─── Marquee ─── */
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 18s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* ─── Halftone overlay ─── */
+
+.halftone {
+  position: relative;
+}
+
+.halftone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--ink) 1px, transparent 1px);
+  background-size: 6px 6px;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+/* ─── Tape décoratif ─── */
+
+.tape {
+  position: relative;
+  display: inline-block;
+}
+
+.tape::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 60px;
+  height: 20px;
+  background: var(--lime);
+  opacity: 0.7;
+  z-index: 1;
+}
