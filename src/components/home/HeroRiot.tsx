@@ -1,163 +1,145 @@
+import { CSSProperties } from 'react';
 import { BtnBold } from '@/components/ui/BtnBold';
+
+const TAPE_BG: Record<string, string> = {
+  washi:  'repeating-linear-gradient(45deg, rgba(212,255,62,.7) 0 8px, rgba(212,255,62,.4) 8px 16px)',
+  orange: 'rgba(255,122,26,.6)',
+  gold:   'rgba(245,229,94,.55)',
+  plain:  'rgba(255,255,255,.18)',
+};
 
 function PolaroidFrame({
   caption,
   sub,
-  posClass,
-  tapeClass,
+  tape = 'washi',
   bgColor = '#1a1a1a',
+  style,
 }: {
   caption: string;
   sub: string;
-  posClass: string;
-  tapeClass: string;
+  tape?: 'washi' | 'orange' | 'gold' | 'plain';
   bgColor?: string;
+  style?: CSSProperties;
 }) {
   return (
-    <div
-      className={`absolute bg-paper p-3 pb-12 ${posClass}`}
-      style={{ filter: 'drop-shadow(4px 6px 0 rgba(0,0,0,.5))' }}
-    >
-      <div className={`absolute top-[-12px] h-7 w-28 z-10 ${tapeClass}`} />
+    <div className="absolute bg-paper" style={{ padding: '14px 14px 50px', filter: 'drop-shadow(4px 6px 0 rgba(0,0,0,.5))', ...style }}>
       <div
-        className="aspect-[3/4] relative overflow-hidden"
-        style={{ background: bgColor, minWidth: 120 }}
-      >
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
+        aria-hidden
+        style={{ position: 'absolute', top: -12, left: 40, width: 120, height: 28, transform: 'rotate(-3deg)', background: TAPE_BG[tape], zIndex: 6 }}
+      />
+      <div style={{ background: bgColor, aspectRatio: '3/4', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" opacity="0.15">
+            <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
           </svg>
         </div>
       </div>
-      <div className="absolute left-3 right-3 bottom-2 font-['Permanent_Marker'] text-lg text-ink leading-tight">
+      <div className="font-marker text-ink" style={{ position: 'absolute', bottom: 10, left: 14, right: 14, fontSize: 18, lineHeight: 1 }}>
         {caption}
-        <small className="block font-['Special_Elite'] text-[11px] tracking-[0.06em] mt-1 text-[#5e6a64]">
-          {sub}
-        </small>
+        <small className="font-type block" style={{ fontSize: 11, letterSpacing: '0.06em', marginTop: 4, color: '#5e6a64' }}>{sub}</small>
       </div>
     </div>
   );
 }
 
-function StatCard({
-  value,
-  sup,
-  label,
-  rotate = '-1deg',
-  shadowColor = '#D4FF3E',
-}: {
-  value: string;
-  sup?: string;
-  label: string;
-  rotate?: string;
-  shadowColor?: string;
+function StatCard({ value, sup, label, rotate = '-1deg', shadow = '#D4FF3E' }: {
+  value: string; sup?: string; label: string; rotate?: string; shadow?: string;
 }) {
   return (
     <div
-      className="bg-paper text-ink p-4 pb-5 relative border-2 border-ink"
-      style={{ transform: `rotate(${rotate})`, boxShadow: `4px 4px 0 ${shadowColor}` }}
+      className="bg-paper text-ink border-2 border-ink relative"
+      style={{ padding: '18px 18px 22px', transform: `rotate(${rotate})`, boxShadow: `4px 4px 0 ${shadow}` }}
     >
-      <div className="font-['Rubik_Mono_One'] text-5xl leading-none tracking-tight">
-        {value}
-        {sup && <sup className="text-[0.5em]">{sup}</sup>}
+      <div className="font-mono" style={{ fontSize: 48, lineHeight: 1, letterSpacing: '-0.02em' }}>
+        {value}{sup && <sup style={{ fontSize: '0.5em' }}>{sup}</sup>}
       </div>
-      <div className="font-['Special_Elite'] text-[11px] tracking-[0.06em] mt-2 text-[#5e6a64]">
-        {label}
-      </div>
+      <div className="font-type" style={{ fontSize: 12, letterSpacing: '0.06em', marginTop: 8, color: '#5e6a64' }}>{label}</div>
     </div>
   );
 }
 
 export function HeroRiot() {
   return (
-    <section className="relative px-8 pt-16 pb-20 overflow-hidden border-b-2 border-dashed border-lime">
-      <div
-        className="absolute top-8 right-8 z-10 font-['Rubik_Mono_One'] text-sm tracking-[0.1em] uppercase text-orange border-2 border-orange px-4 py-2"
-        style={{ transform: 'rotate(8deg)', background: 'rgba(14,27,20,.5)' }}
-      >
+    <section className="relative overflow-hidden border-b-2 border-dashed border-lime" style={{ padding: '60px 32px 80px' }}>
+
+      {/* Stamp */}
+      <div className="absolute font-mono uppercase text-orange border-2 border-orange"
+        style={{ top: 30, right: 32, padding: '8px 16px', fontSize: 14, letterSpacing: '0.1em', transform: 'rotate(8deg)', background: 'rgba(14,27,20,.5)', zIndex: 5 }}>
         RIOT · N°01
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-[1.1fr_.9fr] gap-12 items-start relative">
+      {/* Hero grid */}
+      <div className="max-w-7xl mx-auto relative" style={{ display: 'grid', gridTemplateColumns: '1.1fr .9fr', gap: 48, alignItems: 'start' }}>
+
+        {/* Left — text */}
         <div>
-          <div
-            className="inline-block bg-orange text-ink font-['Rubik_Mono_One'] text-[11px] tracking-[0.18em] uppercase px-3 py-2 mb-6 border-2 border-ink"
-            style={{ transform: 'rotate(-2deg)', boxShadow: '3px 3px 0 #D4FF3E' }}
-          >
+          <div className="inline-block bg-orange text-ink font-mono uppercase border-2 border-ink"
+            style={{ padding: '8px 14px', fontSize: 11, letterSpacing: '0.18em', transform: 'rotate(-2deg)', marginBottom: 24, boxShadow: '3px 3px 0 #D4FF3E' }}>
             ★ Été 2026 · Nouvelle collection
           </div>
 
-          <h1
-            className="font-['Anton'] text-paper uppercase leading-[.82] tracking-[-0.01em]"
-            style={{ fontSize: 'clamp(96px, 14vw, 220px)' }}
-          >
+          <h1 className="font-impact text-paper uppercase"
+            style={{ fontSize: 'clamp(96px, 14vw, 220px)', lineHeight: 0.82, letterSpacing: '-0.01em', position: 'relative' }}>
             Votre<br />
-            <span className="relative inline-block">
+            <span style={{ position: 'relative', display: 'inline-block' }}>
               beauté,
-              <span
-                className="absolute h-2 bg-orange"
-                style={{ left: '-4%', right: '-4%', top: '46%', transform: 'rotate(-2deg)' }}
-              />
+              <span style={{ content: '', position: 'absolute', left: '-4%', right: '-4%', top: '46%', height: 8, background: '#FF7A1A', transform: 'rotate(-2deg)' }} />
             </span>
             <br />
-            <em
-              className="not-italic text-paper"
-              style={{ fontStyle: 'italic', fontFamily: 'var(--font-yeseva-one)', fontSize: '0.9em' }}
-            >
+            <em style={{ fontFamily: 'var(--font-yeseva-one)', fontStyle: 'italic', fontWeight: 400, textTransform: 'none', letterSpacing: '-0.02em' }}>
               votre
             </em>
             <br />
-            <span
-              className="bg-lime text-ink inline-block px-[0.1em]"
-              style={{ transform: 'rotate(-1deg)', boxShadow: '6px 6px 0 #FF7A1A' }}
-            >
+            <span style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 0.1em', display: 'inline-block', transform: 'rotate(-1deg)', boxShadow: '6px 6px 0 #FF7A1A' }}>
               couronne!
             </span>
           </h1>
 
-          <p className="font-['Special_Elite'] text-lg leading-relaxed max-w-xl text-paper mt-8">
-            32 perruques en cheveux humains, photographiées, collées, déchirées — et un essayage
-            virtuel <span className="bg-[#F5E55E] text-ink px-1">photo-réaliste IA</span>.{' '}
-            <span className="line-through text-white/40 decoration-orange decoration-2">
+          <p className="font-type text-paper" style={{ fontSize: 18, lineHeight: 1.5, maxWidth: 520, marginTop: 32 }}>
+            32 perruques en cheveux humains, photographiées, collées, déchirées — et un essayage virtuel{' '}
+            <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>photo-réaliste IA</span>.{' '}
+            <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,.4)', textDecorationColor: '#FF7A1A', textDecorationThickness: '3px' }}>
               Pas de filtre cheap.
             </span>{' '}
-            <b className="bg-lime text-ink px-1">2 essais gratuits</b> par appareil,
-            ou <b className="bg-orange text-ink px-1">5 essais à l'inscription</b>.
+            <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>2 essais gratuits</b> par appareil,
+            ou <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>5 essais à l'inscription</b>.
           </p>
 
-          <div className="mt-8 flex gap-4 flex-wrap items-center">
+          <div style={{ marginTop: 32, display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
             <BtnBold variant="lime" size="lg" href="/catalogue">→ Voir le catalogue</BtnBold>
             <BtnBold variant="orange" size="lg" href="/essayage">▶ Essayer live</BtnBold>
           </div>
         </div>
 
-        <div className="relative h-[640px]">
-          <PolaroidFrame caption="Ginger" sub='22″ · cuivre flame' posClass="top-0 right-20 w-64 z-[3]" tapeClass="left-[60px] bg-lime/70" bgColor="#3d1f0a" />
-          <PolaroidFrame caption="Argent" sub='10″ · pixie' posClass="top-28 left-0 w-[200px] z-[2]" tapeClass="left-10 bg-orange/60" bgColor="#2a2a2a" />
-          <PolaroidFrame caption="Buns" sub='20″ · space curls' posClass="bottom-0 right-0 w-[220px] z-[4]" tapeClass="right-14 bg-[#F5E55E]/55" bgColor="#1a2a2a" />
-          <PolaroidFrame caption="Bordeaux" sub='18″ · vin' posClass="bottom-14 left-10 w-40 z-[1]" tapeClass="left-8 bg-white/18" bgColor="#2a0a0a" />
-          <div
-            className="absolute top-[-20px] right-[240px] bg-lime text-ink px-3 py-2 font-['Permanent_Marker'] text-sm border-2 border-ink rounded-full z-[7]"
-            style={{ transform: 'rotate(-12deg) translateX(-100px)', boxShadow: '2px 3px 0 #0A0A0A' }}
-          >
+        {/* Right — photo stack */}
+        <div style={{ position: 'relative', height: 640 }}>
+          <PolaroidFrame caption="Ginger" sub='22″ · cuivre flame' tape="washi" bgColor="#3d1f0a"
+            style={{ top: 0, right: 80, width: 260, transform: 'rotate(-5deg)', zIndex: 3 }} />
+          <PolaroidFrame caption="Argent" sub='10″ · pixie' tape="orange" bgColor="#2a2a2a"
+            style={{ top: 120, left: 0, width: 200, transform: 'rotate(6deg)', zIndex: 2 }} />
+          <PolaroidFrame caption="Buns" sub='20″ · space curls' tape="gold" bgColor="#1a2a2a"
+            style={{ bottom: 0, right: 0, width: 220, transform: 'rotate(3deg)', zIndex: 4 }} />
+          <PolaroidFrame caption="Bordeaux" sub='18″ · vin' tape="plain" bgColor="#2a0a0a"
+            style={{ bottom: 60, left: 40, width: 160, transform: 'rotate(-8deg)', zIndex: 1 }} />
+
+          {/* Stickers */}
+          <div className="absolute font-marker text-ink bg-lime border-2 border-ink"
+            style={{ top: -20, right: 240, padding: '8px 14px', borderRadius: 999, transform: 'rotate(-12deg) translateX(-100px)', boxShadow: '2px 3px 0 #0A0A0A', zIndex: 7, fontSize: 14 }}>
             ★ Nouveau
           </div>
-          <div
-            className="absolute bottom-[180px] right-[220px] bg-orange text-ink px-3 py-2 font-['Permanent_Marker'] text-sm border-2 border-ink rounded-full z-[7]"
-            style={{ transform: 'rotate(8deg)', boxShadow: '2px 3px 0 #0A0A0A' }}
-          >
+          <div className="absolute font-marker text-ink bg-orange border-2 border-ink"
+            style={{ bottom: 180, right: 220, padding: '8px 14px', borderRadius: 999, transform: 'rotate(8deg)', boxShadow: '2px 3px 0 #0A0A0A', zIndex: 7, fontSize: 14 }}>
             -20%
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-16 grid grid-cols-4 gap-3">
-        <StatCard value="87K" sup="+" label="// Essayages" rotate="-1deg" shadowColor="#D4FF3E" />
-        <StatCard value="4,9★" label="// 12k avis" rotate="1.5deg" shadowColor="#FF7A1A" />
-        <StatCard value="48h" label="// Livraison FR" rotate="-1.5deg" shadowColor="#F5E55E" />
-        <StatCard value="32" label="// Pièces" rotate="1deg" shadowColor="#FF4D8D" />
+      {/* Stats */}
+      <div className="max-w-7xl mx-auto" style={{ marginTop: 60, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+        <StatCard value="87K" sup="+" label="// Essayages" rotate="-1deg" shadow="#D4FF3E" />
+        <StatCard value="4,9★" label="// 12k avis" rotate="1.5deg" shadow="#FF7A1A" />
+        <StatCard value="48h" label="// Livraison FR" rotate="-1.5deg" shadow="#F5E55E" />
+        <StatCard value="32" label="// Pièces collection" rotate="1deg" shadow="#FF4D8D" />
       </div>
     </section>
   );

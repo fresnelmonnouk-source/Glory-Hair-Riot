@@ -60,8 +60,11 @@ html {
 
 body {
   background-color: var(--forest);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .14 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='.5'/></svg>"),
+    linear-gradient(#0E1B14, #0E1B14);
   color: var(--paper);
-  font-family: var(--font-bold);
+  font-family: var(--font-archivo-black), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
