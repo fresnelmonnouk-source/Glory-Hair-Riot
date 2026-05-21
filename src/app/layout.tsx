@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { TRPCProvider } from '@/lib/trpc/provider';
-import '@/styles/design.css';
-import '@/styles/responsive.css';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -11,20 +9,21 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Glory Hair — Votre beauté, votre couronne',
+  title: 'Glory Hair RIOT — Issue N°01',
   description:
-    'Plateforme e-commerce premium de perruques avec essayage virtuel par IA',
+    'Perruques cheveux humains premium — Édition RIOT',
   keywords: [
     'perruques',
     'extensions',
-    'cheveux',
+    'cheveux humains',
     'essayage virtuel',
     'IA',
     'beauté',
+    'RIOT',
   ],
   openGraph: {
-    title: 'Glory Hair',
-    description: 'Perruques premium avec essayage virtuel par IA',
+    title: 'Glory Hair RIOT — Issue N°01',
+    description: 'Perruques cheveux humains premium — Édition RIOT',
     type: 'website',
   },
 };

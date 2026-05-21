@@ -9,32 +9,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /* Palette Sable (default) */
-        bg: '#efe6d4',
-        'bg-deep': '#e5d8c0',
-        'bg-warm': '#faf6ee',
-        surface: '#fffdf8',
-        ink: '#1f1611',
-        'ink-soft': '#5a4a3e',
-        'ink-mute': '#8a7868',
-        gold: '#b88746',
-        'gold-light': '#d9b16f',
-        'gold-deep': '#7d5a2c',
-        blush: '#e9c7b3',
-        terracotta: '#c87158',
-        aubergine: '#3a1f2e',
-        plum: '#5a2e44',
+        /* Palette RIOT */
+        forest: '#0E1B14',
+        lime: '#D4FF3E',
+        orange: '#FF7A1A',
+        paper: '#F4ECD8',
+        pink: '#FF4D8D',
+        'lime-dim': '#B8E035',
+        'forest-light': '#1A2E1F',
+        'forest-mid': '#243D29',
+        ink: '#0A0A0A',
+        'ink-soft': '#2A2A2A',
+        cream: '#FAF7F0',
 
-        /* Hair tones */
-        'hair-1': '#1a0f08', /* noir */
-        'hair-2': '#3a1d10', /* châtain */
-        'hair-3': '#7a4a26', /* miel */
-        'hair-4': '#c89559', /* blond doré */
-        'hair-5': '#4a2a3e', /* prune */
+        /* Hair tones (conservés) */
+        'hair-1': '#1a0f08',
+        'hair-2': '#3a1d10',
+        'hair-3': '#7a4a26',
+        'hair-4': '#c89559',
+        'hair-5': '#4a2a3e',
       },
       fontFamily: {
-        display: ['"Instrument Serif"', '"Cormorant Garamond"', 'Georgia', 'serif'],
-        body: ['"DM Sans"', '-apple-system', 'system-ui', 'sans-serif'],
+        impact: ['"Anton"', '"Rubik Mono One"', 'Impact', 'sans-serif'],
+        marker: ['"Permanent Marker"', 'cursive'],
+        type: ['"Special Elite"', '"Courier New"', 'monospace'],
+        editorial: ['"Yeseva One"', 'Georgia', 'serif'],
+        terminal: ['"VT323"', 'monospace'],
+        mono: ['"Rubik Mono One"', 'monospace'],
+        hand: ['"Caveat"', 'cursive'],
+        bold: ['"Archivo Black"', 'sans-serif'],
       },
       fontSize: {
         xs: ['11px', { lineHeight: '1.4' }],
@@ -43,19 +46,20 @@ const config: Config = {
         lg: ['17px', { lineHeight: '1.6' }],
       },
       borderRadius: {
-        sm: '10px',
-        md: '18px',
-        lg: '28px',
-        xl: '40px',
+        sm: '2px',
+        md: '4px',
+        lg: '6px',
+        xl: '8px',
       },
       boxShadow: {
-        '1': '0 1px 2px rgba(31,22,17,.04), 0 2px 6px rgba(31,22,17,.04)',
-        '2': '0 2px 4px rgba(31,22,17,.05), 0 8px 24px rgba(31,22,17,.08)',
-        '3': '0 4px 8px rgba(31,22,17,.06), 0 20px 50px rgba(31,22,17,.14)',
-        'glow-gold': '0 20px 60px -10px rgba(184,135,70,.45), 0 0 80px -20px rgba(217,177,111,.5)',
+        'riot': '4px 4px 0px #0A0A0A',
+        'riot-lime': '4px 4px 0px #D4FF3E',
+        'riot-orange': '4px 4px 0px #FF7A1A',
+        'riot-lg': '8px 8px 0px #0A0A0A',
       },
       backgroundImage: {
-        'gradient-gold': 'linear-gradient(135deg, var(--gold-deep) 0%, var(--gold) 50%, var(--gold-light) 100%)',
+        'gradient-riot': 'linear-gradient(135deg, #0E1B14 0%, #1A2E1F 100%)',
+        'gradient-lime': 'linear-gradient(135deg, #D4FF3E 0%, #B8E035 100%)',
       },
     },
   },
