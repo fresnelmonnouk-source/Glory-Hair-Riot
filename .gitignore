@@ -10,6 +10,7 @@ coverage/
 .next/
 out/
 build/
+tsconfig.tsbuildinfo
 
 # Misc
 .DS_Store
