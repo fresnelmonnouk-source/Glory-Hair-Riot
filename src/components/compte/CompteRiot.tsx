@@ -113,10 +113,7 @@ export function CompteRiot() {
           }}>
             {MOCK_USER.prenom}
           </em>
-          <span style={{
-            background: '#FF7A1A', color: '#0A0A0A',
-            padding: '0 0.08em', display: 'inline-block',
-          }}>!</span>
+          !
         </h2>
         <div style={{
           background: '#F4ECD8', color: '#0A0A0A',

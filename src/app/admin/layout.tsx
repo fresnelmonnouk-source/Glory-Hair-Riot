@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminTopbar } from '@/components/admin/AdminTopbar';
 
 export const metadata: Metadata = {
   title: 'Back-office · Glory Hair RIOT',
@@ -10,13 +11,17 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      display: 'flex',
+      display: 'grid',
+      gridTemplateColumns: '240px 1fr',
       minHeight: '100vh',
-      background: '#1A2E1F',
+      background: '#0E1B14',
     }}>
       <AdminSidebar />
-      <div style={{ flex: 1, minWidth: 0, padding: '24px 32px 60px' }}>
-        {children}
+      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <AdminTopbar />
+        <div style={{ padding: '32px 28px 80px' }}>
+          {children}
+        </div>
       </div>
     </div>
   );

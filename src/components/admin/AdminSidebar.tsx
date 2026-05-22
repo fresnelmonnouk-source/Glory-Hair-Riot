@@ -61,9 +61,9 @@ export function AdminSidebar() {
       background: '#0A0A0A',
       color: '#F4ECD8',
       borderRight: '3px solid #D4FF3E',
-      padding: '20px 14px',
+      padding: '24px 18px',
       display: 'flex', flexDirection: 'column',
-      gap: 16,
+      gap: 18,
       width: 240,
       position: 'sticky', top: 0,
       height: '100vh', overflowY: 'auto',
@@ -103,11 +103,11 @@ export function AdminSidebar() {
         <span style={{
           display: 'inline-block', marginTop: 10,
           background: '#FF7A1A', color: '#0A0A0A',
-          padding: '4px 10px',
+          padding: '3px 8px',
           fontFamily: 'var(--font-rubik-mono-one),monospace',
-          fontSize: 10, letterSpacing: '0.12em',
-          border: '2px solid #0A0A0A',
-          transform: 'rotate(-3deg)',
+          fontSize: 9, letterSpacing: '0.18em',
+          border: '2px solid #D4FF3E',
+          transform: 'rotate(-2deg)',
         }}>
           ★ ADMIN · RIOT
         </span>
@@ -158,15 +158,15 @@ export function AdminSidebar() {
       {/* User card */}
       <div style={{
         marginTop: 'auto',
-        background: 'rgba(255,255,255,.04)',
-        border: '2px solid rgba(244,236,216,.15)',
-        padding: '10px 12px',
+        background: '#142A1F',
+        border: '2px dashed #D4FF3E',
+        padding: 12,
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <div aria-hidden style={{
           width: 36, height: 36, borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 30%, #f5d4b8, #b8755a)',
-          border: '2px solid #0A0A0A',
+          background: 'radial-gradient(circle at 35% 30%, #f5d4b8 0%, #e8b794 50%, #b8755a 90%)',
+          border: '2px solid #D4FF3E',
           flexShrink: 0,
         }} />
         <div>
@@ -193,32 +193,38 @@ export function AdminSidebar() {
 
 const linkStyle: CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 10,
-  padding: '8px 10px',
+  padding: '10px 12px',
+  borderRadius: 8,
   fontFamily: 'var(--font-special-elite),monospace',
-  fontSize: 13, letterSpacing: '0.02em',
+  fontSize: 14, letterSpacing: '0.02em',
   color: '#F4ECD8',
   background: 'transparent',
   border: '2px solid transparent',
   textDecoration: 'none',
-  transition: 'all .12s',
+  transition: 'background .15s, color .15s, transform .12s',
 };
 
+// Active : Permanent Marker 16px + rotate -1deg + shadow orange + border ink
 const activeLinkStyle: CSSProperties = {
   background: '#D4FF3E',
   color: '#0A0A0A',
   border: '2px solid #0A0A0A',
+  fontFamily: 'var(--font-permanent-marker),cursive',
+  fontSize: 16,
+  transform: 'rotate(-1deg)',
   boxShadow: '3px 3px 0 #FF7A1A',
-  transform: 'translateX(2px)',
 };
 
 const icoStyle: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 18, height: 18,
+  width: 22, height: 22,
   fontFamily: 'var(--font-rubik-mono-one),monospace',
-  fontSize: 14, color: 'inherit',
+  fontSize: 12, color: 'inherit',
+  flexShrink: 0,
 };
 
 const badgeStyle: CSSProperties = {
+  marginLeft: 'auto',
   fontFamily: 'var(--font-rubik-mono-one),monospace',
   fontSize: 10, letterSpacing: '0.06em',
   padding: '2px 7px',

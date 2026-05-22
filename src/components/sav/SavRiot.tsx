@@ -85,8 +85,8 @@ export function SavRiot() {
       {/* Head */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
-        flexWrap: 'wrap', gap: 18,
-        borderBottom: '3px dashed #D4FF3E',
+        flexWrap: 'wrap', gap: 24,
+        borderBottom: '3px dashed #FF7A1A',
         paddingBottom: 28, marginBottom: 32,
       }}>
         <h2 style={{
@@ -165,9 +165,9 @@ function FaqDetails({ item, index, defaultOpen }: {
           width: '100%', textAlign: 'left',
           background: 'transparent',
           border: 0,
-          padding: '14px 18px',
+          padding: '18px 22px',
           fontFamily: 'var(--font-permanent-marker),cursive',
-          fontSize: 18, lineHeight: 1.3,
+          fontSize: 20, lineHeight: 1.3,
           color: '#0A0A0A',
           cursor: 'pointer',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14,
@@ -177,7 +177,8 @@ function FaqDetails({ item, index, defaultOpen }: {
         <span style={{ flex: 1 }}>{item.q}</span>
         <span aria-hidden style={{
           fontFamily: 'var(--font-rubik-mono-one),monospace',
-          fontSize: 18,
+          fontSize: 24,
+          color: '#FF7A1A',
           width: 24, height: 24, display: 'inline-flex',
           alignItems: 'center', justifyContent: 'center',
           transition: 'transform .2s',
@@ -188,9 +189,9 @@ function FaqDetails({ item, index, defaultOpen }: {
       </button>
       {open && (
         <div style={{
-          padding: '14px 18px',
+          padding: '14px 22px 20px',
           fontFamily: 'var(--font-special-elite),monospace',
-          fontSize: 14, lineHeight: 1.5,
+          fontSize: 14, lineHeight: 1.55,
           color: '#0A0A0A',
         }}>
           {item.a}
@@ -215,7 +216,7 @@ function TrackOrderCard() {
   }
 
   return (
-    <HelpCard tape="rgba(255,122,26,.7)" shadow="#FF7A1A" rotate="-0.5deg">
+    <HelpCard tape="rgba(255,122,26,.7)" shadow="#FF7A1A" rotate="1deg">
       <h4 style={cardH4Style}>★ Suivi de commande</h4>
       <p style={leadStyle}>
         Entre ton numéro de commande pour voir où en est ton colis.
@@ -292,7 +293,7 @@ function HelpCard({ children, tape, shadow, rotate }: {
     <div style={{
       background: '#F4ECD8', color: '#0A0A0A',
       border: '3px solid #0A0A0A',
-      padding: '20px 18px',
+      padding: 22,
       position: 'relative',
       transform: `rotate(${rotate})`,
       boxShadow: `6px 6px 0 ${shadow}`,

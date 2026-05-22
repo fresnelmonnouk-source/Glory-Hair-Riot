@@ -93,11 +93,11 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI grid */}
+      {/* KPI grid : 4 colonnes fixes (port fidèle Admin.html line 239) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: 16,
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 14,
       }}>
         {KPIS.map((k, i) => {
           const rotations = ['-0.5deg', '0.5deg', '-0.7deg', '0.6deg'];
@@ -118,35 +118,36 @@ export function AdminDashboard() {
               </div>
               <div style={{
                 fontFamily: 'var(--font-rubik-mono-one),monospace',
-                fontSize: 36, lineHeight: 1,
+                fontSize: 38, lineHeight: 1,
                 color: '#0A0A0A', letterSpacing: '-0.02em',
               }}>
                 {k.value}
                 {k.suffix && (
                   <small style={{
                     fontFamily: 'var(--font-yeseva-one),serif',
-                    fontStyle: 'italic', fontSize: 22,
+                    fontStyle: 'italic', fontSize: 24,
                   }}>{k.suffix}</small>
                 )}
               </div>
               <span style={{
-                display: 'inline-block', marginTop: 10,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                marginTop: 10,
                 background: k.direction === 'up' ? '#D4FF3E' : '#FF4D8D',
                 color: '#0A0A0A',
-                fontFamily: 'var(--font-rubik-mono-one),monospace',
-                fontSize: 10, letterSpacing: '0.08em',
+                fontFamily: 'var(--font-special-elite),monospace',
+                fontSize: 11, letterSpacing: '0.04em',
                 padding: '3px 8px',
-                border: '1px solid #0A0A0A',
+                border: '2px solid #0A0A0A',
               }}>
                 {k.delta}
               </span>
-              {/* Sparkline */}
+              {/* Sparkline en haut à droite (port fidèle Admin.html line 268-271) */}
               <svg
                 viewBox="0 0 80 36"
                 preserveAspectRatio="none"
                 style={{
-                  position: 'absolute', bottom: 8, right: 12,
-                  width: 80, height: 36, opacity: 0.4,
+                  position: 'absolute', top: 18, right: 14,
+                  width: 80, height: 36, opacity: 0.85,
                 }}
               >
                 <polyline points={k.spark} fill="none" stroke="#0A0A0A" strokeWidth="2" />
@@ -156,11 +157,12 @@ export function AdminDashboard() {
         })}
       </div>
 
-      {/* Chart + Tasks */}
+      {/* Chart + Tasks (port fidèle .dash-grid 1.5fr/1fr Admin.html line 275) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
+        gridTemplateColumns: '1.5fr 1fr',
         gap: 20,
+        marginBottom: 24,
       }}>
         <RevenueChart />
         <TasksList tasks={tasksState} onToggle={toggleTask} />
@@ -414,7 +416,7 @@ const italicAccent: CSSProperties = {
 function cardStyle(shadowColor: string, rotate: string): CSSProperties {
   return {
     background: '#F4ECD8', color: '#0A0A0A',
-    border: '3px solid #0A0A0A', padding: 20,
+    border: '3px solid #0A0A0A', padding: 22,
     transform: `rotate(${rotate})`,
     boxShadow: `5px 5px 0 ${shadowColor}`,
     position: 'relative', overflow: 'hidden',
@@ -423,7 +425,7 @@ function cardStyle(shadowColor: string, rotate: string): CSSProperties {
 
 function tapeStyle(bg: string): CSSProperties {
   return {
-    position: 'absolute', top: -12, left: '40%',
+    position: 'absolute', top: -12, left: 24,
     width: 100, height: 22,
     background: bg,
     borderLeft: '1px dashed rgba(0,0,0,.3)',
