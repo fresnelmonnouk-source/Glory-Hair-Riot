@@ -163,7 +163,8 @@ body {
 
 .hp-frame:hover {
   animation: wiggle .35s ease-in-out 2;
-  z-index: 10;
+  /* !important nécessaire : z-index de repos est en style inline (1-4) */
+  z-index: 99 !important;
   filter: drop-shadow(6px 8px 0 rgba(0,0,0,.6));
 }
 
