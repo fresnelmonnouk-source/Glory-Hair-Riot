@@ -480,13 +480,15 @@ function ScreenIntro({ onStart }: { onStart: () => void }) {
         </p>
 
         <div style={{ marginTop: 32, display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" onClick={onStart} style={{
-            fontFamily: 'var(--font-rubik-mono-one),sans-serif', fontSize: 14, letterSpacing: '0.16em', textTransform: 'uppercase',
-            background: '#D4FF3E', color: '#0A0A0A', border: '3px solid #0A0A0A',
-            padding: '18px 28px', cursor: 'pointer', boxShadow: '5px 5px 0 #FF7A1A',
-          }}>
+          <button type="button" onClick={onStart} className="btn-bold">
             ▶ C&apos;est parti
           </button>
+          <a
+            href="/essayage"
+            className="btn-bold outline"
+          >
+            Comment ça marche ?
+          </a>
         </div>
 
         <div style={{ marginTop: 48, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>

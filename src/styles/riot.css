@@ -145,9 +145,65 @@ body {
   50% { opacity: .2; }
 }
 
+/* Scan = défilement des lignes horizontales (background-position),
+ * pas translation de l'élément. Port fidèle Riot.html @keyframes scan. */
 @keyframes scan {
-  0%   { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  0%   { background-position: 0 0, center; }
+  100% { background-position: 0 100px, center; }
+}
+
+/* ─── btn-bold (port fidèle Riot.html lignes 776-790) ─── */
+
+.btn-bold {
+  font-family: var(--font-rubik-mono-one), sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: #D4FF3E;
+  color: #0A0A0A;
+  border: 3px solid #0A0A0A;
+  padding: 16px 26px;
+  cursor: pointer;
+  box-shadow: 6px 6px 0 #FF7A1A;
+  transition: transform .12s, box-shadow .12s, background .12s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.btn-bold:hover {
+  transform: translate(-2px, -2px) rotate(-1deg);
+  box-shadow: 8px 8px 0 #FF7A1A;
+}
+.btn-bold:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 #FF7A1A;
+}
+.btn-bold.orange {
+  background: #FF7A1A;
+  box-shadow: 6px 6px 0 #D4FF3E;
+}
+.btn-bold.orange:hover {
+  box-shadow: 8px 8px 0 #D4FF3E;
+}
+.btn-bold.orange:active {
+  box-shadow: 2px 2px 0 #D4FF3E;
+}
+.btn-bold.outline {
+  background: transparent;
+  color: #F4ECD8;
+  border-color: #F4ECD8;
+  box-shadow: 6px 6px 0 #D4FF3E;
+}
+.btn-bold.outline:hover {
+  box-shadow: 8px 8px 0 #D4FF3E;
+}
+.btn-bold.outline:active {
+  box-shadow: 2px 2px 0 #D4FF3E;
+}
+.btn-bold.full {
+  width: 100%;
 }
 
 /* ─── Nav animations (port fidèle Riot.html lignes 641-689) ─── */

@@ -11,7 +11,7 @@
  */
 
 import Link from 'next/link';
-import { CSSProperties, useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { readQuota, getLiveCtaHref, getLiveCtaLabel, QUOTA_LIMIT_ANON, QUOTA_LIMIT_LOGGED, type QuotaState } from '@/lib/quota';
 
 // ─── Pip (port .tryon-quota .pip) ─────────────────────
@@ -40,23 +40,7 @@ function Pip({ used }: { used: boolean }) {
   );
 }
 
-// ─── Boutons ──────────────────────────────────────────
-
-const BTN_BOLD: CSSProperties = {
-  fontFamily: 'var(--font-rubik-mono-one),sans-serif',
-  fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
-  border: '3px solid #0A0A0A', padding: '16px 26px',
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-  textDecoration: 'none', cursor: 'pointer',
-  background: '#D4FF3E', color: '#0A0A0A',
-  boxShadow: '6px 6px 0 #FF7A1A',
-};
-
-const BTN_ORANGE: CSSProperties = {
-  ...BTN_BOLD,
-  background: '#FF7A1A',
-  boxShadow: '6px 6px 0 #D4FF3E',
-};
+// Boutons : on utilise la classe .btn-bold de riot.css (hover lift + active press).
 
 // ─── Composant principal ──────────────────────────────
 
@@ -303,7 +287,8 @@ function SidePanel({ quota, mode, limit }: { quota: QuotaState; mode: 'anon' | '
           </p>
           <Link
             href="/connexion"
-            style={{ ...BTN_BOLD, width: '100%', marginTop: 10 }}
+            className="btn-bold full"
+            style={{ marginTop: 10 }}
           >
             → Créer mon compte
           </Link>
@@ -375,7 +360,8 @@ function SidePanel({ quota, mode, limit }: { quota: QuotaState; mode: 'anon' | '
       {/* Main CTA — dynamique selon quota */}
       <Link
         href={getLiveCtaHref(quota)}
-        style={{ ...BTN_ORANGE, width: '100%', marginTop: 8 }}
+        className="btn-bold orange full"
+        style={{ marginTop: 8 }}
       >
         {getLiveCtaLabel(quota)}
       </Link>
