@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   const slugs = [...new Set(body.items.map(i => i.wig_slug))];
   const { data: wigs, error: wigsErr } = await supabase
     .from('wigs')
-    .select('id, slug, base_price')
+    .select('id, slug, name, base_price')
     .in('slug', slugs);
 
   if (wigsErr || !wigs) {

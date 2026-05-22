@@ -173,6 +173,58 @@ export const adminRouter = router({
       return { ok: true };
     }),
 
+  // ─── Détail d'une commande ───────────────────────
+  orderDetails: adminProcedure
+    .input(z.object({ orderId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('orders')
+        .select(`
+          id, user_id, total_amount, status, created_at, shipping_address, payment_intent_id,
+          users(full_name, email, phone),
+          order_items(id, wig_id, quantity, price_at_purchase, wigs(slug, name))
+        `)
+        .eq('id', input.orderId)
+        .single();
+      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+      return data;
+    }),
+
+  // ─── Update statut commande ──────────────────────
+  setOrderStatus: adminProcedure
+    .input(z.object({
+      orderId: z.string().uuid(),
+      status: z.enum(['pending', 'paid', 'shipped', 'delivered', 'cancelled']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('orders')
+        .update({ status: input.status, updated_at: new Date().toISOString() })
+        .eq('id', input.orderId);
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      return { ok: true };
+    }),
+
+  // ─── Update produit (prix, stock, flags) ─────────
+  updateProduct: adminProcedure
+    .input(z.object({
+      productId: z.string().uuid(),
+      patch: z.object({
+        base_price: z.number().int().min(0).optional(),
+        stock_quantity: z.number().int().min(0).optional(),
+        active: z.boolean().optional(),
+        featured: z.boolean().optional(),
+      }),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('wigs')
+        .update({ ...input.patch, updated_at: new Date().toISOString() })
+        .eq('id', input.productId);
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      return { ok: true };
+    }),
+
   // ─── Promote user to admin ───────────────────────
   setUserRole: adminProcedure
     .input(z.object({

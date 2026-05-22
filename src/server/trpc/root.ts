@@ -6,6 +6,8 @@ import { elodieRouter } from './routers/elodie';
 import { paymentsRouter } from './routers/payments';
 import { ordersRouter } from './routers/orders';
 import { adminRouter } from './routers/admin';
+import { wishlistRouter } from './routers/wishlist';
+import { tryonRouter } from './routers/tryon';
 
 export const appRouter = router({
   auth: authRouter,
@@ -15,6 +17,8 @@ export const appRouter = router({
   payments: paymentsRouter,
   orders: ordersRouter,
   admin: adminRouter,
+  wishlist: wishlistRouter,
+  tryon: tryonRouter,
 });
 
 export type AppRouter = typeof appRouter;

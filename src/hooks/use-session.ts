@@ -67,7 +67,7 @@ export function useSession(): SessionState {
     const supabase = getSupabaseBrowserClient();
 
     // 1. Session initiale
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(({ data: { session: s } }: { data: { session: Session | null } }) => {
       setSession(s);
       if (s?.user) {
         void fetchProfile(s.user.id);
@@ -77,7 +77,7 @@ export function useSession(): SessionState {
 
     // 2. Souscription aux changements (login/logout/refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, s) => {
+      (_event: string, s: Session | null) => {
         setSession(s);
         if (s?.user) {
           void fetchProfile(s.user.id);

@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Heart } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
 
 const NAV_LINKS = [
   ['/',          'Accueil'],
@@ -25,6 +27,10 @@ export function NavRiot() {
   const count = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
   const { user, profile, loading } = useSession();
   const prenom = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || null;
+  const wishlistCount = trpc.wishlist.count.useQuery(undefined, {
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
   return (
     <nav
@@ -121,7 +127,15 @@ export function NavRiot() {
         ) : (
           <Link href="/connexion" className="nav-pill">Connexion</Link>
         )}
-        <button type="button" className="nav-pill">♥ 14</button>
+        <Link
+          href="/compte?tab=souhaits"
+          className="nav-pill"
+          aria-label="Souhaits"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        >
+          <Heart size={14} strokeWidth={2.5} />
+          {user ? (wishlistCount.data ?? 0) : 0}
+        </Link>
         <Link href="/panier" className="nav-pill hot">
           Panier · {count}
         </Link>

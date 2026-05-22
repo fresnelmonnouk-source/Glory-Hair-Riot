@@ -11,7 +11,7 @@
 'use client';
 
 import Link from 'next/link';
-import { CSSProperties, FormEvent, useState } from 'react';
+import { FormEvent, useState } from 'react';
 
 const COLS: { title: string; links: Array<{ href: string; label: string; star?: boolean }> }[] = [
   {

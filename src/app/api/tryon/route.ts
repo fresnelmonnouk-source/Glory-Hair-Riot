@@ -205,7 +205,7 @@ const Gemini: ProviderDef = {
       const txt = parts.find(p => p.text)?.text ?? JSON.stringify(json).slice(0, 240);
       throw new Error(`Aucune image dans la réponse Gemini · ${txt}`);
     }
-    const inline = imgPart.inline_data ?? imgPart.inlineData!;
+    const inline = (imgPart.inline_data ?? imgPart.inlineData!) as { mime_type?: string; mimeType?: string; data?: string };
     const mime = inline.mime_type ?? inline.mimeType ?? 'image/png';
     const data = inline.data!;
 

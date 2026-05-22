@@ -18,7 +18,7 @@
  *   - À terme : table tryon_quotas + adminProcedure backend
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react';
 import { WIGS, type Wig } from '@/lib/wigs-data';
 import { ConsentModal } from './ConsentModal';
 
@@ -71,7 +71,7 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
     ctx.drawImage(img, 0, 0, SS, SS);
     const data = ctx.getImageData(0, 0, SS, SS).data;
     let sum = 0;
-    for (let i = 0; i < data.length; i += 4) sum += (data[i] + data[i+1] + data[i+2]) / 3;
+    for (let i = 0; i < data.length; i += 4) sum += ((data[i] ?? 0) + (data[i+1] ?? 0) + (data[i+2] ?? 0)) / 3;
     const avg = sum / (SS * SS);
     if (avg < 28) return { ok: false, reason: `Photo trop sombre (luminosité ${avg.toFixed(0)}/255). Trouve plus de lumière.` };
     if (avg > 240) return { ok: false, reason: 'Photo presque blanche — l\'IA aura du mal.' };
@@ -200,7 +200,7 @@ export function TryonFlow() {
   const [personUrl, setPersonUrl] = useState<string | null>(null);
   const [validation, setValidation] = useState<Validation | null>(null);
 
-  const [selectedWig, setSelectedWig] = useState<Wig>(WIGS[0]);
+  const [selectedWig, setSelectedWig] = useState<Wig>(WIGS[0]!);
 
   const [status, setStatus] = useState<Status>('idle');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
@@ -278,7 +278,7 @@ export function TryonFlow() {
     let stageIdx = 0;
     const timer = setInterval(() => {
       stageIdx = Math.min(stageIdx + 1, stages.length - 1);
-      setLoaderMsg(stages[stageIdx]);
+      setLoaderMsg(stages[stageIdx]!);
       setProgress(p => Math.min(p + Math.random() * 10 + 3, 92));
     }, 900);
 
@@ -628,6 +628,7 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
         await videoRef.current.play();
       }
       const track = s.getVideoTracks()[0];
+      if (!track) throw new Error('Aucune piste vidéo disponible.');
       const settings = track.getSettings();
       setFps(settings.frameRate ?? 30);
       log(`📷 Caméra OK · ${settings.width}×${settings.height} @ ${Math.round(settings.frameRate ?? 30)}fps`);

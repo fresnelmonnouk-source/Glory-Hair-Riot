@@ -1,24 +1,22 @@
 'use client';
 
 /**
- * AdminDashboard — port fidèle <section class="page" data-view="dashboard">
- * Admin.html (733-892) + CSS 238-337.
+ * AdminDashboard — KPIs, top produits, commandes récentes branchés sur tRPC admin.*.
  *
- * KPIs + chart CA + tasks + top products. Données mock pour V1.
- * TODO Phase 5 : remplacer par trpc.admin.* queries vers Supabase.
+ * Données réelles via :
+ *  - trpc.admin.kpis (CA 24h, Commandes 24h, Essais 24h, Panier moyen)
+ *  - trpc.admin.listProducts (top produits par ventes)
+ *  - trpc.admin.listOrders (commandes récentes)
+ *
+ * Les tasks restent locales (Phase 6 : table tasks).
  */
 
 import Link from 'next/link';
-import { useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
+import { trpc } from '@/lib/trpc/client';
+import { useSession } from '@/hooks/use-session';
 
-// ─── Mock data ──────────────────────────────────────
-
-const KPIS = [
-  { label: 'CA · 24h',             value: '4 280', suffix: '€', delta: '↑ 14% vs hier', direction: 'up' as const, shadow: '#D4FF3E', spark: '0,28 10,22 20,26 30,18 40,20 50,14 60,16 70,8 80,4' },
-  { label: 'Commandes · 24h',      value: '18',                  delta: '↑ 3 vs hier',   direction: 'up' as const, shadow: '#FF7A1A', spark: '0,24 10,28 20,18 30,22 40,16 50,18 60,10 70,14 80,8' },
-  { label: 'Essais virtuels · 24h', value: '342',                delta: '↑ 28%',         direction: 'up' as const, shadow: '#F5E55E', spark: '0,30 10,26 20,28 30,20 40,16 50,12 60,14 70,8 80,4' },
-  { label: 'Panier moyen',         value: '238', suffix: '€',    delta: '↓ 4€',          direction: 'down' as const, shadow: '#FF4D8D', spark: '0,18 10,22 20,16 30,20 40,24 50,18 60,22 70,26 80,24' },
-];
+// ─── Tasks (local, en attendant la table dédiée) ────
 
 const TASKS = [
   { id: 1, label: 'Valider 3 retours en attente',  priority: 'URGENT'  as const, done: false },
@@ -28,25 +26,114 @@ const TASKS = [
   { id: 5, label: 'Lancer la promo Été (-15%)',     priority: 'SEMAINE' as const, done: false },
 ];
 
-const TOP_PRODUCTS = [
-  { rank: '01', name: 'Ginger 22″',   id: 'ginger',   sales: 128, ca: '44 720€', stars: '★★★', stock: 'live' as const },
-  { rank: '02', name: 'Velours 14″',  id: 'velours',  sales: 96,  ca: '24 864€', stars: '★★',  stock: 'live' as const },
-  { rank: '03', name: 'Argent 18″',   id: 'argent',   sales: 82,  ca: '17 958€', stars: '★',   stock: 'live' as const },
-  { rank: '04', name: 'Bordeaux 22″', id: 'bordeaux', sales: 71,  ca: '20 519€', stars: '',    stock: 'oos'  as const },
-  { rank: '05', name: 'Mocha 20″',    id: 'mocha',    sales: 64,  ca: '17 216€', stars: '★',   stock: 'live' as const },
+const SPARKS = [
+  '0,28 10,22 20,26 30,18 40,20 50,14 60,16 70,8 80,4',
+  '0,24 10,28 20,18 30,22 40,16 50,18 60,10 70,14 80,8',
+  '0,30 10,26 20,28 30,20 40,16 50,12 60,14 70,8 80,4',
+  '0,18 10,22 20,16 30,20 40,24 50,18 60,22 70,26 80,24',
 ];
+const SHADOWS = ['#D4FF3E', '#FF7A1A', '#F5E55E', '#FF4D8D'];
 
-const RECENT_ORDERS = [
-  { num: '#1024', client: 'Naomi A.',    product: 'Ginger 22″',   total: '349€', status: 'PAYÉE'    as const },
-  { num: '#1023', client: 'Maïmouna S.', product: 'Velours 14″',  total: '259€', status: 'EXPÉDIÉE' as const },
-  { num: '#1022', client: 'Aïcha B.',    product: 'Argent 18″',   total: '389€', status: 'LIVRÉE'   as const },
-  { num: '#1021', client: 'Léna D.',     product: 'Bordeaux 22″', total: '419€', status: 'PAYÉE'    as const },
-];
+function formatDelta(value: number, suffix: '%' | '€' | '' = ''): { delta: string; direction: 'up' | 'down' } {
+  if (value === 0) return { delta: '= vs hier', direction: 'up' };
+  if (value > 0) return { delta: `↑ ${value}${suffix} vs hier`, direction: 'up' };
+  return { delta: `↓ ${Math.abs(value)}${suffix} vs hier`, direction: 'down' };
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'EN ATT.',
+  paid: 'PAYÉE',
+  shipped: 'EXPÉDIÉE',
+  delivered: 'LIVRÉE',
+  cancelled: 'ANNULÉE',
+};
+const STATUS_COLOR: Record<string, string> = {
+  pending: '#F5E55E',
+  paid: '#D4FF3E',
+  shipped: '#FF7A1A',
+  delivered: '#F5E55E',
+  cancelled: '#FF4D8D',
+};
+
+function shortRef(id: string): string {
+  return '#' + id.slice(0, 8).toUpperCase();
+}
 
 // ─── Component ──────────────────────────────────────
 
 export function AdminDashboard() {
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const { profile } = useSession();
+  const prenom = profile?.full_name?.split(' ')[0] ?? 'Admin';
+
+  const kpisQ = trpc.admin.kpis.useQuery(undefined, { staleTime: 60_000 });
+  const productsQ = trpc.admin.listProducts.useQuery({ limit: 20 }, { staleTime: 120_000 });
+  const ordersQ = trpc.admin.listOrders.useQuery({ status: 'all', limit: 4, offset: 0 }, { staleTime: 30_000 });
+
+  const KPIS = useMemo(() => {
+    const k = kpisQ.data;
+    return [
+      {
+        label: 'CA · 24h',
+        value: k ? k.ca.value.toLocaleString('fr-FR') : '—',
+        suffix: '€',
+        ...formatDelta(k?.ca.delta ?? 0, '%'),
+        shadow: SHADOWS[0], spark: SPARKS[0],
+      },
+      {
+        label: 'Commandes · 24h',
+        value: k ? String(k.orders.value) : '—',
+        suffix: '',
+        ...formatDelta(k?.orders.delta ?? 0),
+        shadow: SHADOWS[1], spark: SPARKS[1],
+      },
+      {
+        label: 'Essais virtuels · 24h',
+        value: k ? String(k.tryon.value) : '—',
+        suffix: '',
+        ...formatDelta(k?.tryon.delta ?? 0),
+        shadow: SHADOWS[2], spark: SPARKS[2],
+      },
+      {
+        label: 'Panier moyen',
+        value: k ? k.avgBasket.value.toLocaleString('fr-FR') : '—',
+        suffix: '€',
+        ...formatDelta(k?.avgBasket.delta ?? 0, '€'),
+        shadow: SHADOWS[3], spark: SPARKS[3],
+      },
+    ];
+  }, [kpisQ.data]);
+
+  const TOP_PRODUCTS = useMemo(() => {
+    const items = productsQ.data ?? [];
+    const sorted = [...items].sort((a, b) => b.sales.units - a.sales.units).slice(0, 5);
+    return sorted.map((p, i) => ({
+      rank: String(i + 1).padStart(2, '0'),
+      name: p.name,
+      id: p.slug,
+      sales: p.sales.units,
+      ca: `${Math.round(p.sales.revenue / 100).toLocaleString('fr-FR')}€`,
+      stars: p.featured ? '★★' : '★',
+      stock: p.stock_quantity > 0 ? ('live' as const) : ('oos' as const),
+    }));
+  }, [productsQ.data]);
+
+  const RECENT_ORDERS = useMemo(() => {
+    const items = ordersQ.data?.items ?? [];
+    return items.map((o) => {
+      const raw = (o as unknown as { users?: { full_name: string | null; email: string } | { full_name: string | null; email: string }[] | null }).users;
+      const u = Array.isArray(raw) ? raw[0] : raw;
+      const client = u?.full_name?.split(' ')[0] || u?.email?.split('@')[0] || 'Anonyme';
+      return {
+        num: shortRef(o.id),
+        client,
+        product: '—',
+        total: `${Math.round((o.total_amount ?? 0) / 100).toLocaleString('fr-FR')}€`,
+        status: o.status as keyof typeof STATUS_LABEL,
+      };
+    });
+  }, [ordersQ.data]);
+
   const [tasksState, setTasksState] = useState(TASKS);
 
   function toggleTask(id: number) {
@@ -72,7 +159,7 @@ export function AdminDashboard() {
               fontFamily: 'var(--font-yeseva-one),serif',
               fontStyle: 'italic', textTransform: 'none', color: '#D4FF3E',
             }}>
-              Olivia
+              {prenom}
             </em>
             <span style={{
               background: '#FF7A1A', color: '#0A0A0A',
@@ -174,12 +261,21 @@ export function AdminDashboard() {
         gridTemplateColumns: '1fr 1.5fr',
         gap: 20,
       }}>
-        <TopProducts />
-        <RecentOrders />
+        <TopProducts items={TOP_PRODUCTS} loading={productsQ.isLoading} />
+        <RecentOrders items={RECENT_ORDERS} loading={ordersQ.isLoading} />
       </div>
     </div>
   );
 }
+
+type TopProduct = {
+  rank: string; name: string; id: string; sales: number; ca: string;
+  stars: string; stock: 'live' | 'oos';
+};
+type RecentOrder = {
+  num: string; client: string; product: string; total: string;
+  status: keyof typeof STATUS_LABEL;
+};
 
 // ─── Sub-components ─────────────────────────────────
 
@@ -295,7 +391,7 @@ function TasksList({ tasks, onToggle }: { tasks: typeof TASKS; onToggle: (id: nu
   );
 }
 
-function TopProducts() {
+function TopProducts({ items, loading }: { items: TopProduct[]; loading: boolean }) {
   return (
     <div style={cardStyle('#FF4D8D', '-0.4deg')}>
       <span aria-hidden style={tapeStyle('rgba(212,255,62,.65)')} />
@@ -304,8 +400,18 @@ function TopProducts() {
         sub="// 30 jours"
         link={{ href: '/admin/produits', label: 'Tout →' }}
       />
+      {loading && (
+        <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 12, color: '#5E6A64' }}>
+          Chargement…
+        </div>
+      )}
+      {!loading && items.length === 0 && (
+        <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 12, color: '#5E6A64' }}>
+          Aucune vente sur la période.
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {TOP_PRODUCTS.map((p) => (
+        {items.map((p) => (
           <Link
             key={p.rank}
             href={`/perruque/${p.id}`}
@@ -352,26 +458,31 @@ function TopProducts() {
   );
 }
 
-function RecentOrders() {
-  const statusColor: Record<typeof RECENT_ORDERS[number]['status'], string> = {
-    PAYÉE: '#D4FF3E',
-    EXPÉDIÉE: '#FF7A1A',
-    LIVRÉE: '#F5E55E',
-  };
+function RecentOrders({ items, loading }: { items: RecentOrder[]; loading: boolean }) {
   return (
     <div style={cardStyle('#D4FF3E', '0.4deg')}>
       <span aria-hidden style={tapeStyle('rgba(255,122,26,.65)')} />
       <CardHead
         title={<>Commandes <em style={italicAccent}>récentes</em></>}
-        sub="// 4 dernières"
+        sub={`// ${items.length} dernières`}
         link={{ href: '/admin/commandes', label: 'Tout →' }}
       />
+      {loading && (
+        <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 12, color: '#5E6A64' }}>
+          Chargement…
+        </div>
+      )}
+      {!loading && items.length === 0 && (
+        <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 12, color: '#5E6A64' }}>
+          Aucune commande pour l&apos;instant.
+        </div>
+      )}
       <div style={{
         display: 'grid', gridTemplateColumns: 'auto 1fr 1fr auto auto',
         gap: 10, alignItems: 'center',
         fontFamily: 'var(--font-special-elite),monospace', fontSize: 12,
       }}>
-        {RECENT_ORDERS.map((o) => (
+        {items.map((o) => (
           <div key={o.num} style={{
             display: 'contents',
           }}>
@@ -394,10 +505,10 @@ function RecentOrders() {
               fontFamily: 'var(--font-rubik-mono-one),monospace',
               fontSize: 10, letterSpacing: '0.08em',
               padding: '3px 8px',
-              background: statusColor[o.status], color: '#0A0A0A',
+              background: STATUS_COLOR[o.status] ?? '#F4ECD8', color: '#0A0A0A',
               border: '1px solid #0A0A0A',
             }}>
-              {o.status}
+              {STATUS_LABEL[o.status] ?? o.status}
             </span>
           </div>
         ))}

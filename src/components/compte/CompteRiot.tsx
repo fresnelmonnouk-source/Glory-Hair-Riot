@@ -13,11 +13,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
-  MapPin, CreditCard, Settings, Mail, Package, Sparkles,
-  CheckCircle, ShoppingBag, Heart,
+  MapPin, CreditCard, Mail,
+  CheckCircle,
 } from 'lucide-react';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
 
 // ─── Helpers user data ──────────────────────────────
 
@@ -42,34 +43,6 @@ function memberSinceFrom(iso: string): string {
   return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
     .replace(/^./, (c) => c.toUpperCase());
 }
-
-interface Order {
-  num: string;
-  month: string;
-  wigId: string;
-  name: string;
-  variant: string;
-  passed: string;
-  status: { label: string; type: 'delivered' | 'shipping' | 'pending' };
-  price: number;
-}
-
-// TODO Phase 5 suite : remplacer par trpc.orders.list.useQuery() (déjà existant)
-const MOCK_ORDERS: Order[] = [];
-
-interface Essai {
-  date: string;
-  wigId: string;
-  name: string;
-  provider: 'gemini' | 'openai';
-  type: 'free' | 'paid';
-}
-
-// TODO Phase 5 suite : trpc.tryon.history.useQuery() (à créer)
-const MOCK_ESSAIS: Essai[] = [];
-
-// TODO Phase 5 suite : trpc.wishlist.list.useQuery() (à créer)
-const MOCK_WISHLIST: string[] = [];
 
 // ─── Tabs config ────────────────────────────────────
 
@@ -132,16 +105,28 @@ export function CompteRiot() {
     };
   }, [profile, user]);
 
+  // Counts via tRPC (enabled seulement si user logged pour éviter 401)
+  const ordersCount = trpc.orders.list.useQuery(
+    { page: 1, limit: 1 },
+    { enabled: !!user, staleTime: 60_000 },
+  );
+  const essaisCount = trpc.tryon.history.count.useQuery(undefined, {
+    enabled: !!user, staleTime: 60_000,
+  });
+  const wishlistCount = trpc.wishlist.count.useQuery(undefined, {
+    enabled: !!user, staleTime: 60_000,
+  });
+
   const tabs: TabDef[] = useMemo(() => [
-    { id: 'commandes',   label: 'Commandes', count: String(MOCK_ORDERS.length), star: true },
-    { id: 'essayages',   label: 'Essayages', count: String(MOCK_ESSAIS.length) },
-    { id: 'souhaits',    label: 'Souhaits',  count: String(MOCK_WISHLIST.length) },
+    { id: 'commandes',   label: 'Commandes', count: String(ordersCount.data?.total ?? 0), star: true },
+    { id: 'essayages',   label: 'Essayages', count: String(essaisCount.data ?? 0) },
+    { id: 'souhaits',    label: 'Souhaits',  count: String(wishlistCount.data ?? 0) },
     { id: 'fidelite',    label: 'Glory Club', count: `${userView.points.toLocaleString('fr-FR')} pts`, star: true, variant: 'glory' },
     { id: 'adresses',    label: 'Adresses' },
     { id: 'paiement',    label: 'Paiement' },
     { id: 'preferences', label: 'Préférences' },
     { id: 'sav',         label: 'SAV' },
-  ], [userView.points]);
+  ], [userView.points, ordersCount.data, essaisCount.data, wishlistCount.data]);
 
   if (loading) {
     return (
@@ -330,83 +315,101 @@ function TabLink({ tab, active, odd, onClick }: {
 
 // ─── Tab content : Commandes ────────────────────────
 
+const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+  pending:   { label: 'En attente', color: '#F5E55E' },
+  paid:      { label: '✓ Payée',    color: '#D4FF3E' },
+  shipped:   { label: 'En route',   color: '#FF7A1A' },
+  delivered: { label: '✓ Livrée',   color: '#D4FF3E' },
+  cancelled: { label: 'Annulée',    color: '#FF4D8D' },
+};
+
 function OrdersList() {
   const shadows = ['#D4FF3E', '#FF7A1A', '#F5E55E', '#FF4D8D'];
   const rotations = ['-0.5deg', '0.5deg', '-0.7deg', '0.4deg'];
 
-  if (MOCK_ORDERS.length === 0) {
+  const { data, isLoading, error } = trpc.orders.list.useQuery({ page: 1, limit: 20 });
+
+  if (isLoading) {
+    return <p style={{ fontFamily: 'var(--font-vt323),monospace', color: '#F4ECD8', opacity: 0.6, textAlign: 'center', padding: 40 }}>★ Chargement des commandes…</p>;
+  }
+  if (error) {
+    return <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: '#FF4D8D', textAlign: 'center', padding: 20 }}>★ {error.message}</p>;
+  }
+  if (!data || data.orders.length === 0) {
     return <EmptyState icon="▤" title="Aucune commande" sub="Tes commandes apparaîtront ici. Découvre le catalogue ↘" linkHref="/catalogue" linkLabel="→ Voir le catalogue" />;
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {MOCK_ORDERS.map((o, i) => (
-        <div key={o.num} style={{
-          background: '#F4ECD8', color: '#0A0A0A',
-          padding: 18, border: '3px solid #0A0A0A',
-          display: 'grid', gridTemplateColumns: '80px 1fr auto',
-          gap: 24, alignItems: 'center',
-          transform: `rotate(${rotations[i % rotations.length]})`,
-          boxShadow: `4px 4px 0 ${shadows[i % shadows.length]}`,
-          position: 'relative',
-        }}>
-          {/* Num + month */}
-          <div style={{
-            fontFamily: 'var(--font-rubik-mono-one),monospace',
-            fontSize: 36, color: '#0A0A0A', lineHeight: 1,
+      {data.orders.map((o, i) => {
+        const status = STATUS_LABEL[o.status] ?? { label: o.status.toUpperCase(), color: '#5E6A64' };
+        const ref = o.id.slice(0, 8).toUpperCase();
+        const d = new Date(o.created_at);
+        const month = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }).replace('.', '');
+        return (
+          <div key={o.id} style={{
+            background: '#F4ECD8', color: '#0A0A0A',
+            padding: 18, border: '3px solid #0A0A0A',
+            display: 'grid', gridTemplateColumns: '80px 1fr auto',
+            gap: 24, alignItems: 'center',
+            transform: `rotate(${rotations[i % rotations.length]})`,
+            boxShadow: `4px 4px 0 ${shadows[i % shadows.length]}`,
+            position: 'relative',
           }}>
-            {o.num}
-            <small style={{
-              display: 'block', fontFamily: 'var(--font-special-elite),monospace',
-              fontSize: 10, color: '#5E6A64', letterSpacing: '0.1em', marginTop: 4,
+            {/* Num + month */}
+            <div style={{
+              fontFamily: 'var(--font-rubik-mono-one),monospace',
+              fontSize: 28, color: '#0A0A0A', lineHeight: 1,
             }}>
-              {o.month}
-            </small>
-          </div>
-          {/* Info */}
-          <div>
-            <Link href={`/perruque/${o.wigId}`} style={{ textDecoration: 'none' }}>
+              {ref}
+              <small style={{
+                display: 'block', fontFamily: 'var(--font-special-elite),monospace',
+                fontSize: 10, color: '#5E6A64', letterSpacing: '0.1em', marginTop: 4,
+              }}>
+                {month}
+              </small>
+            </div>
+            {/* Info */}
+            <div>
               <div style={{
                 fontFamily: 'var(--font-permanent-marker),cursive',
                 fontSize: 22, color: '#0A0A0A', lineHeight: 1,
               }}>
-                {o.name} <em style={{
+                Commande <em style={{
                   fontFamily: 'var(--font-yeseva-one),serif',
                   fontStyle: 'italic', color: '#FF7A1A',
-                }}>
-                  {o.variant.split(' · ')[0]}
-                </em>{' '}· {o.variant.split(' · ').slice(1).join(' · ')}
+                }}>#{ref}</em>
               </div>
-            </Link>
-            <div style={{
-              fontFamily: 'var(--font-special-elite),monospace',
-              fontSize: 12, color: '#5E6A64', marginTop: 6, letterSpacing: '0.04em',
-            }}>
-              Passée le {o.passed}
+              <div style={{
+                fontFamily: 'var(--font-special-elite),monospace',
+                fontSize: 12, color: '#5E6A64', marginTop: 6, letterSpacing: '0.04em',
+              }}>
+                {d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+              <div style={{
+                display: 'inline-block', marginTop: 6,
+                background: status.color,
+                color: '#0A0A0A',
+                fontFamily: 'var(--font-rubik-mono-one),monospace',
+                fontSize: 10, letterSpacing: '0.1em',
+                padding: '3px 8px', border: '2px solid #0A0A0A',
+                transform: 'rotate(-2deg)',
+              }}>
+                {status.label}
+              </div>
             </div>
+            {/* Price */}
             <div style={{
-              display: 'inline-block', marginTop: 6,
-              background: o.status.type === 'shipping' ? '#FF7A1A' : '#D4FF3E',
-              color: '#0A0A0A',
+              background: '#0A0A0A', color: '#D4FF3E',
               fontFamily: 'var(--font-rubik-mono-one),monospace',
-              fontSize: 10, letterSpacing: '0.1em',
-              padding: '3px 8px', border: '2px solid #0A0A0A',
-              transform: 'rotate(-2deg)',
+              fontSize: 22, padding: '6px 12px',
+              transform: 'rotate(-2deg)', display: 'inline-block',
             }}>
-              {o.status.label}
+              {(o.total_cents / 100).toFixed(0)}€
             </div>
           </div>
-          {/* Price */}
-          <div style={{
-            background: '#0A0A0A', color: '#D4FF3E',
-            fontFamily: 'var(--font-rubik-mono-one),monospace',
-            fontSize: 22, padding: '6px 12px',
-            transform: 'rotate(-2deg)', display: 'inline-block',
-          }}>
-            {o.price}€
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -414,9 +417,18 @@ function OrdersList() {
 // ─── Tab content : Essayages ────────────────────────
 
 function EssaisList() {
-  if (MOCK_ESSAIS.length === 0) {
+  const { data, isLoading, error } = trpc.tryon.history.list.useQuery({ limit: 20 });
+
+  if (isLoading) {
+    return <p style={{ fontFamily: 'var(--font-vt323),monospace', color: '#F4ECD8', opacity: 0.6, textAlign: 'center', padding: 40 }}>★ Chargement des essais…</p>;
+  }
+  if (error) {
+    return <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: '#FF4D8D', textAlign: 'center', padding: 20 }}>★ {error.message}</p>;
+  }
+  if (!data || data.length === 0) {
     return <EmptyState icon="●" title="Aucun essai" sub="Tes essais virtuels apparaîtront ici" linkHref="/essayage" linkLabel="▶ Essayer une perruque" />;
   }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{
@@ -426,12 +438,18 @@ function EssaisList() {
       }}>
         Tes derniers essais virtuels — clique pour relancer
       </div>
-      {MOCK_ESSAIS.map((e, i) => {
-        const wig = WIG_BY_ID[e.wigId];
+      {data.map((e, i) => {
+        const wigData = Array.isArray(e.wigs) ? e.wigs[0] : e.wigs;
+        const slug = wigData?.slug ?? '';
+        const wig = slug ? WIG_BY_ID[slug] : undefined;
+        const wigName = wigData?.name ?? wig?.name ?? 'Essai';
+        const d = new Date(e.created_at);
+        const dateLabel = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) +
+          ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         return (
           <Link
-            key={i}
-            href={`/perruque/${e.wigId}`}
+            key={e.id}
+            href={slug ? `/perruque/${slug}` : '/essayage'}
             style={{
               background: '#F4ECD8', color: '#0A0A0A',
               padding: 14, border: '3px solid #0A0A0A',
@@ -442,11 +460,11 @@ function EssaisList() {
               textDecoration: 'none',
             }}
           >
-            {wig && (
+            {(e.snapshot_url || wig?.img) && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={wig.img}
-                alt={wig.name}
+                src={e.snapshot_url ?? wig?.img ?? ''}
+                alt={wigName}
                 style={{
                   width: 60, height: 60, borderRadius: '50%',
                   border: '2px solid #0A0A0A', objectFit: 'cover',
@@ -458,25 +476,25 @@ function EssaisList() {
                 fontFamily: 'var(--font-permanent-marker),cursive',
                 fontSize: 20, lineHeight: 1,
               }}>
-                {e.name}
+                {wigName}
               </div>
               <div style={{
                 fontFamily: 'var(--font-special-elite),monospace',
                 fontSize: 11, color: '#5E6A64', marginTop: 4, letterSpacing: '0.04em',
               }}>
-                {e.date}
+                {dateLabel}
               </div>
             </div>
             <span style={{
               fontFamily: 'var(--font-rubik-mono-one),monospace',
               fontSize: 10, letterSpacing: '0.08em',
               padding: '3px 8px',
-              background: e.type === 'paid' ? '#FF7A1A' : '#D4FF3E',
+              background: e.shared ? '#FF7A1A' : '#D4FF3E',
               color: '#0A0A0A',
               border: '2px solid #0A0A0A',
               transform: 'rotate(-2deg)',
             }}>
-              {e.type === 'paid' ? 'PREMIUM' : 'GRATUIT'}
+              {e.shared ? 'PARTAGÉ' : 'PRIVÉ'}
             </span>
           </Link>
         );
@@ -488,18 +506,29 @@ function EssaisList() {
 // ─── Tab content : Wishlist ─────────────────────────
 
 function WishlistList() {
-  if (MOCK_WISHLIST.length === 0) {
+  const { data, isLoading, error } = trpc.wishlist.list.useQuery();
+
+  if (isLoading) {
+    return <p style={{ fontFamily: 'var(--font-vt323),monospace', color: '#F4ECD8', opacity: 0.6, textAlign: 'center', padding: 40 }}>★ Chargement de la wishlist…</p>;
+  }
+  if (error) {
+    return <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: '#FF4D8D', textAlign: 'center', padding: 20 }}>★ {error.message}</p>;
+  }
+  if (!data || data.length === 0) {
     return <EmptyState icon="♡" title="Aucun souhait" sub="Ajoute des perruques à tes souhaits depuis le catalogue" linkHref="/catalogue" linkLabel="→ Voir le catalogue" />;
   }
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
-      {MOCK_WISHLIST.map((id) => {
-        const w = WIG_BY_ID[id];
+      {data.map((item) => {
+        const wigData = Array.isArray(item.wigs) ? item.wigs[0] : item.wigs;
+        const slug = wigData?.slug ?? '';
+        const w = slug ? WIG_BY_ID[slug] : undefined;
         if (!w) return null;
         return (
           <Link
-            key={id}
-            href={`/perruque/${id}`}
+            key={item.id}
+            href={`/perruque/${slug}`}
             style={{
               background: '#F4ECD8', color: '#0A0A0A',
               padding: 12, border: '3px solid #0A0A0A',

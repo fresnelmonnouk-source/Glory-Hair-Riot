@@ -20,6 +20,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 type Status = 'checking' | 'ready' | 'invalid' | 'submitting' | 'success';
@@ -36,7 +37,7 @@ export default function NouveauMotDePassePage() {
     const supabase = getSupabaseBrowserClient();
 
     // Listener qui capte l'événement PASSWORD_RECOVERY déclenché par le hash
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === 'PASSWORD_RECOVERY') {
         setStatus('ready');
       }
@@ -44,7 +45,7 @@ export default function NouveauMotDePassePage() {
 
     // Fallback : check immédiatement la session (cas où le hash a déjà été
     // consommé avant qu'on s'abonne au listener)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session) {
         setStatus('ready');
       } else {

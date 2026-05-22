@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const result = await resend.contacts.create({
         email,
-        audienceId: RESEND_AUDIENCE_ID,
+        audience_id: RESEND_AUDIENCE_ID,
         unsubscribed: false,
       });
 

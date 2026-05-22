@@ -2,10 +2,18 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 
 export default function MerciPage() {
+  return (
+    <Suspense fallback={null}>
+      <MerciContent />
+    </Suspense>
+  );
+}
+
+function MerciContent() {
   const params = useSearchParams();
   const ref = params?.get('ref') ?? 'GH-XXXX';
   const clear = useCartStore((s) => s.clear);
