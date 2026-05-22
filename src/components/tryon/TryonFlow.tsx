@@ -122,9 +122,16 @@ const INTRO_PICS: Array<{ wigId: string; pos: CSSProperties; tape: CSSProperties
   { wigId: 'bordeaux', pos: { bottom: 40, right: 80, width: 210, transform: 'rotate(2deg)',  zIndex: 4 }, tape: { right: 40, transform: 'rotate(6deg)' } },
 ];
 
-// ─── Flag debug : visible uniquement en dev (npm run dev). En prod = caché. ───────
+// ─── Flag debug : invisible par défaut. Activer via ?debug=1 dans l'URL. ───────
 
-const DEBUG_ENABLED = process.env.NODE_ENV !== 'production';
+function useDebugEnabled(): boolean {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setEnabled(new URLSearchParams(window.location.search).get('debug') === '1');
+  }, []);
+  return enabled;
+}
 
 // ─── Composant principal ──────────────────────────────
 
@@ -134,6 +141,7 @@ interface LogEntry { t: string; msg: string; level: LogLevel }
 
 export function TryonFlow() {
   /* État ----------------------------------------- */
+  const debugEnabled = useDebugEnabled();
   const [step, setStep] = useState<0|1|2|3>(0);
   const [consentOpen, setConsentOpen] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -147,7 +155,6 @@ export function TryonFlow() {
   const [status, setStatus] = useState<Status>('idle');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [lastProvider, setLastProvider] = useState<string | null>(null);
   const [lastCostCents, setLastCostCents] = useState<number | null>(null);
   const [lastLatencyMs, setLastLatencyMs] = useState<number | null>(null);
   const [totalCostCents, setTotalCostCents] = useState(0);
@@ -275,7 +282,6 @@ export function TryonFlow() {
 
       const dataUrl = `data:${json.mimeType};base64,${json.resultBase64}`;
       setResultUrl(dataUrl);
-      setLastProvider(json.provider);
       setLastCostCents(json.costCents);
       setLastLatencyMs(json.latencyMs ?? totalMs);
       setTotalCostCents(c => c + (json.costCents || 0));
@@ -369,14 +375,13 @@ export function TryonFlow() {
           loaderMsg={loaderMsg}
           costCents={lastCostCents}
           latencyMs={lastLatencyMs}
-          provider={lastProvider}
           onRegenerate={() => void startGeneration()}
           onDownload={handleDownload}
           onRestart={handleRestart}
         />}
       </main>
 
-      {DEBUG_ENABLED && <DebugDrawer open={debugOpen} logs={logs} />}
+      {debugEnabled && <DebugDrawer open={debugOpen} logs={logs} />}
       <FooterNav
         step={step}
         totalSteps={STEPS.length}
@@ -384,9 +389,9 @@ export function TryonFlow() {
         onPrev={goPrev}
         onNext={step === 3 ? handleRestart : goNext}
         ctaLabel={ctaLabel}
-        debugOpen={DEBUG_ENABLED && debugOpen}
+        debugOpen={debugEnabled && debugOpen}
         toggleDebug={() => setDebugOpen(o => !o)}
-        showDebug={DEBUG_ENABLED}
+        showDebug={debugEnabled}
       />
 
       <ConsentModal
@@ -774,10 +779,10 @@ function ScreenWig({ selectedWig, setSelectedWig, quota }: { selectedWig: Wig; s
 
 // ─── SCREEN 03 : RESULT ─────────────────────────
 
-function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progress, loaderMsg, costCents, latencyMs, provider, onRegenerate, onDownload, onRestart }: {
+function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progress, loaderMsg, costCents, latencyMs, onRegenerate, onDownload, onRestart }: {
   status: Status; resultUrl: string | null; personUrl: string | null; error: string | null;
   selectedWig: Wig; progress: number; loaderMsg: string;
-  costCents: number | null; latencyMs: number | null; provider: string | null;
+  costCents: number | null; latencyMs: number | null;
   onRegenerate: () => void; onDownload: () => void; onRestart: () => void;
 }) {
   const [showBefore, setShowBefore] = useState(false);

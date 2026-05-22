@@ -277,7 +277,7 @@ export async function POST(request: Request) {
 
   const attempts: Array<{ provider: string; ok: boolean; latencyMs?: number; error?: string; kind?: ErrKind }> = [];
   for (let i = 0; i < chain.length; i++) {
-    const p = chain[i];
+    const p = chain[i]!; // i < chain.length garantit non-undefined
     const t = performance.now();
     try {
       const r = await p.generate({
