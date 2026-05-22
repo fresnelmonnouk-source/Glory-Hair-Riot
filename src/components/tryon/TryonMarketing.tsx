@@ -65,7 +65,13 @@ export function TryonMarketing() {
   const isLoggedIn = false;
   const mode = isLoggedIn ? 'logged' : 'anon';
 
-  const [quota, setQuota] = useState<QuotaState>(() => readQuota(mode));
+  // SSR-safe initial : fresh quota (count=0) identique côté serveur et client
+  // pour éviter l'hydration mismatch. La vraie valeur localStorage est lue
+  // en useEffect après hydration.
+  const limit = mode === 'logged' ? QUOTA_LIMIT_LOGGED : QUOTA_LIMIT_ANON;
+  const [quota, setQuota] = useState<QuotaState>({
+    count: 0, limit, remaining: limit, resetAt: null, mode,
+  });
   useEffect(() => { setQuota(readQuota(mode)); }, [mode]);
 
   return (
