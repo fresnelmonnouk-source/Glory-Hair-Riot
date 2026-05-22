@@ -245,7 +245,8 @@ function ChatZine({ messages, input, setInput, sending, onSend, onQuickReply, me
       border: '3px solid #0A0A0A',
       padding: 20,
       position: 'relative',
-      transform: 'rotate(-0.6deg)',
+      // Rotation retirée du conteneur input (interférait avec le caret).
+      // Effet visuel RIOT préservé via la rotation de la sticker + tape.
       boxShadow: '8px 8px 0 #FF7A1A',
       display: 'flex', flexDirection: 'column', gap: 12,
       minHeight: 600, maxHeight: 720,
@@ -342,17 +343,22 @@ function ChatZine({ messages, input, setInput, sending, onSend, onQuickReply, me
         }}
       >
         <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Écris à Élodie…"
-          disabled={sending}
           aria-label="Message pour Élodie"
+          autoComplete="off"
           style={{
             flex: 1, border: '2px solid #0A0A0A',
             padding: '10px 14px', background: '#F4ECD8',
             color: '#0A0A0A',
             fontFamily: 'var(--font-special-elite),monospace', fontSize: 13,
             outline: 'none',
+            // Force pointer events sur l'input (defensive contre overlays)
+            pointerEvents: 'auto',
+            position: 'relative',
+            zIndex: 1,
           }}
         />
         <button
