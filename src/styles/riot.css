@@ -206,6 +206,304 @@ body {
   width: 100%;
 }
 
+/* ─── Auth pages (port fidèle Riot.html lignes 101-162) ─── */
+
+.auth-section {
+  padding: 80px 32px;
+  border-bottom: 3px solid #D4FF3E;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+.auth-head {
+  margin-bottom: 48px;
+  text-align: center;
+  position: relative;
+}
+
+.auth-head h2 {
+  font-family: var(--font-anton), Impact, sans-serif;
+  font-size: clamp(72px, 9vw, 140px);
+  line-height: 0.85;
+  text-transform: uppercase;
+  color: #F4ECD8;
+}
+
+.auth-head h2 em {
+  font-family: var(--font-yeseva-one), serif;
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  color: #D4FF3E;
+}
+
+.auth-scrawl {
+  font-family: var(--font-caveat), cursive;
+  font-weight: 700;
+  color: #FF7A1A;
+  font-size: 26px;
+  line-height: 1.1;
+  transform: rotate(-3deg);
+  margin-top: 14px;
+  display: inline-block;
+}
+
+.auth-card {
+  background: #F4ECD8;
+  color: #0A0A0A;
+  padding: 32px 28px;
+  border: 3px solid #0A0A0A;
+  transform: rotate(-1deg);
+  box-shadow: 8px 8px 0 #D4FF3E;
+  position: relative;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.auth-card.orange {
+  transform: rotate(1deg);
+  box-shadow: 8px 8px 0 #FF7A1A;
+}
+
+.auth-card .tape {
+  position: absolute;
+  top: -14px;
+  left: 32px;
+  width: 120px;
+  height: 22px;
+  background: repeating-linear-gradient(45deg, rgba(212,255,62,.7) 0 8px, rgba(212,255,62,.4) 8px 16px);
+  border-left: 1px dashed rgba(0,0,0,.3);
+  border-right: 1px dashed rgba(0,0,0,.3);
+  transform: rotate(-3deg);
+}
+
+.auth-card.orange .tape {
+  background: rgba(255,122,26,.6);
+  left: auto;
+  right: 32px;
+}
+
+.auth-card h3 {
+  font-family: var(--font-anton), Impact, sans-serif;
+  font-size: 48px;
+  line-height: 0.95;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.auth-card h3 em {
+  font-family: var(--font-yeseva-one), serif;
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  color: #FF7A1A;
+}
+
+.auth-card .sub {
+  font-family: var(--font-special-elite), monospace;
+  font-size: 13px;
+  color: #5E6A64;
+  margin-bottom: 24px;
+  letter-spacing: 0.04em;
+}
+
+.auth-card label {
+  display: block;
+  font-family: var(--font-permanent-marker), cursive;
+  font-size: 14px;
+  color: #0A0A0A;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  transform: rotate(-1deg);
+}
+
+.auth-card input[type="email"],
+.auth-card input[type="password"],
+.auth-card input[type="text"] {
+  width: 100%;
+  border: 3px solid #0A0A0A;
+  padding: 12px 14px;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 14px;
+  background: #F4ECD8;
+  color: #0A0A0A;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.auth-card input[type="email"]:focus,
+.auth-card input[type="password"]:focus,
+.auth-card input[type="text"]:focus {
+  background: #F5E55E;
+}
+
+.auth-card .row-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 12px;
+  color: #0A0A0A;
+}
+
+.auth-card .row-h label {
+  font-family: var(--font-special-elite), monospace;
+  font-size: 12px;
+  margin: 0;
+  transform: none;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.auth-card .row-h a {
+  cursor: pointer;
+  color: #0A0A0A;
+  text-decoration: underline;
+  text-decoration-color: #FF7A1A;
+  text-decoration-thickness: 2px;
+}
+
+.auth-card .submit {
+  margin-top: 20px;
+  width: 100%;
+  font-family: var(--font-rubik-mono-one), monospace;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: #0A0A0A;
+  color: #D4FF3E;
+  border: 3px solid #0A0A0A;
+  padding: 14px;
+  cursor: pointer;
+  box-shadow: 6px 6px 0 #FF7A1A;
+  transition: transform .12s, box-shadow .12s;
+}
+
+.auth-card.orange .submit {
+  background: #FF7A1A;
+  color: #0A0A0A;
+  box-shadow: 6px 6px 0 #D4FF3E;
+}
+
+.auth-card .submit:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 #FF7A1A;
+}
+
+.auth-card.orange .submit:hover:not(:disabled) {
+  box-shadow: 8px 8px 0 #D4FF3E;
+}
+
+.auth-card .submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-card .or {
+  margin: 20px 0 14px;
+  text-align: center;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #5E6A64;
+  position: relative;
+}
+
+.auth-card .or::before,
+.auth-card .or::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 38%;
+  height: 2px;
+  background: #0A0A0A;
+}
+
+.auth-card .or::before { left: 0; }
+.auth-card .or::after  { right: 0; }
+
+.auth-card .social-row {
+  display: flex;
+  gap: 8px;
+}
+
+.auth-card .social-row button {
+  flex: 1;
+  border: 2px solid #0A0A0A;
+  background: #F4ECD8;
+  color: #0A0A0A;
+  padding: 10px;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.04em;
+}
+
+.auth-card .social-row button:hover {
+  background: #F5E55E;
+}
+
+.auth-card .legal {
+  font-family: var(--font-special-elite), monospace;
+  font-size: 11px;
+  color: #5E6A64;
+  margin-top: 14px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+.auth-card .legal a {
+  text-decoration: underline;
+  color: #0A0A0A;
+}
+
+.auth-error {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #0A0A0A;
+  color: #FF4D8D;
+  border: 2px solid #FF4D8D;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.auth-success {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: #D4FF3E;
+  color: #0A0A0A;
+  border: 2px solid #0A0A0A;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auth-switch {
+  margin-top: 18px;
+  text-align: center;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 13px;
+  color: #F4ECD8;
+}
+
+.auth-switch a {
+  color: #D4FF3E;
+  text-decoration: underline;
+  text-decoration-color: #FF7A1A;
+  text-decoration-thickness: 2px;
+  font-weight: 400;
+}
+
 /* ─── Nav animations (port fidèle Riot.html lignes 641-689) ─── */
 
 .nav-link {
