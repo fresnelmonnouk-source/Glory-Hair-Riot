@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const TESTIMONIALS = [
   {
     parts: ['Le lace est ', 'invisible', ", j'ai eu 3 compliments le 1er jour."],
@@ -70,12 +72,15 @@ export function CustomerShow() {
             transform: 'rotate(-3deg)', display: 'block',
           }} />
 
-          {/* Photo placeholder */}
-          <div style={{ width: '100%', aspectRatio: '4/3', background: '#1A2E1F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-permanent-marker),cursive', color: 'rgba(244,236,216,.3)', fontSize: 24 }}>Photos clients</p>
-              <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: 'rgba(244,236,216,.2)', fontSize: 11, letterSpacing: '0.12em', marginTop: 4 }}>À venir</p>
-            </div>
+          {/* Customer show photo */}
+          <div style={{ width: '100%', aspectRatio: '4/3', background: '#1A2E1F', overflow: 'hidden', position: 'relative' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/customer-show.jpg"
+              alt="Clientes Glory Hair — Customer Show"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              loading="lazy"
+            />
           </div>
 
           {/* stamp-go */}
@@ -107,11 +112,31 @@ export function CustomerShow() {
                 </em>
                 {t.parts[2]}
               </p>
-              <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, letterSpacing: '0.06em', marginTop: 8, color: '#5e6a64' }}>
-                — {t.author} · {t.location}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <span style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, letterSpacing: '0.06em', color: '#5e6a64' }}>
+                  — {t.author} · {t.location}
+                </span>
+                <span style={{ color: '#FF7A1A', fontSize: 14, letterSpacing: '0.1em' }} aria-label="5 étoiles sur 5">
+                  ★★★★★
+                </span>
               </div>
             </div>
           ))}
+
+          <Link
+            href="/avis"
+            style={{
+              fontFamily: 'var(--font-rubik-mono-one),sans-serif',
+              fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
+              border: '3px solid #0A0A0A', padding: '14px 22px',
+              background: '#FF7A1A', color: '#0A0A0A',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              textDecoration: 'none', boxShadow: '6px 6px 0 #0A0A0A',
+              marginTop: 8, alignSelf: 'flex-start',
+            }}
+          >
+            → Voir tous les avis (12 482)
+          </Link>
         </div>
       </div>
     </section>

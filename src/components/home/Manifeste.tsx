@@ -60,11 +60,13 @@ export function Manifeste() {
             transform: 'rotate(4deg)', boxShadow: '5px 5px 0 #FF7A1A', zIndex: 2,
           }}>
             <div style={{ background: '#1a1a1a', aspectRatio: '3/4', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" opacity="0.15">
-                  <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/ginger.jpg"
+                alt="Ginger — couverture N°01"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.08) saturate(1.05)' }}
+                loading="lazy"
+              />
             </div>
             <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14, fontFamily: 'var(--font-permanent-marker),cursive', color: '#0A0A0A', fontSize: 16, lineHeight: 1 }}>
               Couv. N°01

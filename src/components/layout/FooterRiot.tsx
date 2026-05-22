@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 const LINKS = [
@@ -11,28 +13,103 @@ const LINKS = [
 
 export function FooterRiot() {
   return (
-    <footer className="border-t-2 border-ink bg-forest-light mt-24">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row justify-between gap-8">
+    <footer
+      style={{
+        borderTop: '3px solid #0A0A0A',
+        background: '#1A2E1F',
+        marginTop: 96,
+      }}
+    >
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto',
+            gap: 48,
+            alignItems: 'start',
+          }}
+        >
           {/* Brand */}
           <div>
-            <p className="font-['Anton'] text-3xl text-lime uppercase">Glory Hair</p>
-            <p className="font-['Special_Elite'] text-xs text-paper opacity-60 uppercase tracking-widest mt-1">
+            <p
+              style={{
+                fontFamily: 'var(--font-anton), Impact, sans-serif',
+                fontSize: 32,
+                color: '#D4FF3E',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Glory Hair
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-special-elite), monospace',
+                fontSize: 12,
+                color: '#F4ECD8',
+                opacity: 0.6,
+                textTransform: 'uppercase',
+                letterSpacing: '0.18em',
+                marginTop: 4,
+              }}
+            >
               Édition RIOT N°01
             </p>
-            <p className="font-['Caveat'] text-sm text-paper opacity-50 mt-3 max-w-xs">
-              Perruques cheveux humains premium.<br />DIY. Brutal. Sans compromis.
+            <p
+              style={{
+                fontFamily: 'var(--font-caveat), cursive',
+                fontSize: 18,
+                color: '#F4ECD8',
+                opacity: 0.5,
+                marginTop: 12,
+                maxWidth: 320,
+                lineHeight: 1.3,
+              }}
+            >
+              Perruques cheveux humains premium.
+              <br />
+              DIY. Brutal. Sans compromis.
             </p>
           </div>
 
           {/* Links */}
           <nav aria-label="Liens footer">
-            <ul className="grid grid-cols-2 gap-x-12 gap-y-2 list-none">
+            <ul
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, auto)',
+                columnGap: 48,
+                rowGap: 8,
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+              }}
+            >
               {LINKS.map(({ href, label }) => (
                 <li key={href}>
                   <Link
                     href={href}
-                    className="font-['Archivo_Black'] text-xs uppercase tracking-widest text-paper opacity-60 hover:opacity-100 hover:text-lime transition-all"
+                    style={{
+                      fontFamily: 'var(--font-archivo-black), sans-serif',
+                      fontSize: 12,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.18em',
+                      color: '#F4ECD8',
+                      opacity: 0.6,
+                      textDecoration: 'none',
+                      transition: 'opacity .15s, color .15s',
+                      display: 'inline-block',
+                      padding: '2px 0',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.color = '#D4FF3E';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.6';
+                      e.currentTarget.style.color = '#F4ECD8';
+                    }}
                   >
                     {label}
                   </Link>
@@ -42,11 +119,37 @@ export function FooterRiot() {
           </nav>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-ink flex flex-col md:flex-row justify-between gap-2">
-          <p className="font-['Special_Elite'] text-xs text-paper opacity-40">
+        <div
+          style={{
+            marginTop: 40,
+            paddingTop: 24,
+            borderTop: '1px solid #0A0A0A',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            gap: 8,
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-special-elite), monospace',
+              fontSize: 12,
+              color: '#F4ECD8',
+              opacity: 0.4,
+            }}
+          >
             © {new Date().getFullYear()} Glory Hair by RHD Empire
           </p>
-          <p className="font-['Special_Elite'] text-xs text-paper opacity-30 uppercase tracking-widest">
+          <p
+            style={{
+              fontFamily: 'var(--font-special-elite), monospace',
+              fontSize: 12,
+              color: '#F4ECD8',
+              opacity: 0.3,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+            }}
+          >
             Issue N°01 — All rights reserved
           </p>
         </div>

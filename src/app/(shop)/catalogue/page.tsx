@@ -7,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CataloguePage() {
-  return (
-    <main style={{ minHeight: '100vh', background: '#0E1B14' }}>
-      <CatalogueRiot />
-    </main>
-  );
+  return <CatalogueRiot />;
 }

@@ -1,7 +1,4 @@
 import type { Metadata } from 'next';
-import { Topbar } from '@/components/ui/Topbar';
-import { NavRiot } from '@/components/layout/NavRiot';
-import { FooterRiot } from '@/components/layout/FooterRiot';
 import { TryonFlow } from '@/components/tryon/TryonFlow';
 
 export const metadata: Metadata = {
@@ -10,14 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function EssayagePage() {
-  return (
-    <>
-      <Topbar />
-      <NavRiot />
-      <main>
-        <TryonFlow />
-      </main>
-      <FooterRiot />
-    </>
-  );
+  return <TryonFlow />;
 }

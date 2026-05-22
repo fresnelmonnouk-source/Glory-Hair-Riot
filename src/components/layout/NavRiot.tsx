@@ -31,7 +31,7 @@ const PILL_HOT: CSSProperties = {
 };
 
 const NAV_LINKS = [
-  ['/accueil', 'Accueil'],
+  ['/', 'Accueil'],
   ['/catalogue', 'Catalogue'],
   ['/essayage', 'Essayage'],
   ['/elodie', 'Élodie'],
