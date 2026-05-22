@@ -12,6 +12,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import {
+  MapPin, CreditCard, Settings, Mail, Package, Sparkles,
+  CheckCircle, ShoppingBag, Heart,
+} from 'lucide-react';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 import { useSession } from '@/hooks/use-session';
 
@@ -237,10 +241,10 @@ export function CompteRiot() {
           {activeTab === 'essayages' && <EssaisList />}
           {activeTab === 'souhaits' && <WishlistList />}
           {activeTab === 'fidelite' && <FideliteCard />}
-          {activeTab === 'adresses' && <Placeholder title="Adresses" icon="📍" />}
-          {activeTab === 'paiement' && <Placeholder title="Moyens de paiement" icon="💳" />}
+          {activeTab === 'adresses' && <Placeholder title="Adresses" IconCmp={MapPin} />}
+          {activeTab === 'paiement' && <Placeholder title="Moyens de paiement" IconCmp={CreditCard} />}
           {activeTab === 'preferences' && <PreferencesCard />}
-          {activeTab === 'sav' && <Placeholder title="Service après-vente" icon="✉" linkHref="/sav" linkLabel="Aller au centre SAV" />}
+          {activeTab === 'sav' && <Placeholder title="Service après-vente" IconCmp={Mail} linkHref="/sav" linkLabel="Aller au centre SAV" />}
         </div>
       </div>
     </section>
@@ -721,7 +725,12 @@ function PreferencesCard() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
             <span style={{ color: '#5E6A64', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Newsletter</span>
-            <span>{profile?.newsletter ? '✓ Inscrit·e' : '— Non inscrit·e'}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              {profile?.newsletter
+                ? (<><CheckCircle size={14} color="#5cc864" /> Inscrit·e</>)
+                : (<>— Non inscrit·e</>)
+              }
+            </span>
           </div>
         </div>
       </div>
@@ -773,8 +782,8 @@ function PreferencesCard() {
 
 // ─── Tab content : Placeholder (adresses, paiement, etc.) ───
 
-function Placeholder({ title, icon, linkHref, linkLabel }: {
-  title: string; icon: string; linkHref?: string; linkLabel?: string;
+function Placeholder({ title, IconCmp, linkHref, linkLabel }: {
+  title: string; IconCmp: typeof MapPin; linkHref?: string; linkLabel?: string;
 }) {
   return (
     <div style={{
@@ -782,7 +791,9 @@ function Placeholder({ title, icon, linkHref, linkLabel }: {
       padding: 40, border: '3px dashed #0A0A0A',
       textAlign: 'center',
     }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>
+      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>
+        <IconCmp size={48} strokeWidth={2} color="#FF7A1A" />
+      </div>
       <h3 style={{
         fontFamily: 'var(--font-anton),Impact,sans-serif',
         fontSize: 36, textTransform: 'uppercase', lineHeight: 1,

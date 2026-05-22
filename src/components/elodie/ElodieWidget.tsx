@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { MessageCircle, X, Hand } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 
 interface Message {
@@ -97,7 +98,7 @@ export function ElodieWidget() {
         className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gold text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl z-40"
         aria-label="Chat avec ELODIE"
       >
-        {isOpen ? '✕' : '💬'}
+        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
 
       {/* Chat Widget */}
@@ -113,7 +114,9 @@ export function ElodieWidget() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-bg-warm">
             {messages.length === 0 ? (
               <div className="text-center text-ink-soft text-sm">
-                <p>Bonjour! Je suis ELODIE 👋</p>
+                <p style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                  Bonjour! Je suis ELODIE <Hand size={16} />
+                </p>
                 <p className="mt-2 text-xs">
                   Posez-moi vos questions sur nos perruques.
                 </p>
