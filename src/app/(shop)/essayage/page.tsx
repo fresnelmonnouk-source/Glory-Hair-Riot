@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { TryonFlow } from '@/components/tryon/TryonFlow';
+import { TryonMarketing } from '@/components/tryon/TryonMarketing';
 
 export const metadata: Metadata = {
-  title: 'Essai Live — Glory Hair RIOT',
-  description: 'Essaie une perruque sur ta vraie photo. IA photo-réaliste, ~5 secondes, 2 essais offerts.',
+  title: 'Essai Live · Essayage virtuel IA — Glory Hair RIOT',
+  description: '2 essais gratuits offerts par appareil, 5 avec un compte. Rendu photo-réaliste IA en ~5 secondes, sans installation. Glory Hair Issue N°01.',
 };
 
-export default function EssayagePage() {
-  return <TryonFlow />;
+export default function EssayageMarketingPage() {
+  return <TryonMarketing />;
 }

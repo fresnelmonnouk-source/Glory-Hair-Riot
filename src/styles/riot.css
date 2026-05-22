@@ -139,6 +139,22 @@ body {
   to   { transform: translateX(-50%); }
 }
 
+/* ─── Animations RIOT (tryon marketing camera) ─── */
+
+@keyframes pulse {
+  50% { opacity: .2; }
+}
+
+@keyframes scan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+
 .marquee-track {
   display: flex;
   width: max-content;
