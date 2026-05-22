@@ -668,22 +668,22 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
     <div style={{ width: '100%', maxWidth: 1320 }}>
       <ScreenHead num="01" stk="-o" word="tronche." scrawl="selfie de face, bonne lumière." />
       <div className="row-grid row-15-1" style={{ gap: 24, alignItems: 'start' }}>
-        <div style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
+        <div className="tryon-cam-box" style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
           <CamCorners />
           <Scanlines />
 
           {mode === 'idle' && !personBlob && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: 40, textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 13, letterSpacing: '0.14em', color: '#FF7A1A', border: '3px solid #FF7A1A', padding: '8px 14px', transform: 'rotate(-3deg)' }}>
+            <div className="tryon-cam-intro" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 'clamp(18px, 4vw, 40px)', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 'clamp(10px, 1.5vw, 13px)', letterSpacing: '0.14em', color: '#FF7A1A', border: '3px solid #FF7A1A', padding: '6px 12px', transform: 'rotate(-3deg)' }}>
                 ★ WAITING SIGNAL
               </div>
-              <h3 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 'clamp(36px,5vw,60px)', lineHeight: 0.9, textTransform: 'uppercase', color: '#F4ECD8' }}>
+              <h3 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 'clamp(24px, 6vw, 60px)', lineHeight: 0.9, textTransform: 'uppercase', color: '#F4ECD8' }}>
                 Allume ta <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', textTransform: 'none', color: '#D4FF3E' }}>caméra.</em>
               </h3>
-              <p style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 14, color: '#F4ECD8', maxWidth: 380, lineHeight: 1.5 }}>
+              <p className="hide-sm" style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 14, color: '#F4ECD8', maxWidth: 380, lineHeight: 1.5 }}>
                 Ou balance une photo depuis ton tél.<br />JPEG, PNG · 400×400 minimum.
               </p>
-              <div className="row-grid row-2" style={{ gap: 12, marginTop: 14, width: '100%', maxWidth: 440 }}>
+              <div className="tryon-choice-grid row-grid row-2" style={{ gap: 12, marginTop: 6, width: '100%', maxWidth: 440 }}>
                 <BigChoice onClick={startCamera} icon="▶" name="Caméra" sub="getUserMedia" rotate="-1deg" shadow="#D4FF3E" />
                 <BigChoice onClick={() => fileRef.current?.click()} icon="↑" name="Importer" sub="JPEG · PNG" rotate="1deg" shadow="#FF7A1A" />
               </div>
@@ -855,7 +855,7 @@ function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progre
       } />
 
       <div className="row-grid row-15-1" style={{ gap: 24, alignItems: 'start' }}>
-        <div style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
+        <div className="tryon-cam-box" style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
           <CamCorners />
           <Scanlines />
 

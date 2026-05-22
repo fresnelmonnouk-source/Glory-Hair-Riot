@@ -894,6 +894,24 @@ body {
   }
 }
 
+/* ─── Tryon Live — box caméra : aspect-ratio 1/1 trop carré sur mobile,
+ * on relâche pour donner de la hauteur au contenu (h3 + 2 boutons stack) ─── */
+@media (max-width: 640px) {
+  .tryon-cam-box {
+    aspect-ratio: auto !important;
+    min-height: 480px;
+    box-shadow: 4px 4px 0 #D4FF3E !important;
+  }
+  .tryon-cam-intro {
+    gap: 12px !important;
+  }
+  /* BigChoice : moins de padding et rotation neutralisée pour rentrer dans la box */
+  .tryon-choice-grid > button {
+    padding: 14px 12px !important;
+    transform: none !important;
+  }
+}
+
 /* ─── Tryon Live mobile ─── */
 @media (max-width: 768px) {
   /* Stepper : collapse en stack vertical + pills plus petites */
