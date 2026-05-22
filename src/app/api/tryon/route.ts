@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { WIG_BY_ID, type Wig } from '@/lib/wigs-data';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -288,6 +289,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Perruque inconnue : ${wigId}` }, { status: 404 });
   }
 
+  // ─── Quota check (logged users) ───────────────────────
+  // Si user logged : on lit tryon_quotas en DB et on bloque si used >= granted.
+  // Si user anon : on continue (le quota localStorage côté client gère, +
+  //   le rate limiting serveur Phase 5 #5 protège l'IP).
+  const supabase = createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let quotaRow: { user_id: string; used_count: number; granted: number } | null = null;
+
+  if (user) {
+    const { data } = await supabase
+      .from('tryon_quotas')
+      .select('user_id, used_count, granted')
+      .eq('user_id', user.id)
+      .single();
+    quotaRow = data;
+
+    if (quotaRow && quotaRow.used_count >= quotaRow.granted) {
+      return NextResponse.json(
+        {
+          error: 'QUOTA_EXCEEDED',
+          userMessage: `Tu as utilisé tes ${quotaRow.granted} essais Premium offerts. Recharge avec tes points Glory Club (100 pts = 1 essai) ou achète un essai à 4,99€.`,
+          quota: { used: quotaRow.used_count, granted: quotaRow.granted },
+        },
+        { status: 402 }, // Payment Required
+      );
+    }
+  }
+
   let wigImg;
   try {
     wigImg = await loadWigImage(wig);
@@ -343,6 +372,27 @@ export async function POST(request: Request) {
         apiKey: process.env[p.envKey]!,
       });
       attempts.push({ provider: p.id, ok: true, latencyMs: r.latencyMs });
+
+      // Bump quota DB pour user logged + log dans tryon_results
+      let newQuota: { used: number; granted: number } | null = null;
+      if (user) {
+        const usedAfter = (quotaRow?.used_count ?? 0) + 1;
+        const granted = quotaRow?.granted ?? 5;
+        const upsert = await supabase
+          .from('tryon_quotas')
+          .upsert({
+            user_id: user.id,
+            used_count: usedAfter,
+            granted,
+            last_used_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        if (upsert.error) {
+          console.warn('[tryon] upsert quota failed:', upsert.error.message);
+        }
+        newQuota = { used: usedAfter, granted };
+      }
+
       return NextResponse.json({
         resultBase64: r.resultBase64,
         mimeType: r.mimeType,
@@ -350,6 +400,7 @@ export async function POST(request: Request) {
         costCents: r.costCents,
         latencyMs: r.latencyMs,
         attempts,
+        ...(newQuota && { quota: newQuota }),
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

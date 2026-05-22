@@ -33,9 +33,44 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 /**
- * Admin procedure — requires admin role (to be implemented)
+ * Admin procedure — requires user.role === 'admin' (Phase 5).
+ *
+ * Lit public.users.role pour l'user auth courant (single query).
+ * RLS : la policy "users_admin_all" autorise admin à voir tous les profils,
+ * mais ici on lit juste son propre profil donc la policy "self_select"
+ * suffit (toujours autorisée).
+ *
+ * Erreurs :
+ * - UNAUTHORIZED si pas logged (hérité de protectedProcedure)
+ * - FORBIDDEN si role !== 'admin'
+ * - INTERNAL_SERVER_ERROR si la query users échoue
  */
-export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  // TODO: Check user role from database
-  return next({ ctx });
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const { data: profile, error } = await ctx.supabase
+    .from('users')
+    .select('role')
+    .eq('id', ctx.user.id)
+    .single();
+
+  if (error) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Impossible de vérifier le rôle. Réessaie.',
+      cause: error,
+    });
+  }
+
+  if (profile?.role !== 'admin') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Accès réservé aux comptes admin.',
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      role: profile.role as 'admin',
+    },
+  });
 });
