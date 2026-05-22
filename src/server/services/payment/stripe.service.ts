@@ -1,8 +1,19 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
-});
+/**
+ * Lazy client : Stripe throw "API key required" si on lui passe '' au
+ * constructeur. On instancie au premier appel pour ne pas crasher le build
+ * Vercel quand STRIPE_SECRET_KEY n'est pas défini.
+ */
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_placeholder', {
+      apiVersion: '2023-10-16',
+    });
+  }
+  return _stripe;
+}
 
 export interface CreatePaymentIntentParams {
   amount: number; // in cents
@@ -18,7 +29,7 @@ export async function createPaymentIntent({
   metadata,
 }: CreatePaymentIntentParams) {
   try {
-    const intent = await stripe.paymentIntents.create({
+    const intent = await getStripe().paymentIntents.create({
       amount,
       currency,
       customer: customerId,
@@ -40,7 +51,7 @@ export async function createPaymentIntent({
 
 export async function confirmPaymentIntent(intentId: string) {
   try {
-    const intent = await stripe.paymentIntents.retrieve(intentId);
+    const intent = await getStripe().paymentIntents.retrieve(intentId);
 
     return {
       status: intent.status, // 'succeeded', 'processing', 'requires_action', etc.
@@ -58,7 +69,7 @@ export function verifyWebhookSignature(
   secret: string
 ): Stripe.Event {
   try {
-    return stripe.webhooks.constructEvent(body, signature, secret);
+    return getStripe().webhooks.constructEvent(body, signature, secret);
   } catch (error) {
     console.error('Webhook signature verification failed:', error);
     throw new Error('Invalid webhook signature');
@@ -70,7 +81,7 @@ export async function refundPayment(
   amount?: number
 ) {
   try {
-    const refund = await stripe.refunds.create({
+    const refund = await getStripe().refunds.create({
       payment_intent: paymentIntentId,
       amount,
     });

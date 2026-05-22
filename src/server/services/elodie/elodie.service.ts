@@ -1,9 +1,20 @@
 import OpenAI from 'openai';
 
-const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: 'https://api.deepseek.com',
-});
+/**
+ * Lazy client : on instancie SEULEMENT au premier appel, pas au load du module.
+ * Sinon le SDK OpenAI throw "OPENAI_API_KEY missing" au build Vercel quand
+ * DEEPSEEK_API_KEY n'est pas défini (fallback automatique du SDK).
+ */
+let _deepseek: OpenAI | null = null;
+function getDeepseek(): OpenAI {
+  if (!_deepseek) {
+    _deepseek = new OpenAI({
+      apiKey: process.env.DEEPSEEK_API_KEY ?? 'missing-key',
+      baseURL: 'https://api.deepseek.com',
+    });
+  }
+  return _deepseek;
+}
 
 const ELODIE_SYSTEM_PROMPT = `Tu es ELODIE, l'assistante IA de Glory Hair.
 
@@ -32,7 +43,7 @@ export async function getElodieResponse(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ) {
   try {
-    const response = await deepseek.chat.completions.create({
+    const response = await getDeepseek().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
         {
