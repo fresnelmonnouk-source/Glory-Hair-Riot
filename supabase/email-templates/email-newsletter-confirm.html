@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abonné à RIOT · Glory Hair</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Permanent+Marker&family=Special+Elite&family=Rubik+Mono+One&family=VT323&display=swap');
+  body { margin: 0; padding: 0; font-family: 'Special Elite', monospace; background: #0E1B14; color: #F4ECD8; }
+  .container { max-width: 600px; margin: 0 auto; background: #0E1B14; }
+  .header { background: #0A0A0A; border-bottom: 4px solid #FF4D8D; padding: 24px; text-align: center; }
+  .logo { font-family: 'Permanent Marker', cursive; font-size: 42px; color: #F4ECD8; margin: 0; transform: rotate(-2deg); display: inline-block; }
+  .logo b { background: #FF4D8D; color: #0A0A0A; padding: 0 8px; display: inline-block; transform: rotate(3deg); }
+  .content { padding: 40px 24px; }
+  .hero { background: #F4ECD8; color: #0A0A0A; padding: 40px 32px; border: 4px solid #0A0A0A; box-shadow: 10px 10px 0 #FF4D8D; transform: rotate(-1.5deg); margin-bottom: 32px; text-align: center; }
+  h1 { font-family: 'Anton', sans-serif; font-size: 64px; line-height: 0.85; margin: 0 0 16px; text-transform: uppercase; }
+  .stk { background: #D4FF3E; color: #0A0A0A; padding: 0 8px; display: inline-block; transform: rotate(2deg); }
+  p { font-size: 15px; line-height: 1.6; margin: 16px 0; }
+  .btn { display: inline-block; font-family: 'Rubik Mono One', sans-serif; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; background: #FF4D8D; color: #F4ECD8; padding: 18px 36px; text-decoration: none; border: 3px solid #0A0A0A; box-shadow: 6px 6px 0 #0A0A0A; transform: rotate(-2deg); margin: 24px 0; }
+  .footer { padding: 32px 24px; border-top: 3px dashed #D4FF3E; text-align: center; }
+  .footer p { font-family: 'VT323', monospace; font-size: 14px; color: #5e6a64; margin: 8px 0; }
+  .footer a { color: #D4FF3E; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2 class="logo">Glory <b>Hair</b></h2>
+    <p style="font-family: 'VT323', monospace; font-size: 16px; letter-spacing: 0.12em; color: #FF4D8D; margin: 8px 0 0; text-transform: uppercase;">by RHD Empire · RIOT N°01</p>
+  </div>
+  <div class="content">
+    <div class="hero">
+      <h1>T'es <span class="stk">IN</span> !</h1>
+      <p style="font-size: 18px; margin: 16px 0;">Abonné(e) à la newsletter RIOT</p>
+    </div>
+    <p style="text-align: center; font-family: 'Permanent Marker', cursive; font-size: 22px; color: #FF4D8D;">Bienvenue {{ .Email }}</p>
+    <p style="text-align: center;">Chaque mois, tu recevras l'édition RIOT avec :</p>
+    <ul style="margin: 24px 0; padding-left: 40px; font-size: 15px; line-height: 1.8;">
+      <li>Nouvelles perruques en avant-première</li>
+      <li>Tips & tutos cheveux</li>
+      <li>Customer show (vos transformations)</li>
+      <li>Codes promo exclusifs</li>
+    </ul>
+    <div style="text-align: center; margin: 40px 0;">
+      <a href="https://gloryhair.riot/#catalogue" class="btn">Découvrir le catalogue</a>
+    </div>
+    <p style="text-align: center; font-size: 13px; color: #5e6a64; margin-top: 32px;">Tu peux te désabonner à tout moment via le lien en bas de chaque newsletter.</p>
+  </div>
+  <div class="footer">
+    <p>Glory Hair by RHD Empire</p>
+    <p><a href="https://gloryhair.riot">gloryhair.riot</a> · <a href="mailto:squad@gloryhair.riot">squad@gloryhair.riot</a></p>
+    <p style="font-size: 12px; margin-top: 16px;"><a href="{{ .UnsubscribeURL }}">Se désabonner</a></p>
+  </div>
+</div>
+</body>
+</html>

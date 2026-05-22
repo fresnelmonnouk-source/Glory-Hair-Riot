@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 import { useSession } from '@/hooks/use-session';
 
@@ -98,6 +98,12 @@ export function CompteRiot() {
     router.replace('/');
     router.refresh();
   }
+
+  // Tentative d'envoi welcome email (idempotent côté serveur via marker DB)
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/email/welcome', { method: 'POST' }).catch(() => {/* silent */});
+  }, [user]);
 
   // Données utilisateur dérivées (fallback sur des valeurs neutres si profile null)
   const userView = useMemo(() => {

@@ -20,6 +20,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { sendEmail, sendAdminEmail, renderOrderItemsHTML } from '@/lib/email/send';
 
 export const runtime = 'nodejs';
 
@@ -178,6 +179,66 @@ export async function POST(request: Request) {
 
   // 8. Build short ref pour /merci
   const ref = order.id.slice(0, 8).toUpperCase();
+
+  // 9. Emails (best-effort, n'échoue pas la commande si l'envoi rate)
+  void (async () => {
+    try {
+      const fullName = `${body.address.prenom} ${body.address.nom}`.trim();
+      const orderUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/compte?tab=commandes`;
+
+      // Items pour le client : reconstruire les noms depuis le lookup wigs
+      const itemsForEmail = body.items.map(i => {
+        const wig = slugToWig.get(i.wig_slug)!;
+        return {
+          name: wig.name,                                  // ex: "Velours 14""
+          variant: i.variant_id ? `Variant ${i.variant_id}` : null,
+          quantity: i.quantity,
+          price_cents: i.price_at_added * 100,
+        };
+      });
+      const itemsHTML = renderOrderItemsHTML(itemsForEmail);
+
+      // Email client
+      await sendEmail({
+        to: body.address.email,
+        subject: `Commande confirmée #${ref} · Glory Hair RIOT`,
+        template: 'email-order-confirmed.html',
+        data: {
+          UserName: body.address.prenom,
+          OrderNumber: ref,
+          ItemsHTML: itemsHTML,
+          ShippingName: fullName,
+          ShippingAddress: body.address.adresse,
+          ShippingCity: body.address.ville,
+          ShippingPostal: body.address.codePostal,
+          ShippingCountry: body.address.pays,
+          EstimatedDelivery: body.shipping === 'express' ? '24h' : body.shipping === 'standard' ? '48h' : 'Sur RDV',
+          PointsEarned: pointsEarned,
+          OrderURL: orderUrl,
+        },
+      });
+
+      // Email admin
+      const itemsList = itemsForEmail.map(i => `${i.name} ×${i.quantity}`).join(', ');
+      await sendAdminEmail({
+        subject: `[ADMIN] Nouvelle commande #${ref} · ${(total_cents / 100).toFixed(2)}€`,
+        template: 'email-admin-new-order.html',
+        data: {
+          OrderNumber: ref,
+          OrderDate: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          CustomerName: fullName,
+          CustomerEmail: body.address.email,
+          Total: (total_cents / 100).toFixed(2).replace('.', ','),
+          PaymentMethod: body.payment_method === 'stripe' ? 'Stripe (CB)' : 'FedaPay (Mobile Money)',
+          ItemCount: itemsForEmail.length,
+          ItemsList: itemsList,
+          OrderURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/admin/commandes`,
+        },
+      });
+    } catch (e) {
+      console.error('[checkout] email send error:', e);
+    }
+  })();
 
   return NextResponse.json({
     ok: true,

@@ -52,6 +52,9 @@ export default function ChangePasswordPage() {
         return;
       }
 
+      // Email notification (best-effort, n'échoue pas si Resend absent)
+      void fetch('/api/email/password-changed', { method: 'POST' }).catch(() => {});
+
       setSuccess(true);
       setSubmitting(false);
       setTimeout(() => router.replace('/compte'), 2500);

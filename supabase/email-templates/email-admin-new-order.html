@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[ADMIN] Nouvelle commande · Glory Hair</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=VT323&family=Special+Elite&family=Permanent+Marker&display=swap');
+  body { margin: 0; padding: 0; font-family: 'Special Elite', monospace; background: #0E1B14; color: #F4ECD8; }
+  .container { max-width: 600px; margin: 0 auto; }
+  .header { background: #0A0A0A; border-bottom: 3px solid #D4FF3E; padding: 20px; text-align: center; }
+  .content { padding: 32px 20px; }
+  .order-table { width: 100%; background: #142a1f; border: 2px solid #D4FF3E; border-collapse: collapse; margin: 20px 0; }
+  .order-table th { font-family: 'Rubik Mono One', sans-serif; font-size: 11px; background: #0A0A0A; color: #D4FF3E; padding: 10px; text-align: left; }
+  .order-table td { padding: 12px 10px; border-bottom: 1px solid rgba(212, 255, 62, 0.2); font-size: 13px; }
+  .btn { display: inline-block; font-family: 'Rubik Mono One', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; background: #D4FF3E; color: #0A0A0A; padding: 12px 24px; text-decoration: none; border: 2px solid #0A0A0A; margin: 16px 4px; }
+  p { font-size: 14px; line-height: 1.6; margin: 12px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2 style="font-family: 'Rubik Mono One', sans-serif; font-size: 24px; color: #D4FF3E; margin: 0;">[ADMIN] NOUVELLE COMMANDE</h2>
+  </div>
+  <div class="content">
+    <p><strong>Commande #{{ .OrderNumber }}</strong><br>{{ .OrderDate }}</p>
+    <table class="order-table">
+      <tr>
+        <th>Client</th>
+        <th>Total</th>
+        <th>Paiement</th>
+        <th>Statut</th>
+      </tr>
+      <tr>
+        <td>{{ .CustomerName }}<br><span style="font-size: 12px; color: #5e6a64;">{{ .CustomerEmail }}</span></td>
+        <td style="font-family: 'Rubik Mono One', sans-serif; font-size: 16px; color: #D4FF3E;">{{ .Total }}€</td>
+        <td>{{ .PaymentMethod }}</td>
+        <td><span style="background: #5cc864; color: #0A0A0A; padding: 4px 8px; font-family: 'Rubik Mono One', sans-serif; font-size: 10px;">PAYÉE</span></td>
+      </tr>
+    </table>
+    <p style="font-size: 13px; color: #5e6a64; margin: 20px 0;">Produits ({{ .ItemCount }}) : {{ .ItemsList }}</p>
+    <div style="margin: 24px 0;">
+      <a href="{{ .OrderURL }}" class="btn">Voir commande</a>
+      <a href="{{ .OrderURL }}/pack" class="btn" style="background: #FF7A1A;">Préparer colis</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

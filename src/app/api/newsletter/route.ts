@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { checkLimit, getRequestIp } from '@/lib/rate-limit';
 import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/send';
 
 export const runtime = 'nodejs';
 
@@ -85,7 +86,18 @@ export async function POST(request: Request) {
     }
   }
 
-  // 5. Retour neutre (anti-énumération)
+  // 5. Email de confirmation (best-effort)
+  void sendEmail({
+    to: email,
+    subject: '★ Abonné à RIOT · Glory Hair',
+    template: 'email-newsletter-confirm.html',
+    data: {
+      Email: email,
+      UnsubscribeURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/sav?action=unsubscribe&email=${encodeURIComponent(email)}`,
+    },
+  }).catch((e) => console.warn('[newsletter] confirm email skip:', e));
+
+  // 6. Retour neutre (anti-énumération)
   return NextResponse.json({
     ok: true,
     userMessage: '★ Inscrit·e ! Tu recevras l\'Issue 02 dès qu\'elle sort.',
