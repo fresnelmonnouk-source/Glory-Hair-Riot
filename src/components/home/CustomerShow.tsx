@@ -30,12 +30,14 @@ export function CustomerShow() {
           lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8',
         }}>
           VRAIES{' '}
-          <span style={{ position: 'relative', display: 'inline-block' }}>
+          <span style={{
+            background: '#FF4D8D',
+            color: '#0A0A0A',
+            padding: '0 0.08em',
+            display: 'inline-block',
+            transform: 'rotate(-2deg)',
+          }}>
             filles,
-            <span aria-hidden style={{
-              position: 'absolute', left: '-4%', right: '-4%', top: '46%',
-              height: 8, background: '#FF7A1A', transform: 'rotate(-2deg)', display: 'block',
-            }} />
           </span>
           <br />
           <em style={{
