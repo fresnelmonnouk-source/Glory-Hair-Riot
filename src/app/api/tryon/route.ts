@@ -279,7 +279,16 @@ const OpenAI: ProviderDef = {
   },
 };
 
-const PROVIDERS: ProviderDef[] = [Gemini, OpenAI];
+/**
+ * Chaîne de providers — par défaut [Gemini, OpenAI] avec fallback.
+ *
+ * Désactivation Gemini possible via env var `TRYON_DISABLE_GEMINI=1` (sans
+ * commit). Utile quand le quota / facturation Gemini console n'est pas
+ * rechargé : on bascule 100% sur OpenAI sans toucher au code.
+ */
+const PROVIDERS: ProviderDef[] = process.env.TRYON_DISABLE_GEMINI === '1'
+  ? [OpenAI]
+  : [Gemini, OpenAI];
 
 // ─── Handler ───────────────────────────────────────────
 
