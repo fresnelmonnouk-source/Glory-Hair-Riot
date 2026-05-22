@@ -21,21 +21,26 @@ const TAPE_BASE: CSSProperties = {
   display: 'block',
 };
 
-function Polaroid({ caption, sub, tape, tapePos, img, frameStyle }: {
+function Polaroid({ caption, sub, tape, tapePos, img, frameStyle, rotate }: {
   caption: string; sub: string;
   tape: keyof typeof TAPE_BG;
   tapePos: CSSProperties;
   img: string;
   frameStyle: CSSProperties;
+  rotate: string;
 }) {
   return (
-    <div style={{
-      position: 'absolute',
-      background: '#F4ECD8',
-      padding: '14px 14px 50px',
-      filter: 'drop-shadow(4px 6px 0 rgba(0,0,0,.5))',
-      ...frameStyle,
-    }}>
+    <div
+      className="hp-frame"
+      style={{
+        position: 'absolute',
+        background: '#F4ECD8',
+        padding: '14px 14px 50px',
+        filter: 'drop-shadow(4px 6px 0 rgba(0,0,0,.5))',
+        transform: `rotate(${rotate})`,
+        ['--rot' as string]: rotate,
+        ...frameStyle,
+      }}>
       <span aria-hidden style={{ ...TAPE_BASE, background: TAPE_BG[tape], ...tapePos }} />
       <div style={{ background: '#1a1a1a', aspectRatio: '3/4', position: 'relative', overflow: 'hidden' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -180,16 +185,20 @@ export function HeroRiot() {
         <div style={{ position: 'relative', height: 640 }}>
           <Polaroid caption="Ginger" sub='N°03 · 18″ · Lace Front' tape="washi" img="/images/ginger.jpg"
             tapePos={{ top: -12, left: 60, transform: 'rotate(4deg)' }}
-            frameStyle={{ top: 0, right: 80, width: 260, transform: 'rotate(-5deg)', zIndex: 3 }} />
+            rotate="-5deg"
+            frameStyle={{ top: 0, right: 80, width: 260, zIndex: 3 }} />
           <Polaroid caption="Argent" sub='N°05 · 18″ · Full Lace' tape="orange" img="/images/argent.jpg"
             tapePos={{ top: -12, left: 40, transform: 'rotate(-6deg)' }}
-            frameStyle={{ top: 120, left: 0, width: 200, transform: 'rotate(6deg)', zIndex: 2 }} />
+            rotate="6deg"
+            frameStyle={{ top: 120, left: 0, width: 200, zIndex: 2 }} />
           <Polaroid caption="Velours" sub='N°01 · 14″ · Closure' tape="gold" img="/images/velours.jpg"
             tapePos={{ top: -12, right: 60, transform: 'rotate(8deg)' }}
-            frameStyle={{ bottom: 0, right: 0, width: 220, transform: 'rotate(3deg)', zIndex: 4 }} />
+            rotate="3deg"
+            frameStyle={{ bottom: 0, right: 0, width: 220, zIndex: 4 }} />
           <Polaroid caption="Bordeaux" sub='N°04 · 22″ · 360 Lace' tape="plain" img="/images/bordeaux.jpg"
             tapePos={{ top: -12, left: 30, transform: 'rotate(-3deg)' }}
-            frameStyle={{ bottom: 60, left: 40, width: 160, transform: 'rotate(-8deg)', zIndex: 1 }} />
+            rotate="-8deg"
+            frameStyle={{ bottom: 60, left: 40, width: 160, zIndex: 1 }} />
 
           {/* Sticker lime */}
           <div style={{

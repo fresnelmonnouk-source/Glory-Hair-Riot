@@ -41,6 +41,7 @@ export function CustomerShow() {
           <em style={{
             fontFamily: 'var(--font-yeseva-one),serif',
             fontStyle: 'italic', fontWeight: 400, textTransform: 'none',
+            color: '#FF7A1A',
           }}>
             vrais
           </em>{' '}cheveux.

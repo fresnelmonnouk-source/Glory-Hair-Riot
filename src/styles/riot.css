@@ -150,9 +150,21 @@ body {
   100% { transform: translateY(100%); }
 }
 
+/* Wiggle utilise --rot pour respecter la rotation au repos de chaque polaroïd */
 @keyframes wiggle {
-  0%, 100% { transform: rotate(-2deg); }
-  50%      { transform: rotate(2deg); }
+  0%, 100% { transform: rotate(var(--rot, 0deg)); }
+  25%      { transform: rotate(calc(var(--rot, 0deg) + 1.5deg)); }
+  75%      { transform: rotate(calc(var(--rot, 0deg) - 1.5deg)); }
+}
+
+.hp-frame {
+  transition: filter .25s ease;
+}
+
+.hp-frame:hover {
+  animation: wiggle .35s ease-in-out 2;
+  z-index: 10;
+  filter: drop-shadow(6px 8px 0 rgba(0,0,0,.6));
 }
 
 .marquee-track {

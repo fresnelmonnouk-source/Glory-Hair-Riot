@@ -122,24 +122,27 @@ export function Manifeste() {
             <span style={{
               fontFamily: 'var(--font-permanent-marker),cursive',
               color: '#D4FF3E', textTransform: 'none',
-              fontSize: '0.85em', display: 'inline-block',
+              fontSize: '0.7em', display: 'inline-block',
               transform: 'rotate(-2deg)',
             }}>
               couronne
             </span>
             <br />
-            <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span style={{
+              background: '#FF7A1A',
+              color: '#0A0A0A',
+              padding: '0 0.08em',
+              display: 'inline-block',
+              transform: 'rotate(-1deg)',
+            }}>
               pour chaque
-              <span aria-hidden style={{
-                position: 'absolute', left: '-2%', right: '-2%', top: '46%',
-                height: 8, background: '#FF7A1A', transform: 'rotate(-1deg)', display: 'block',
-              }} />
             </span>
             <br />
             <em style={{
               fontFamily: 'var(--font-yeseva-one),serif',
               fontStyle: 'italic', fontWeight: 400,
-              textTransform: 'none', letterSpacing: '-0.02em', color: '#F4ECD8',
+              textTransform: 'none', letterSpacing: '-0.02em',
+              color: '#D4FF3E',
             }}>
               visage.
             </em>
