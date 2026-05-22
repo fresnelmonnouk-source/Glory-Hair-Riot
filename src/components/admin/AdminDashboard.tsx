@@ -180,12 +180,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI grid : 4 colonnes fixes (port fidèle Admin.html line 239) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 14,
-      }}>
+      {/* KPI grid : 4 colonnes desktop, 2 cols tablet, 1 col mobile */}
+      <div className="row-grid row-4" style={{ gap: 14 }}>
         {KPIS.map((k, i) => {
           const rotations = ['-0.5deg', '0.5deg', '-0.7deg', '0.6deg'];
           return (
@@ -245,22 +241,13 @@ export function AdminDashboard() {
       </div>
 
       {/* Chart + Tasks (port fidèle .dash-grid 1.5fr/1fr Admin.html line 275) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.5fr 1fr',
-        gap: 20,
-        marginBottom: 24,
-      }}>
+      <div className="row-grid row-15-1" style={{ gap: 20, marginBottom: 24 }}>
         <RevenueChart />
         <TasksList tasks={tasksState} onToggle={toggleTask} />
       </div>
 
       {/* Top products + Recent orders */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1.5fr',
-        gap: 20,
-      }}>
+      <div className="row-grid row-1-15" style={{ gap: 20 }}>
         <TopProducts items={TOP_PRODUCTS} loading={productsQ.isLoading} />
         <RecentOrders items={RECENT_ORDERS} loading={ordersQ.isLoading} />
       </div>

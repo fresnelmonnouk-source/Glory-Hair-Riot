@@ -97,7 +97,7 @@ export default function AdminCommandesPage() {
         ) : items.length === 0 ? (
           <Empty text="Aucune commande pour ce filtre." />
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
+          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px dashed #0A0A0A' }}>
                 <Th>Réf</Th>
@@ -115,17 +115,17 @@ export default function AdminCommandesPage() {
                 const next = STATUS_FLOW[o.status as string];
                 return (
                   <tr key={o.id} style={{ borderBottom: '1px dashed rgba(0,0,0,0.15)' }}>
-                    <Td>
+                    <Td label="Réf">
                       <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace' }}>
                         #{o.id.slice(0, 8).toUpperCase()}
                       </span>
                     </Td>
-                    <Td>
+                    <Td label="Client">
                       <div style={{ fontWeight: 600 }}>{u?.full_name ?? '—'}</div>
                       <div style={{ fontSize: 11, color: '#5E6A64' }}>{u?.email ?? ''}</div>
                     </Td>
-                    <Td>{new Date(o.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}</Td>
-                    <Td align="right">
+                    <Td label="Date">{new Date(o.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}</Td>
+                    <Td align="right" label="Total">
                       <span style={{
                         fontFamily: 'var(--font-rubik-mono-one),monospace',
                         background: '#0A0A0A', color: '#D4FF3E',
@@ -134,7 +134,7 @@ export default function AdminCommandesPage() {
                         {Math.round((o.total_amount ?? 0) / 100).toLocaleString('fr-FR')}€
                       </span>
                     </Td>
-                    <Td>
+                    <Td label="Statut">
                       <span style={{
                         fontFamily: 'var(--font-rubik-mono-one),monospace',
                         fontSize: 10, letterSpacing: '0.08em',
@@ -146,7 +146,7 @@ export default function AdminCommandesPage() {
                         {STATUS_LABEL[o.status as string] ?? o.status}
                       </span>
                     </Td>
-                    <Td align="right">
+                    <Td align="right" label="Actions">
                       <div style={{ display: 'inline-flex', gap: 6 }}>
                         {next && (
                           <button
@@ -215,8 +215,8 @@ function Th({ children, align }: { children: React.ReactNode; align?: 'left' | '
     }}>{children}</th>
   );
 }
-function Td({ children, align }: { children: React.ReactNode; align?: 'left' | 'right' }) {
-  return <td style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
+function Td({ children, align, label }: { children: React.ReactNode; align?: 'left' | 'right'; label?: string }) {
+  return <td data-label={label} style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
 }
 function Empty({ text }: { text: string }) {
   return (

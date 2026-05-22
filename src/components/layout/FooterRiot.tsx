@@ -83,6 +83,7 @@ export function FooterRiot() {
 
   return (
     <footer
+      className="container-pad"
       style={{
         background: '#0A0A0A',
         color: '#F4ECD8',
@@ -96,7 +97,7 @@ export function FooterRiot() {
       <div
         style={{
           fontFamily: 'var(--font-anton),Impact,sans-serif',
-          fontSize: 'clamp(120px,17vw,300px)',
+          fontSize: 'clamp(64px,17vw,300px)',
           lineHeight: 0.85,
           textTransform: 'uppercase',
           letterSpacing: '-0.02em',
@@ -152,9 +153,8 @@ export function FooterRiot() {
 
       {/* Grid */}
       <div
+        className="row-grid row-15-1-1-1"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1.5fr 1fr 1fr 1fr',
           gap: 40,
           marginTop: 48,
           paddingTop: 28,
@@ -283,7 +283,7 @@ export function FooterRiot() {
           marginTop: 36, paddingTop: 24,
           borderTop: '3px dashed rgba(255,255,255,.2)',
           fontFamily: 'var(--font-vt323),monospace',
-          fontSize: 18, color: 'rgba(255,255,255,.6)',
+          fontSize: 'clamp(14px, 2vw, 18px)', color: 'rgba(255,255,255,.6)',
           letterSpacing: '0.04em',
         }}
       >

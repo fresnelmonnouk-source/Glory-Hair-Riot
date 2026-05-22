@@ -49,7 +49,7 @@ export default function AdminProduitsPage() {
         ) : items.length === 0 ? (
           <div style={emptyStyle}>Aucun produit.</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
+          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px dashed #0A0A0A' }}>
                 <Th>Nom</Th>
@@ -68,12 +68,12 @@ export default function AdminProduitsPage() {
                 const stock = editing[p.id]?.stock_quantity ?? p.stock_quantity;
                 return (
                   <tr key={p.id} style={{ borderBottom: '1px dashed rgba(0,0,0,0.15)' }}>
-                    <Td>
+                    <Td label="Nom">
                       <div style={{ fontWeight: 600 }}>{p.name}</div>
                       <div style={{ fontSize: 11, color: '#5E6A64' }}>/{p.slug}</div>
                     </Td>
-                    <Td>{p.category ?? '—'}</Td>
-                    <Td align="right">
+                    <Td label="Catégorie">{p.category ?? '—'}</Td>
+                    <Td align="right" label="Prix (€)">
                       <input
                         type="number"
                         min={0}
@@ -83,7 +83,7 @@ export default function AdminProduitsPage() {
                         style={inputStyle}
                       />
                     </Td>
-                    <Td align="right">
+                    <Td align="right" label="Stock">
                       <input
                         type="number"
                         min={0}
@@ -96,12 +96,12 @@ export default function AdminProduitsPage() {
                         }}
                       />
                     </Td>
-                    <Td align="right">
+                    <Td align="right" label="Ventes">
                       <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace' }}>
                         {p.sales.units}
                       </span>
                     </Td>
-                    <Td>
+                    <Td label="Flags">
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           type="button"
@@ -125,7 +125,7 @@ export default function AdminProduitsPage() {
                         </button>
                       </div>
                     </Td>
-                    <Td align="right">
+                    <Td align="right" label="Actions">
                       <button
                         type="button"
                         disabled={!dirty || updateM.isPending}
@@ -161,8 +161,8 @@ function Th({ children, align }: { children: React.ReactNode; align?: 'left' | '
     }}>{children}</th>
   );
 }
-function Td({ children, align }: { children: React.ReactNode; align?: 'left' | 'right' }) {
-  return <td style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
+function Td({ children, align, label }: { children: React.ReactNode; align?: 'left' | 'right'; label?: string }) {
+  return <td data-label={label} style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
 }
 const emptyStyle: React.CSSProperties = {
   textAlign: 'center', padding: '40px 0',

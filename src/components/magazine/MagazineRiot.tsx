@@ -19,7 +19,7 @@ export function MagazineRiot() {
     <>
       {/* ═══ Hero éditorial : COVER ISSUE N°01 ═══ */}
       <section style={{
-        padding: '80px 32px 40px',
+        padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px) 40px',
         position: 'relative',
         overflow: 'hidden',
         borderBottom: '3px solid #FF7A1A',
@@ -37,9 +37,10 @@ export function MagazineRiot() {
           ISSUE N°01 · ÉTÉ 2026
         </div>
 
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 60, alignItems: 'start',
-        }}>
+        <div
+          className="row-grid row-1-15"
+          style={{ gap: 'clamp(28px, 5vw, 60px)', alignItems: 'start' }}
+        >
           {/* Édito */}
           <div>
             <div style={{
@@ -111,7 +112,7 @@ export function MagazineRiot() {
 
       {/* ═══ Sommaire ═══ */}
       <section style={{
-        padding: '60px 32px 40px',
+        padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 32px) 40px',
         borderBottom: '3px dashed #D4FF3E',
       }}>
         <div style={{
@@ -143,7 +144,7 @@ export function MagazineRiot() {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
           gap: 28,
         }}>
           {WIGS.map((wig, i) => (
@@ -154,7 +155,7 @@ export function MagazineRiot() {
 
       {/* ═══ Colophon mag ═══ */}
       <section style={{
-        padding: '60px 32px 80px',
+        padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 32px) clamp(48px, 8vw, 80px)',
       }}>
         <div style={{
           background: '#F4ECD8', color: '#0A0A0A',
@@ -192,7 +193,7 @@ export function MagazineRiot() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
             gap: 24, marginTop: 18,
           }}>
             {[

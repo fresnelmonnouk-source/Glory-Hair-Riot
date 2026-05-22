@@ -78,8 +78,8 @@ const FAQ: FaqItem[] = [
 
 export function SavRiot() {
   return (
-    <section style={{
-      padding: '80px 32px',
+    <section className="container-pad" style={{
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #FF4D8D',
     }}>
       {/* Head */}
@@ -91,7 +91,7 @@ export function SavRiot() {
       }}>
         <h2 style={{
           fontFamily: 'var(--font-anton),Impact,sans-serif',
-          fontSize: 'clamp(72px,9vw,140px)',
+          fontSize: 'clamp(44px, 9vw, 140px)',
           lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8',
         }}>
           AIDE &amp;{' '}
@@ -118,11 +118,10 @@ export function SavRiot() {
       </div>
 
       {/* Grid : FAQ + help cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.4fr 1fr',
-        gap: 32, alignItems: 'start',
-      }}>
+      <div
+        className="row-grid row-15-1"
+        style={{ gap: 32, alignItems: 'start' }}
+      >
         {/* FAQ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {FAQ.map((item, i) => (

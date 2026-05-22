@@ -119,7 +119,7 @@ export function CheckoutRiot() {
 
   if (items.length === 0) {
     return (
-      <section style={{ padding: '120px 32px', textAlign: 'center', minHeight: '60vh' }}>
+      <section style={{ padding: 'clamp(60px, 12vw, 120px) clamp(16px, 4vw, 32px)', textAlign: 'center', minHeight: '60vh' }}>
         <p style={{
           fontFamily: 'var(--font-vt323),monospace',
           fontSize: 22, color: '#F4ECD8', opacity: 0.6,
@@ -131,8 +131,8 @@ export function CheckoutRiot() {
   }
 
   return (
-    <section style={{
-      padding: '60px 32px 96px',
+    <section className="container-pad" style={{
+      padding: 'clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px) clamp(60px, 10vw, 96px)',
       borderBottom: '3px solid #D4FF3E',
     }}>
       {/* Head */}
@@ -169,10 +169,10 @@ export function CheckoutRiot() {
       <Stepper step={step} setStep={setStep} addressValid={addressValid} />
 
       {/* Grid : form (gauche) + récap (droite) */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 40, alignItems: 'start',
-        marginTop: 40,
-      }}>
+      <div
+        className="row-grid row-15-1"
+        style={{ gap: 'clamp(24px, 3vw, 40px)', alignItems: 'start', marginTop: 40 }}
+      >
         <div>
           {step === 1 && (
             <StepAddress
@@ -665,7 +665,7 @@ function Field({ label, required, children }: {
 
 function Row({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+    <div className="row-grid row-2" style={{ gap: 12 }}>
       {children}
     </div>
   );

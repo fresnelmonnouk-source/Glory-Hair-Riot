@@ -100,8 +100,8 @@ export function ElodieRiot() {
   }
 
   return (
-    <section style={{
-      padding: '80px 32px',
+    <section className="container-pad" style={{
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #FF7A1A',
       position: 'relative',
       overflow: 'hidden',
@@ -110,9 +110,10 @@ export function ElodieRiot() {
         #0E1B14
       `,
     }}>
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 60, alignItems: 'start',
-      }}>
+      <div
+        className="row-grid row-1-15"
+        style={{ gap: 'clamp(28px, 5vw, 60px)', alignItems: 'start' }}
+      >
         {/* ═══ Pitch gauche ═══ */}
         <div>
           <div style={{

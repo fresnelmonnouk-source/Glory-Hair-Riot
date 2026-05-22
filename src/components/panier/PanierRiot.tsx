@@ -60,7 +60,7 @@ export function PanierRiot() {
   if (items.length === 0) {
     return (
       <section style={{
-        padding: '80px 32px',
+        padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
         borderBottom: '3px solid #D4FF3E',
         minHeight: '60vh',
       }}>
@@ -100,16 +100,16 @@ export function PanierRiot() {
 
   // ─── Filled cart ────────────────────────────────────
   return (
-    <section style={{
-      padding: '80px 32px',
+    <section className="container-pad" style={{
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #D4FF3E',
     }}>
       <Head totalQty={totalQty} subtotal={subtotal} />
 
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 40,
-        alignItems: 'start',
-      }}>
+      <div
+        className="row-grid row-15-1"
+        style={{ gap: 'clamp(24px, 3vw, 40px)', alignItems: 'start' }}
+      >
         {/* ═══ Liste des items ═══ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {items.map((item, i) => (
@@ -299,7 +299,7 @@ function CartRow({ item, index, onInc, onDec, onRemove }: {
   const tape = tapeColors[index % tapeColors.length];
 
   return (
-    <div style={{
+    <div className="cart-row" style={{
       display: 'grid',
       gridTemplateColumns: '110px 1fr auto auto auto',
       gap: 18,

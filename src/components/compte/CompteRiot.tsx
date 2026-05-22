@@ -130,7 +130,7 @@ export function CompteRiot() {
 
   if (loading) {
     return (
-      <section style={{ padding: '120px 32px', textAlign: 'center', minHeight: '60vh' }}>
+      <section style={{ padding: 'clamp(60px, 12vw, 120px) clamp(16px, 4vw, 32px)', textAlign: 'center', minHeight: '60vh' }}>
         <p style={{
           fontFamily: 'var(--font-vt323),monospace',
           fontSize: 22, color: '#F4ECD8', opacity: 0.6,
@@ -142,20 +142,23 @@ export function CompteRiot() {
   }
 
   return (
-    <section style={{
-      padding: '80px 32px',
+    <section className="container-pad" style={{
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #FF7A1A',
     }}>
       {/* Header */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr auto auto',
-        alignItems: 'flex-end', gap: 24,
-        borderBottom: '3px dashed #D4FF3E',
-        paddingBottom: 28, marginBottom: 28,
-      }}>
+      <div
+        className="compte-head"
+        style={{
+          display: 'grid', gridTemplateColumns: '1fr auto auto',
+          alignItems: 'flex-end', gap: 24,
+          borderBottom: '3px dashed #D4FF3E',
+          paddingBottom: 28, marginBottom: 28,
+        }}
+      >
         <h2 style={{
           fontFamily: 'var(--font-anton),Impact,sans-serif',
-          fontSize: 'clamp(56px,7vw,110px)',
+          fontSize: 'clamp(40px, 7vw, 110px)',
           lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8',
         }}>
           SALUT,
@@ -200,10 +203,13 @@ export function CompteRiot() {
       </div>
 
       {/* Grid sidebar + content */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 2.2fr',
-        gap: 32, alignItems: 'start',
-      }}>
+      <div
+        className="compte-body"
+        style={{
+          display: 'grid', gridTemplateColumns: '1fr 2.2fr',
+          gap: 32, alignItems: 'start',
+        }}
+      >
         {/* Sidebar tabs */}
         <nav aria-label="Onglets compte" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {tabs.map((t, i) => (

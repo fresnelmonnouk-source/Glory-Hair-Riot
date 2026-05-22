@@ -87,7 +87,7 @@ export default function AdminClientsPage() {
         ) : items.length === 0 ? (
           <div style={emptyStyle}>Aucun client.</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
+          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px dashed #0A0A0A' }}>
                 <Th>Nom</Th>
@@ -105,17 +105,17 @@ export default function AdminClientsPage() {
                 const isSelf = user?.id === c.id;
                 return (
                   <tr key={c.id} style={{ borderBottom: '1px dashed rgba(0,0,0,0.15)' }}>
-                    <Td>{c.full_name ?? '—'}</Td>
-                    <Td>
+                    <Td label="Nom">{c.full_name ?? '—'}</Td>
+                    <Td label="Email">
                       <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11 }}>
                         {c.email}
                       </span>
                     </Td>
-                    <Td>{new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}</Td>
-                    <Td align="right">
+                    <Td label="Inscrit">{new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}</Td>
+                    <Td align="right" label="Points">
                       <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace' }}>{c.points}</span>
                     </Td>
-                    <Td>
+                    <Td label="Tier">
                       <span style={{
                         fontFamily: 'var(--font-rubik-mono-one),monospace',
                         fontSize: 10, letterSpacing: '0.08em',
@@ -128,8 +128,8 @@ export default function AdminClientsPage() {
                         {c.tier}
                       </span>
                     </Td>
-                    <Td>{c.newsletter ? '✓' : '—'}</Td>
-                    <Td>
+                    <Td label="News">{c.newsletter ? '✓' : '—'}</Td>
+                    <Td label="Rôle">
                       <span style={{
                         fontFamily: 'var(--font-rubik-mono-one),monospace',
                         fontSize: 10, letterSpacing: '0.08em',
@@ -142,7 +142,7 @@ export default function AdminClientsPage() {
                         {c.role}
                       </span>
                     </Td>
-                    <Td align="right">
+                    <Td align="right" label="Actions">
                       <select
                         value={c.role}
                         disabled={isSelf || setRoleM.isPending}
@@ -210,8 +210,8 @@ function Th({ children, align }: { children: React.ReactNode; align?: 'left' | '
     }}>{children}</th>
   );
 }
-function Td({ children, align }: { children: React.ReactNode; align?: 'left' | 'right' }) {
-  return <td style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
+function Td({ children, align, label }: { children: React.ReactNode; align?: 'left' | 'right'; label?: string }) {
+  return <td data-label={label} style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
 }
 const emptyStyle: React.CSSProperties = {
   textAlign: 'center', padding: '40px 0',

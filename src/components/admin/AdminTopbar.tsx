@@ -13,7 +13,7 @@ export function AdminTopbar() {
   const [search, setSearch] = useState('');
 
   return (
-    <header style={{
+    <header className="admin-topbar" style={{
       background: '#142A1F',
       borderBottom: '3px solid #FF7A1A',
       padding: '14px 28px',
@@ -58,7 +58,7 @@ export function AdminTopbar() {
       </div>
 
       {/* Notifications + Aide */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div className="admin-topbar-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <TopBtn ariaLabel="Notifications" hasDot>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
@@ -69,7 +69,7 @@ export function AdminTopbar() {
       </div>
 
       {/* CTA */}
-      <button type="button" style={{
+      <button type="button" className="admin-topbar-cta" style={{
         fontFamily: 'var(--font-rubik-mono-one),monospace',
         fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
         background: '#FF7A1A', color: '#0A0A0A',

@@ -69,7 +69,7 @@ export function FideliteRiot() {
 
   if (loading) {
     return (
-      <section style={{ padding: '120px 32px', textAlign: 'center', minHeight: '60vh' }}>
+      <section style={{ padding: 'clamp(60px, 12vw, 120px) clamp(16px, 4vw, 32px)', textAlign: 'center', minHeight: '60vh' }}>
         <p style={{
           fontFamily: 'var(--font-vt323),monospace',
           fontSize: 22, color: '#F4ECD8', opacity: 0.6,
@@ -81,8 +81,8 @@ export function FideliteRiot() {
   }
 
   return (
-    <section style={{
-      padding: '80px 32px',
+    <section className="container-pad" style={{
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #D4FF3E',
       position: 'relative',
       overflow: 'hidden',
@@ -157,10 +157,10 @@ export function FideliteRiot() {
       </div>
 
       {/* Grid */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1.4fr 1fr',
-        gap: 24, alignItems: 'start',
-      }}>
+      <div
+        className="row-grid row-15-1"
+        style={{ gap: 24, alignItems: 'start' }}
+      >
         {/* Left col : parcours + récompenses */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <ParcoursCard
@@ -217,10 +217,10 @@ function ParcoursCard({ currentPts, nextMin, currentMin, progress }: {
       </div>
 
       {/* Ladder */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 8, marginTop: 18,
-      }}>
+      <div
+        className="row-grid row-4"
+        style={{ gap: 8, marginTop: 18 }}
+      >
         {TIERS.map((t) => {
           const isActive = t.name === 'Or';
           const isFuture = t.name === 'VIP';

@@ -92,10 +92,18 @@ const BTN: CSSProperties = {
 
 export function HeroRiot() {
   return (
-    <section style={{ position: 'relative', padding: '60px 32px 80px', overflow: 'hidden', borderBottom: '3px dashed #D4FF3E' }}>
+    <section
+      className="container-pad"
+      style={{
+        position: 'relative',
+        padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 32px) clamp(60px, 8vw, 80px)',
+        overflow: 'hidden',
+        borderBottom: '3px dashed #D4FF3E',
+      }}
+    >
 
       {/* Stamp */}
-      <div style={{
+      <div className="hide-sm" style={{
         position: 'absolute', top: 30, right: 32,
         fontFamily: 'var(--font-rubik-mono-one),monospace',
         fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -106,8 +114,11 @@ export function HeroRiot() {
         RIOT · N°01
       </div>
 
-      {/* Hero grid — no max-width */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr .9fr', gap: 48, alignItems: 'start', position: 'relative' }}>
+      {/* Hero grid */}
+      <div
+        className="row-grid row-1-15"
+        style={{ gap: 'clamp(28px, 4vw, 48px)', alignItems: 'start', position: 'relative' }}
+      >
 
         {/* Left — text */}
         <div>
@@ -125,7 +136,7 @@ export function HeroRiot() {
 
           <h1 style={{
             fontFamily: 'var(--font-anton),Impact,sans-serif',
-            fontSize: 'clamp(96px,14vw,220px)',
+            fontSize: 'clamp(56px, 14vw, 220px)',
             lineHeight: 0.82, letterSpacing: '-0.01em',
             textTransform: 'uppercase', color: '#F4ECD8', position: 'relative',
           }}>
@@ -159,7 +170,7 @@ export function HeroRiot() {
 
           <p style={{
             fontFamily: 'var(--font-special-elite),monospace',
-            color: '#F4ECD8', fontSize: 18, lineHeight: 1.5,
+            color: '#F4ECD8', fontSize: 'clamp(14px, 1.6vw, 18px)', lineHeight: 1.5,
             maxWidth: 520, marginTop: 32,
           }}>
             6 perruques en cheveux humains, photographiées, collées, déchirées — et un essayage virtuel{' '}
@@ -181,8 +192,34 @@ export function HeroRiot() {
           </div>
         </div>
 
-        {/* Right — photo stack (catalogue réel : LIVE_WIGS) */}
-        <div style={{ position: 'relative', height: 640 }}>
+        {/* Mobile-only : 1 image clean centrée */}
+        <div className="hide-desktop" style={{
+          width: '100%', maxWidth: 360, margin: '0 auto',
+          background: '#F4ECD8', padding: '14px 14px 50px',
+          transform: 'rotate(-2deg)',
+          boxShadow: '6px 6px 0 #FF7A1A',
+          border: '3px solid #0A0A0A',
+          position: 'relative',
+        }}>
+          <span aria-hidden style={{
+            position: 'absolute', top: -12, left: '40%', width: 100, height: 22,
+            background: 'rgba(212,255,62,.5)', transform: 'rotate(-3deg)',
+            border: '1px dashed rgba(0,0,0,.3)', borderTop: 0, borderBottom: 0,
+          }} />
+          <div style={{ background: '#1a1a1a', aspectRatio: '3/4', position: 'relative', overflow: 'hidden' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/ginger.jpg" alt="Ginger N°03" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.08) saturate(1.05)' }} />
+          </div>
+          <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14, fontFamily: 'var(--font-permanent-marker),cursive', color: '#0A0A0A', fontSize: 18, lineHeight: 1 }}>
+            Ginger
+            <small style={{ fontFamily: 'var(--font-special-elite),monospace', display: 'block', fontSize: 11, letterSpacing: '0.06em', marginTop: 4, color: '#5e6a64' }}>
+              N°03 · 18″ · Lace Front
+            </small>
+          </div>
+        </div>
+
+        {/* Desktop — photo stack (catalogue réel : LIVE_WIGS) */}
+        <div className="hide-mobile" style={{ position: 'relative', height: 640 }}>
           <Polaroid caption="Ginger" sub='N°03 · 18″ · Lace Front' tape="washi" img="/images/ginger.jpg"
             tapePos={{ top: -12, left: 60, transform: 'rotate(4deg)' }}
             rotate="-5deg"
@@ -226,7 +263,7 @@ export function HeroRiot() {
       </div>
 
       {/* Stats — alignées sur systeme.md + LIVE_WIGS */}
-      <div style={{ marginTop: 60, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+      <div className="row-grid row-4" style={{ marginTop: 60, gap: 12 }}>
         <StatCard value="~5s" label="// Latence IA" rotate="-1deg" shadow="#D4FF3E" />
         <StatCard value="2" label="// IA en backup auto" rotate="1.5deg" shadow="#FF7A1A" />
         <StatCard value="48h" label="// Livraison FR" rotate="-1.5deg" shadow="#F5E55E" />

@@ -20,13 +20,21 @@ const TESTIMONIALS = [
 
 export function CustomerShow() {
   return (
-    <section style={{ padding: '80px 32px', borderBottom: '3px dashed #D4FF3E', overflow: 'hidden', position: 'relative' }}>
+    <section
+      className="container-pad"
+      style={{
+        padding: 'clamp(48px, 8vw, 80px) clamp(16px, 4vw, 32px)',
+        borderBottom: '3px dashed #D4FF3E',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
 
       {/* Heading row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
         <h2 style={{
           fontFamily: 'var(--font-anton),Impact,sans-serif',
-          fontSize: 'clamp(64px,9vw,140px)',
+          fontSize: 'clamp(40px, 9vw, 140px)',
           lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8',
         }}>
           VRAIES{' '}
@@ -58,7 +66,10 @@ export function CustomerShow() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 32, alignItems: 'start' }}>
+      <div
+        className="row-grid row-15-1"
+        style={{ gap: 32, alignItems: 'start' }}
+      >
 
         {/* Left — collage */}
         <div style={{

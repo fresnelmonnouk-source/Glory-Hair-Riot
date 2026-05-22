@@ -23,7 +23,7 @@ const FILTERS: ReadonlyArray<{ id: FilterId; label: string; match: (w: Wig) => b
 
 const SECTION: CSSProperties = {
   borderBottom: '3px solid #D4FF3E',
-  padding: '60px 32px',
+  padding: 'clamp(40px, 7vw, 60px) clamp(16px, 4vw, 32px)',
   position: 'relative',
 };
 
@@ -38,7 +38,7 @@ const HEAD: CSSProperties = {
 
 const H2: CSSProperties = {
   fontFamily: 'var(--font-anton), Impact, sans-serif',
-  fontSize: 'clamp(80px, 11vw, 180px)',
+  fontSize: 'clamp(48px, 11vw, 180px)',
   lineHeight: 0.85,
   textTransform: 'uppercase',
   color: '#F4ECD8',
@@ -90,7 +90,7 @@ function pillStyle(active: boolean, disabled: boolean): CSSProperties {
 
 const GRID: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
   gap: '32px 20px',
 };
 

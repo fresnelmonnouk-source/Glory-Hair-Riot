@@ -56,10 +56,10 @@ export function TryonMarketing() {
   useEffect(() => { setQuota(readQuota(mode)); }, [mode]);
 
   return (
-    <section style={{
+    <section className="container-pad" style={{
       background: '#0A0A0A',
       color: '#F4ECD8',
-      padding: '80px 32px',
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #D4FF3E',
       position: 'relative',
       overflow: 'hidden',
@@ -106,12 +106,14 @@ export function TryonMarketing() {
       </div>
 
       {/* Shell : camera + side info */}
-      <div style={{
-        position: 'relative', zIndex: 2,
-        display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20,
-        border: '3px solid #F4ECD8',
-        background: 'rgba(255,255,255,.03)',
-      }}>
+      <div
+        className="row-grid row-15-1"
+        style={{
+          position: 'relative', zIndex: 2, gap: 20,
+          border: '3px solid #F4ECD8',
+          background: 'rgba(255,255,255,.03)',
+        }}
+      >
         <CameraMock />
         <SidePanel quota={quota} mode={mode} limit={limit} />
       </div>

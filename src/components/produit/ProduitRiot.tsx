@@ -77,8 +77,8 @@ export function ProduitRiot({ wig }: { wig: Wig }) {
   }
 
   return (
-    <section style={{
-      padding: '80px 32px',
+    <section className="container-pad" style={{
+      padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 32px)',
       borderBottom: '3px solid #FF7A1A',
       position: 'relative',
       background: `
@@ -86,12 +86,10 @@ export function ProduitRiot({ wig }: { wig: Wig }) {
         #0E1B14
       `,
     }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1.05fr 1fr',
-        gap: 60,
-        alignItems: 'start',
-      }}>
+      <div
+        className="row-grid row-1-15"
+        style={{ gap: 'clamp(24px, 5vw, 60px)', alignItems: 'start' }}
+      >
         {/* ═══ Stage gauche : polaroïd principal + 3 thumbs + stamps ═══ */}
         <FpStage wig={wig} thumbs={otherWigs} />
 

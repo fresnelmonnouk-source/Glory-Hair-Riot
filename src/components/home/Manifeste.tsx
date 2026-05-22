@@ -11,7 +11,15 @@ const BTN: CSSProperties = {
 
 export function Manifeste() {
   return (
-    <section style={{ padding: '80px 32px', borderBottom: '3px solid #FF7A1A', overflow: 'hidden', position: 'relative' }}>
+    <section
+      className="container-pad"
+      style={{
+        padding: 'clamp(48px, 8vw, 80px) clamp(16px, 4vw, 32px)',
+        borderBottom: '3px solid #FF7A1A',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
 
       {/* Ghost background text */}
       <div aria-hidden style={{
@@ -24,10 +32,13 @@ export function Manifeste() {
         GLORY GLORY GLORY GLORY GLORY GLORY GLORY
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 60, alignItems: 'center', position: 'relative' }}>
+      <div
+        className="row-grid row-1-15"
+        style={{ gap: 'clamp(32px, 5vw, 60px)', alignItems: 'center', position: 'relative' }}
+      >
 
-        {/* Left — visual collage */}
-        <div style={{ position: 'relative', height: 520 }}>
+        {/* Left — visual collage (hide on mobile, trop dense) */}
+        <div className="hide-mobile" style={{ position: 'relative', height: 520 }}>
 
           {/* mi-1: yellow quote card */}
           <div style={{
@@ -114,7 +125,7 @@ export function Manifeste() {
 
           <h2 style={{
             fontFamily: 'var(--font-anton),Impact,sans-serif',
-            fontSize: 'clamp(56px,8vw,120px)',
+            fontSize: 'clamp(40px, 8vw, 120px)',
             lineHeight: 0.85, textTransform: 'uppercase',
             color: '#F4ECD8', marginBottom: 32,
           }}>
