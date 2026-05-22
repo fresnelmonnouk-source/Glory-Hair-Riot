@@ -1,45 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { CSSProperties } from 'react';
+import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/stores/cart.store';
 
-const PILL: CSSProperties = {
-  border: '2px solid #D4FF3E',
-  padding: '0 14px',
-  borderRadius: 999,
-  height: 36,
-  background: 'transparent',
-  color: '#F4ECD8',
-  fontFamily: 'var(--font-special-elite), monospace',
-  fontSize: 14,
-  display: 'inline-flex',
-  alignItems: 'center',
-  cursor: 'pointer',
-  textDecoration: 'none',
-};
-
-const PILL_HOT: CSSProperties = {
-  ...PILL,
-  background: '#FF7A1A',
-  color: '#0A0A0A',
-  borderColor: '#0A0A0A',
-  fontFamily: 'var(--font-rubik-mono-one), monospace',
-  fontSize: 11,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-};
-
 const NAV_LINKS = [
-  ['/', 'Accueil'],
+  ['/',          'Accueil'],
   ['/catalogue', 'Catalogue'],
-  ['/essayage', 'Essayage'],
-  ['/elodie', 'Élodie'],
-  ['/magazine', 'Magazine'],
-  ['/sav', 'SAV'],
+  ['/essayage',  'Essayage'],
+  ['/elodie',    'Élodie'],
+  ['/magazine',  'Magazine'],
+  ['/sav',       'SAV'],
 ] as const;
 
+/** Match exact pour "/" ; match préfixe pour les autres (gère /essayage/live). */
+function isActive(href: string, pathname: string): boolean {
+  if (href === '/') return pathname === '/';
+  return pathname === href || pathname.startsWith(href + '/');
+}
+
 export function NavRiot() {
+  const pathname = usePathname() ?? '/';
   const count = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
 
   return (
@@ -113,17 +94,13 @@ export function NavRiot() {
       </Link>
 
       {/* Nav links */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 22,
-          justifyContent: 'center',
-          fontFamily: 'var(--font-special-elite), monospace',
-          fontSize: 15,
-        }}
-      >
+      <div style={{ display: 'flex', gap: 22, justifyContent: 'center' }}>
         {NAV_LINKS.map(([href, label]) => (
-          <Link key={href} href={href} style={{ color: '#F4ECD8', textDecoration: 'none' }}>
+          <Link
+            key={href}
+            href={href}
+            className={isActive(href, pathname) ? 'nav-link active' : 'nav-link'}
+          >
             {label}
           </Link>
         ))}
@@ -131,10 +108,10 @@ export function NavRiot() {
 
       {/* Right — pill buttons */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button style={PILL}>FR / EN</button>
-        <Link href="/compte" style={PILL}>Compte</Link>
-        <button style={PILL}>♥ 14</button>
-        <Link href="/panier" style={PILL_HOT}>
+        <button type="button" className="nav-pill">FR / EN</button>
+        <Link href="/compte" className="nav-pill">Compte</Link>
+        <button type="button" className="nav-pill">♥ 14</button>
+        <Link href="/panier" className="nav-pill hot">
           Panier · {count}
         </Link>
       </div>

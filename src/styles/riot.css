@@ -150,6 +150,77 @@ body {
   100% { transform: translateY(100%); }
 }
 
+/* ─── Nav animations (port fidèle Riot.html lignes 641-689) ─── */
+
+.nav-link {
+  position: relative;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: transform .15s, color .15s;
+  color: #F4ECD8;
+  text-decoration: none;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 15px;
+}
+.nav-link:hover {
+  transform: rotate(-2deg) scale(1.05);
+  color: #D4FF3E;
+}
+.nav-link.active {
+  color: #D4FF3E;
+}
+.nav-link.active::before {
+  content: '★';
+  position: absolute;
+  left: -14px;
+  top: 6px;
+  color: #FF7A1A;
+  font-size: 14px;
+}
+
+.nav-pill {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 2px solid #D4FF3E;
+  padding: 0 14px;
+  border-radius: 999px;
+  height: 36px;
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: #F4ECD8;
+  transition: all .15s;
+  font-family: var(--font-special-elite), monospace;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 0;
+}
+.nav-pill:hover {
+  background: #D4FF3E;
+  color: #0A0A0A;
+}
+.nav-pill.hot {
+  background: #FF7A1A;
+  color: #0A0A0A;
+  border-color: #0A0A0A;
+  font-family: var(--font-rubik-mono-one), monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 0 16px;
+}
+.nav-pill.hot:hover {
+  background: #D4FF3E;
+  border-color: #0A0A0A;
+}
+
 /* Wiggle utilise --rot pour respecter la rotation au repos de chaque polaroïd */
 @keyframes wiggle {
   0%, 100% { transform: rotate(var(--rot, 0deg)); }
