@@ -894,6 +894,35 @@ body {
   }
 }
 
+/* ─── Tryon Live mobile ─── */
+@media (max-width: 768px) {
+  /* Stepper : collapse en stack vertical + pills plus petites */
+  .tryon-stepper {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .tryon-stepper > div {
+    gap: 6px !important;
+    font-size: 10px !important;
+  }
+  /* Footer : wrap propre + progress prend toute la largeur */
+  .tryon-footer {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+  .tryon-footer > div {
+    width: 100%;
+    order: 3;
+    font-size: 12px !important;
+  }
+  .tryon-footer > button {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px !important;
+    padding: 10px 12px !important;
+  }
+}
+
 /* ─── Compte mobile ─── */
 @media (max-width: 768px) {
   .compte-head {

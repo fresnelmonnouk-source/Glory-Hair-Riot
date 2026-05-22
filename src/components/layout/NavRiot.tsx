@@ -177,7 +177,8 @@ export function NavRiot() {
         <div className="hide-desktop" aria-hidden style={{ width: 1 }} />
       </nav>
 
-      {/* FAB mobile — Floating Action Button */}
+      {/* FAB mobile — caché sur tryon live qui a son propre footer fixe */}
+      {!pathname.startsWith('/essayage/live') && (
       <button
         type="button"
         className={sheetOpen ? 'nav-fab open' : 'nav-fab'}
@@ -199,6 +200,7 @@ export function NavRiot() {
           </span>
         )}
       </button>
+      )}
 
       {/* Sheet mobile */}
       {sheetOpen && (

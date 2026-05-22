@@ -411,7 +411,7 @@ export function TryonFlow() {
       <Marquee />
       <Stepper step={step} sessionCount={sessionCount} totalCostCents={totalCostCents} quota={quota} />
 
-      <main style={{ flex: 1, position: 'relative', padding: '40px 32px', display: 'flex', justifyContent: 'center' }}>
+      <main className="container-pad" style={{ flex: 1, position: 'relative', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 4vw, 32px)', display: 'flex', justifyContent: 'center' }}>
         {step === 0 && <ScreenIntro onStart={() => setStep(1)} />}
         {step === 1 && <ScreenPhoto
           personBlob={personBlob}
@@ -474,7 +474,7 @@ function Marquee() {
 
 function Stepper({ step, sessionCount, totalCostCents, quota }: { step: number; sessionCount: number; totalCostCents: number; quota: QuotaState }) {
   return (
-    <header style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 20, padding: '16px 28px', borderBottom: '2px solid #D4FF3E', background: '#0E1B14' }}>
+    <header className="tryon-stepper" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 14, padding: 'clamp(12px, 2vw, 16px) clamp(14px, 3vw, 28px)', borderBottom: '2px solid #D4FF3E', background: '#0E1B14' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', flexWrap: 'wrap' }}>
         {STEPS.map((s, i) => (
           <span key={s.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -521,7 +521,7 @@ function Pill({ label, value, hot }: { label: string; value: string; hot?: boole
 
 function ScreenIntro({ onStart }: { onStart: () => void }) {
   return (
-    <div style={{ width: '100%', maxWidth: 1320, display: 'grid', gridTemplateColumns: '1.05fr .95fr', gap: 60, alignItems: 'center', minHeight: 'calc(100vh - 280px)' }}>
+    <div className="row-grid row-1-15" style={{ width: '100%', maxWidth: 1320, gap: 'clamp(28px, 5vw, 60px)', alignItems: 'center', minHeight: 'calc(100vh - 280px)' }}>
       <div>
         <div style={{ display: 'inline-block', background: '#FF7A1A', color: '#0A0A0A', padding: '8px 14px', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', transform: 'rotate(-2deg)', marginBottom: 24, border: '2px solid #0A0A0A', boxShadow: '3px 3px 0 #D4FF3E' }}>
           ★ Sandbox · IA réelle · v1.0
@@ -547,14 +547,14 @@ function ScreenIntro({ onStart }: { onStart: () => void }) {
           </a>
         </div>
 
-        <div style={{ marginTop: 48, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+        <div className="row-grid row-3" style={{ marginTop: 48, gap: 12 }}>
           <IntroStat value="~5s" label="Latence moyenne" rotate="-1deg" shadow="#D4FF3E" />
           <IntroStat value="2" label="IA en backup auto" rotate="1deg" shadow="#FF7A1A" />
           <IntroStat value="~4¢" label="Coût par essai" rotate="-1.2deg" shadow="#F5E55E" />
         </div>
       </div>
 
-      <div style={{ position: 'relative', height: 540 }}>
+      <div className="hide-mobile" style={{ position: 'relative', height: 540 }}>
         <Sticker style={{ top: -10, left: 60, transform: 'rotate(-12deg)', background: '#FF7A1A' }}>★ TRY ME</Sticker>
         <Sticker style={{ bottom: 160, left: -10, transform: 'rotate(8deg)' }}>No filter ★</Sticker>
         {INTRO_PICS.map((pic, i) => {
@@ -667,7 +667,7 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
   return (
     <div style={{ width: '100%', maxWidth: 1320 }}>
       <ScreenHead num="01" stk="-o" word="tronche." scrawl="selfie de face, bonne lumière." />
-      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="row-grid row-15-1" style={{ gap: 24, alignItems: 'start' }}>
         <div style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
           <CamCorners />
           <Scanlines />
@@ -683,7 +683,7 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
               <p style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 14, color: '#F4ECD8', maxWidth: 380, lineHeight: 1.5 }}>
                 Ou balance une photo depuis ton tél.<br />JPEG, PNG · 400×400 minimum.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14, width: '100%', maxWidth: 440 }}>
+              <div className="row-grid row-2" style={{ gap: 12, marginTop: 14, width: '100%', maxWidth: 440 }}>
                 <BigChoice onClick={startCamera} icon="▶" name="Caméra" sub="getUserMedia" rotate="-1deg" shadow="#D4FF3E" />
                 <BigChoice onClick={() => fileRef.current?.click()} icon="↑" name="Importer" sub="JPEG · PNG" rotate="1deg" shadow="#FF7A1A" />
               </div>
@@ -798,7 +798,7 @@ function ScreenWig({ selectedWig, setSelectedWig, quota }: { selectedWig: Wig; s
           ⚠ QUOTA ATTEINT · {quota.count}/{QUOTA_LIMIT_ANON} ESSAIS ANONYMES · CRÉE UN COMPTE POUR 5 ESSAIS OFFERTS
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '32px 24px' }}>
+      <div className="row-grid row-3" style={{ gap: '32px 24px' }}>
         {WIGS.map((w, i) => {
           const isActive = selectedWig.id === w.id;
           const r = i % 3 === 0 ? '-1.2deg' : i % 3 === 1 ? '1.4deg' : '-1deg';
@@ -854,7 +854,7 @@ function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progre
         status === 'error' ? '✗ raté · réessaie ou recommence' : '★ prêt à lancer…'
       } />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr .8fr', gap: 24, alignItems: 'start' }}>
+      <div className="row-grid row-15-1" style={{ gap: 24, alignItems: 'start' }}>
         <div style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
           <CamCorners />
           <Scanlines />
@@ -973,7 +973,7 @@ function FooterNav({ step, totalSteps, canNext, onPrev, onNext, ctaLabel, debugO
 }) {
   const pct = Math.round((step / (totalSteps - 1)) * 100);
   return (
-    <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, background: '#0A0A0A', color: '#F4ECD8', borderTop: '3px solid #D4FF3E', padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 14, zIndex: 50 }}>
+    <div className="tryon-footer" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, background: '#0A0A0A', color: '#F4ECD8', borderTop: '3px solid #D4FF3E', padding: 'clamp(10px, 1.6vw, 14px) clamp(12px, 3vw, 28px)', display: 'flex', alignItems: 'center', gap: 14, zIndex: 50, flexWrap: 'wrap' }}>
       <button type="button" onClick={onPrev} disabled={step === 0} style={footerBtn(step === 0)}>← Précédent</button>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 14, fontFamily: 'var(--font-vt323),monospace', fontSize: 16, color: '#D4FF3E' }}>
         <span>STEP {String(step).padStart(2,'0')}/{String(totalSteps-1).padStart(2,'0')}</span>
