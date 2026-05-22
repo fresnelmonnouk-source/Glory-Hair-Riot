@@ -7,7 +7,15 @@ const ADMIN_ROUTES = ['/admin'];
 const AUTH_ROUTES = ['/connexion', '/inscription', '/mot-de-passe-oublie'];
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  // ─── Dev preview bypass ───
+  // En NODE_ENV=development uniquement : ?preview=1 contourne l'auth pour
+  // permettre de visualiser /admin et /compte sans login. Ignoré en production
+  // (la condition est inlinée par Next.js au build → branch dead en prod).
+  if (process.env.NODE_ENV === 'development' && searchParams.get('preview') === '1') {
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
 
   let response = NextResponse.next({
     request: { headers: request.headers },
