@@ -39,17 +39,36 @@ Ne discute pas:
 - Détails privés des clients
 - Informations confidentielles de l'entreprise`;
 
+export type ElodieErrorCode =
+  | 'MISSING_KEY'
+  | 'INVALID_KEY'
+  | 'RATE_LIMIT'
+  | 'TIMEOUT'
+  | 'PROVIDER_ERROR'
+  | 'NETWORK';
+
+export class ElodieError extends Error {
+  code: ElodieErrorCode;
+  status?: number;
+  constructor(code: ElodieErrorCode, message: string, status?: number) {
+    super(message);
+    this.code = code;
+    this.status = status;
+  }
+}
+
 export async function getElodieResponse(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
-) {
+): Promise<{ content: string; tokens_used: number }> {
+  if (!process.env.DEEPSEEK_API_KEY) {
+    throw new ElodieError('MISSING_KEY', 'DEEPSEEK_API_KEY non configurée côté serveur.');
+  }
+
   try {
     const response = await getDeepseek().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
-        {
-          role: 'system',
-          content: ELODIE_SYSTEM_PROMPT,
-        },
+        { role: 'system', content: ELODIE_SYSTEM_PROMPT },
         ...messages,
       ],
       temperature: 0.3,
@@ -58,19 +77,32 @@ export async function getElodieResponse(
 
     const content =
       response.choices[0]?.message?.content ||
-      'Je suis désolée, j\'ai eu un problème. Pouvez-vous reformuler?';
+      'Je suis désolée, j\'ai eu un problème. Peux-tu reformuler ?';
 
     return {
       content,
       tokens_used: response.usage?.total_tokens || 0,
     };
   } catch (error) {
-    console.error('Deepseek API error:', error);
+    console.error('[Élodie] Deepseek API error:', error);
 
-    return {
-      content:
-        'Je suis actuellement indisponible. Nos équipes travaillent sur mon intégration. Veuillez réessayer plus tard ou contacter le support.',
-      tokens_used: 0,
-    };
+    // SDK OpenAI expose `status` et `code` sur les erreurs API
+    const e = error as { status?: number; code?: string; message?: string };
+    const status = e?.status;
+    const msg = e?.message ?? String(error);
+
+    if (status === 401 || status === 403) {
+      throw new ElodieError('INVALID_KEY', `Clé DeepSeek invalide ou révoquée (HTTP ${status}).`, status);
+    }
+    if (status === 429) {
+      throw new ElodieError('RATE_LIMIT', 'Limite de requêtes DeepSeek atteinte. Réessaie dans une minute.', status);
+    }
+    if (e?.code === 'ETIMEDOUT' || /timeout/i.test(msg)) {
+      throw new ElodieError('TIMEOUT', 'DeepSeek a mis trop de temps à répondre.', status);
+    }
+    if (e?.code === 'ENOTFOUND' || e?.code === 'ECONNREFUSED' || /fetch failed/i.test(msg)) {
+      throw new ElodieError('NETWORK', 'Impossible de joindre l\'API DeepSeek.', status);
+    }
+    throw new ElodieError('PROVIDER_ERROR', `DeepSeek a renvoyé une erreur : ${msg.slice(0, 200)}`, status);
   }
 }

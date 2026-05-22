@@ -1,6 +1,19 @@
 import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure, publicProcedure } from '../init';
-import { getElodieResponse } from '@/server/services/elodie/elodie.service';
+import { getElodieResponse, ElodieError } from '@/server/services/elodie/elodie.service';
+
+function toTrpcError(err: unknown): never {
+  if (err instanceof ElodieError) {
+    const code =
+      err.code === 'MISSING_KEY' || err.code === 'INVALID_KEY' ? 'PRECONDITION_FAILED' :
+      err.code === 'RATE_LIMIT' ? 'TOO_MANY_REQUESTS' :
+      err.code === 'TIMEOUT' ? 'TIMEOUT' :
+      'INTERNAL_SERVER_ERROR';
+    throw new TRPCError({ code, message: err.message, cause: err });
+  }
+  throw err;
+}
 
 export const elodieRouter = router({
   startConversation: protectedProcedure.mutation(async ({ ctx }) => {
@@ -110,9 +123,15 @@ export const elodieRouter = router({
         content: m.content,
       }));
 
-      const { content, tokens_used } = await getElodieResponse(
-        conversationMessages
-      );
+      let content: string;
+      let tokens_used: number;
+      try {
+        const res = await getElodieResponse(conversationMessages);
+        content = res.content;
+        tokens_used = res.tokens_used;
+      } catch (err) {
+        toTrpcError(err);
+      }
 
       const assistantResponse = {
         role: 'assistant',
@@ -159,9 +178,13 @@ export const elodieRouter = router({
   chat: publicProcedure
     .input(z.object({ message: z.string().min(1).max(2000) }))
     .mutation(async ({ input }) => {
-      const { content, tokens_used } = await getElodieResponse([
-        { role: 'user', content: input.message }
-      ]);
-      return { content, tokens_used };
+      try {
+        const { content, tokens_used } = await getElodieResponse([
+          { role: 'user', content: input.message }
+        ]);
+        return { content, tokens_used };
+      } catch (err) {
+        toTrpcError(err);
+      }
     }),
 });

@@ -87,12 +87,27 @@ export function ElodieRiot() {
       setMessages((m) => [...m, botMsg]);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
+      // tRPC client expose data.code et message via TRPCClientError
+      const tErr = err as { data?: { code?: string }; message?: string };
+      const code = tErr?.data?.code;
+
+      let friendly: string;
+      if (code === 'PRECONDITION_FAILED') {
+        friendly = `Élodie n'est pas configurée correctement côté serveur (${tErr.message ?? 'clé manquante'}).`;
+      } else if (code === 'TOO_MANY_REQUESTS') {
+        friendly = 'Trop de monde discute avec moi en ce moment. Réessaie dans une minute.';
+      } else if (code === 'TIMEOUT') {
+        friendly = 'J\'ai mis trop de temps à réfléchir. Réessaie avec une question plus simple.';
+      } else if (code === 'INTERNAL_SERVER_ERROR') {
+        friendly = `Erreur Élodie : ${tErr.message ?? 'inconnue'}`;
+      } else {
+        friendly = `Désolée, je n\'arrive pas à te répondre. ${errMsg.slice(0, 200)}`;
+      }
+
       setMessages((m) => [...m, {
         id: 'err-' + Date.now(),
         role: 'assistant',
-        content: errMsg.includes('DEEPSEEK')
-          ? 'Élodie est temporairement indisponible. Notre équipe a été prévenue.'
-          : 'Désolée, je n\'arrive pas à te répondre pour le moment. Réessaie dans un instant.',
+        content: friendly,
       }]);
     } finally {
       setSending(false);
