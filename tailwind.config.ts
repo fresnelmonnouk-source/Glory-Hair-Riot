@@ -9,12 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /* Palette RIOT */
+        /* Palette RIOT — alignée sur tryon-live.css */
         forest: '#0E1B14',
+        'bg-2': '#142A1F',
         lime: '#D4FF3E',
         orange: '#FF7A1A',
         paper: '#F4ECD8',
+        'paper-yellow': '#F5E55E',
         pink: '#FF4D8D',
+        hot: '#FF3D00',
+        mute: '#5E6A64',
         'lime-dim': '#B8E035',
         'forest-light': '#1A2E1F',
         'forest-mid': '#243D29',
@@ -22,7 +26,7 @@ const config: Config = {
         'ink-soft': '#2A2A2A',
         cream: '#FAF7F0',
 
-        /* Hair tones (conservés) */
+        /* Hair tones (conservés pour compat existante) */
         'hair-1': '#1a0f08',
         'hair-2': '#3a1d10',
         'hair-3': '#7a4a26',
