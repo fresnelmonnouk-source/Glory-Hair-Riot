@@ -1,120 +1,114 @@
 const TESTIMONIALS = [
   {
-    q: 'La qualité est',
-    qEm: 'incroyable',
-    qEnd: '. Je ne change plus.',
-    author: 'Maryline K.',
-    location: 'Paris · France',
-    stars: '★★★★★',
-    rotate: '-1deg',
-    shadowColor: '#FF7A1A',
+    parts: ['Le lace est ', 'invisible', ", j'ai eu 3 compliments le 1er jour."],
+    author: 'Naomi', location: 'Paris',
+    rotate: '-1deg', shadow: '#FF7A1A',
   },
   {
-    q: 'L\'essayage virtuel m\'a',
-    qEm: 'convaincue',
-    qEnd: ' avant même la commande.',
-    author: 'Aminata D.',
-    location: 'Abidjan · CI',
-    stars: '★★★★★',
-    rotate: '1.2deg',
-    shadowColor: '#D4FF3E',
+    parts: ['Essayage virtuel ', 'bluffant', '. J\'ai testé 6 modèles avant de choisir.'],
+    author: 'Maïmouna', location: 'Lyon',
+    rotate: '1.2deg', shadow: '#D4FF3E',
   },
   {
-    q: 'Livraison rapide,',
-    qEm: 'perruque parfaite',
-    qEnd: '. Que demander de plus ?',
-    author: 'Sophie M.',
-    location: 'Lyon · France',
-    stars: '★★★★★',
-    rotate: '-1.4deg',
-    shadowColor: '#F5E55E',
+    parts: ['Livré en 48h, qualité ', 'au top', '. Je recommande les yeux fermés.'],
+    author: 'Aïcha', location: 'Marseille',
+    rotate: '-0.8deg', shadow: '#FF4D8D',
   },
 ];
 
 export function CustomerShow() {
   return (
-    <section className="relative px-8 py-20 border-b-2 border-dashed border-orange overflow-hidden">
-      {/* Head */}
-      <div className="max-w-7xl mx-auto flex justify-between items-end flex-wrap gap-4 mb-8">
-        <h2
-          className="font-['Anton'] text-paper uppercase leading-[.85]"
-          style={{ fontSize: 'clamp(64px, 9vw, 140px)' }}
-        >
-          Elles ont{' '}
-          <span
-            className="bg-pink text-ink px-[0.08em] inline-block"
-            style={{ transform: 'rotate(-2deg)' }}
-          >
-            osé.
+    <section style={{ padding: '80px 32px', borderBottom: '3px dashed #D4FF3E', overflow: 'hidden', position: 'relative' }}>
+
+      {/* Heading row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
+        <h2 style={{
+          fontFamily: 'var(--font-anton),Impact,sans-serif',
+          fontSize: 'clamp(64px,9vw,140px)',
+          lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8',
+        }}>
+          VRAIES{' '}
+          <span style={{ position: 'relative', display: 'inline-block' }}>
+            filles,
+            <span aria-hidden style={{
+              position: 'absolute', left: '-4%', right: '-4%', top: '46%',
+              height: 8, background: '#FF7A1A', transform: 'rotate(-2deg)', display: 'block',
+            }} />
           </span>
           <br />
-          <em
-            className="font-['Yeseva_One'] text-orange not-italic"
-            style={{ fontStyle: 'italic', fontSize: '0.85em' }}
-          >
-            À toi.
-          </em>
+          <em style={{
+            fontFamily: 'var(--font-yeseva-one),serif',
+            fontStyle: 'italic', fontWeight: 400, textTransform: 'none',
+          }}>
+            vrais
+          </em>{' '}cheveux.
         </h2>
-        <p
-          className="font-['Caveat'] font-bold text-lime text-[28px] leading-tight max-w-xs"
-          style={{ transform: 'rotate(-3deg)' }}
-        >
-          12 000+ avis<br />5 étoiles
+
+        <p style={{
+          fontFamily: 'var(--font-caveat),cursive',
+          fontWeight: 700, color: '#D4FF3E', fontSize: 28,
+          lineHeight: 1.2, maxWidth: 200, transform: 'rotate(-3deg)',
+        }}>
+          → taggez @gloryhair<br />pour apparaître !
         </p>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-[1.4fr_1fr] gap-8 items-start">
+      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 32, alignItems: 'start' }}>
+
         {/* Left — collage */}
-        <div
-          className="relative bg-paper border-2 border-ink p-4"
-          style={{ transform: 'rotate(-1deg)', boxShadow: '8px 8px 0 #D4FF3E' }}
-        >
+        <div style={{
+          position: 'relative',
+          background: '#F4ECD8', border: '3px solid #0A0A0A',
+          padding: 12, transform: 'rotate(-1deg)',
+          boxShadow: '8px 8px 0 #D4FF3E',
+        }}>
           {/* Tape */}
-          <div
-            className="absolute top-[-14px] h-7 bg-lime/50"
-            style={{ left: '30%', width: 140, transform: 'rotate(-3deg)' }}
-          />
+          <span aria-hidden style={{
+            position: 'absolute', top: -14, left: '30%',
+            width: 140, height: 28,
+            background: 'rgba(212,255,62,.5)',
+            transform: 'rotate(-3deg)', display: 'block',
+          }} />
+
           {/* Photo placeholder */}
-          <div
-            className="w-full aspect-[4/3] bg-forest-light flex items-center justify-center"
-          >
-            <div className="text-center">
-              <p className="font-['Permanent_Marker'] text-paper/30 text-2xl">Photos clients</p>
-              <p className="font-['Special_Elite'] text-paper/20 text-xs tracking-widest mt-1">
-                À venir
-              </p>
+          <div style={{ width: '100%', aspectRatio: '4/3', background: '#1A2E1F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-permanent-marker),cursive', color: 'rgba(244,236,216,.3)', fontSize: 24 }}>Photos clients</p>
+              <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: 'rgba(244,236,216,.2)', fontSize: 11, letterSpacing: '0.12em', marginTop: 4 }}>À venir</p>
             </div>
           </div>
-          {/* Bottom stamp */}
-          <div
-            className="absolute bottom-[-14px] right-6 bg-orange text-ink font-['Rubik_Mono_One'] text-[10px] tracking-[0.1em] uppercase px-3 py-2 border-2 border-ink"
-            style={{ transform: 'rotate(-4deg)' }}
-          >
-            VRAIES CLIENTES
+
+          {/* stamp-go */}
+          <div style={{
+            position: 'absolute', bottom: -14, right: 24,
+            background: '#FF7A1A', color: '#0A0A0A',
+            fontFamily: 'var(--font-rubik-mono-one),monospace',
+            fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+            padding: '8px 12px', border: '2px solid #0A0A0A',
+            transform: 'rotate(-4deg)',
+          }}>
+            #GLORYHAIRGANG
           </div>
         </div>
 
         {/* Right — testimonials */}
-        <div className="flex flex-col gap-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {TESTIMONIALS.map((t, i) => (
-            <div
-              key={i}
-              className="bg-paper text-ink p-5 border-2 border-ink"
-              style={{
-                transform: `rotate(${t.rotate})`,
-                boxShadow: `4px 4px 0 ${t.shadowColor}`,
-              }}
-            >
-              <p className="font-['Permanent_Marker'] text-xl leading-tight">
-                {t.q}{' '}
-                <em className="font-['Yeseva_One'] text-orange not-italic" style={{ fontStyle: 'italic' }}>
-                  {t.qEm}
+            <div key={i} style={{
+              background: '#F4ECD8', color: '#0A0A0A',
+              padding: 18, border: '3px solid #0A0A0A',
+              transform: `rotate(${t.rotate})`,
+              boxShadow: `4px 4px 0 ${t.shadow}`,
+            }}>
+              <p style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, lineHeight: 1.3 }}>
+                {t.parts[0]}
+                <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', color: '#FF7A1A' }}>
+                  {t.parts[1]}
                 </em>
-                {t.qEnd}
+                {t.parts[2]}
               </p>
-              <div className="font-['Special_Elite'] text-xs tracking-[0.06em] mt-2 text-[#5e6a64] flex justify-between items-center">
-                <span>— {t.author} · {t.location}</span>
-                <span className="text-orange tracking-[0.04em]">{t.stars}</span>
+              <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, letterSpacing: '0.06em', marginTop: 8, color: '#5e6a64' }}>
+                — {t.author} · {t.location}
               </div>
             </div>
           ))}

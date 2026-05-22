@@ -1,53 +1,43 @@
-import { HTMLAttributes } from 'react';
-
-interface TopbarProps extends HTMLAttributes<HTMLDivElement> {
-  items?: string[];
-  bg?: string;
-  textColor?: string;
-  speed?: number;
-}
-
-const DEFAULT_ITEMS = [
-  'GLORY HAIR RIOT',
-  '★ ISSUE N°01',
-  'CHEVEUX HUMAINS 100%',
-  '★ LIVRAISON EXPRESS',
-  'ESSAYAGE VIRTUEL IA',
+const ITEMS = [
+  '→ ISSUE N°01 →',
   '★',
+  'RIOT GIRL · ÉTÉ 2026',
+  'LIVRAISON 48H FRANCE',
+  '2 ESSAIS PREMIUM OFFERTS PAR APPAREIL',
+  '5 ESSAIS GRATUITS À LA CRÉATION DE COMPTE',
+  '87K+ ESSAYAGES VIRTUELS',
+  'RETOUR 30J',
 ];
 
-export function Topbar({
-  items = DEFAULT_ITEMS,
-  bg = 'bg-lime',
-  textColor = 'text-ink',
-  speed = 18,
-  className = '',
-  style,
-  ...props
-}: TopbarProps) {
-  const repeated = [...items, ...items];
-
+export function Topbar() {
+  const items = [...ITEMS, ...ITEMS];
   return (
     <div
-      className={`relative overflow-hidden h-8 flex items-center border-b-2 border-ink ${bg} ${textColor} ${className}`}
-      style={style}
       aria-hidden
-      {...props}
+      style={{
+        background: '#0A0A0A',
+        color: '#D4FF3E',
+        padding: '8px 0',
+        borderBottom: '3px solid #FF7A1A',
+        position: 'sticky',
+        top: 0,
+        zIndex: 60,
+        overflow: 'hidden',
+      }}
     >
       <div
-        className="flex whitespace-nowrap"
         style={{
-          animation: `marquee ${speed}s linear infinite`,
-          width: 'max-content',
+          display: 'flex',
+          gap: 32,
+          whiteSpace: 'nowrap',
+          animation: 'marquee 22s linear infinite',
+          fontFamily: 'var(--font-vt323), monospace',
+          fontSize: 22,
+          letterSpacing: '0.04em',
         }}
       >
-        {repeated.map((item, i) => (
-          <span
-            key={i}
-            className="font-['Special_Elite'] text-xs uppercase tracking-[0.15em] px-6"
-          >
-            {item}
-          </span>
+        {items.map((item, i) => (
+          <span key={i} style={{ padding: '0 16px' }}>{item}</span>
         ))}
       </div>
     </div>

@@ -1,15 +1,19 @@
 /* ─── RIOT Design System — Glory Hair Edition N°01 ─── */
 
 :root {
-  /* Palette principale */
-  --forest:        #0E1B14;
+  /* Palette principale — alignée sur tryon-live.css */
+  --forest:        #0E1B14;   /* bg */
+  --bg-2:          #142A1F;   /* secondary surface (camera shell, etc.) */
   --forest-light:  #1A2E1F;
   --forest-mid:    #243D29;
   --lime:          #D4FF3E;
   --lime-dim:      #B8E035;
   --orange:        #FF7A1A;
   --paper:         #F4ECD8;
+  --paper-yellow:  #F5E55E;   /* highlighter */
   --pink:          #FF4D8D;
+  --hot:           #FF3D00;   /* error / stamp red */
+  --mute:          #5E6A64;   /* secondary text on paper */
   --ink:           #0A0A0A;
   --ink-soft:      #2A2A2A;
   --cream:         #FAF7F0;
@@ -45,6 +49,9 @@
   --z-nav:     90;
   --z-modal:   200;
   --z-toast:   300;
+
+  /* Layout */
+  --topbar-h: 43px; /* 8px×2 padding + 22px VT323 + 3px border */
 }
 
 /* Reset brutal */
@@ -64,7 +71,9 @@ body {
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .14 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='.5'/></svg>"),
     linear-gradient(#0E1B14, #0E1B14);
   color: var(--paper);
-  font-family: var(--font-archivo-black), sans-serif;
+  font-family: var(--font-special-elite), 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

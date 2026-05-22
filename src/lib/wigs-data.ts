@@ -1,25 +1,29 @@
+/* Catalogue Glory Hair RIOT — Issue N°01
+ * Source de vérité : tryon-live.jsx › LIVE_WIGS
+ * 6 modèles physiquement référencés.
+ */
+
 export interface Wig {
   id: string;
+  num: string;          // 'N°01' … 'N°06'
   name: string;
-  cat: string;
-  style: string;
-  price: number;
-  was?: number;
-  tag?: 'new' | 'sale' | 'best';
-  color: string;
-  shape: 'round' | 'wavy' | 'curly' | 'long';
-  swatches: string[];
-  rating: number;
-  reviews: number;
+  cat: string;          // 'Closure' | 'Lace Front' | '360 Lace' | 'Full Lace'
+  style: string;        // 'Wavy' | 'Straight' | 'Body Wave'
+  tone: string;         // 'Châtain', 'Moka', 'Ginger', 'Plum', 'Argent', 'Blond doré'
+  img: string;          // chemin /public — ex: '/images/velours.jpg'
+  price: number;        // EUR
+  tag?: 'BEST' | 'NEW' | 'HOT' | 'EDIT';
+  rating?: number;
+  reviews?: number;
 }
 
 export const WIGS: Wig[] = [
-  { id:'w1', name:'Aura Lace 18"', cat:'Lace Front', style:'Ondulée', price:289, was:329, tag:'new', color:'var(--hair-1)', shape:'wavy', swatches:['var(--hair-1)','var(--hair-2)','var(--hair-3)','var(--hair-4)'], rating:4.9, reviews:218 },
-  { id:'w2', name:'Couronne 22"', cat:'360 Lace', style:'Lisse', price:419, tag:'best', color:'var(--hair-3)', shape:'long', swatches:['var(--hair-2)','var(--hair-3)','var(--hair-4)'], rating:4.8, reviews:347 },
-  { id:'w3', name:'Soleil Bouclée 14"', cat:'Full Lace', style:'Bouclée', price:349, color:'var(--hair-4)', shape:'curly', swatches:['var(--hair-3)','var(--hair-4)','var(--hair-5)'], rating:4.7, reviews:156 },
-  { id:'w4', name:'Velours 16"', cat:'Closure', style:'Body Wave', price:259, was:299, tag:'sale', color:'var(--hair-2)', shape:'wavy', swatches:['var(--hair-1)','var(--hair-2)','var(--hair-4)','var(--hair-5)'], rating:4.9, reviews:412 },
-  { id:'w5', name:'Onyx Lisse 24"', cat:'Lace Front', style:'Lisse', price:389, color:'var(--hair-1)', shape:'long', swatches:['var(--hair-1)','var(--hair-2)'], rating:4.8, reviews:189 },
-  { id:'w6', name:'Miel Bouclée 12"', cat:'Headband', style:'Kinky Curly', price:179, tag:'new', color:'var(--hair-3)', shape:'curly', swatches:['var(--hair-2)','var(--hair-3)','var(--hair-4)'], rating:4.6, reviews:94 },
-  { id:'w7', name:'Pourpre Wave 20"', cat:'Frontal', style:'Body Wave', price:329, color:'var(--hair-5)', shape:'wavy', swatches:['var(--hair-5)','var(--hair-1)','var(--hair-2)'], rating:4.7, reviews:67 },
-  { id:'w8', name:'Aurore Blonde 18"', cat:'Lace Front', style:'Ondulée', price:359, tag:'best', color:'var(--hair-4)', shape:'wavy', swatches:['var(--hair-4)','var(--hair-3)'], rating:4.9, reviews:288 }
+  { id: 'velours',  num: 'N°01', name: 'Velours 14"',    cat: 'Closure',    style: 'Wavy',      tone: 'Châtain',    img: '/images/velours.jpg',    price: 259, tag: 'BEST', rating: 4.9, reviews: 218 },
+  { id: 'mocha',    num: 'N°02', name: 'Moka 20"',       cat: 'Lace Front', style: 'Straight',  tone: 'Moka',       img: '/images/mocha.jpg',      price: 339, tag: 'NEW',  rating: 4.8, reviews: 156 },
+  { id: 'ginger',   num: 'N°03', name: 'Ginger 18"',     cat: 'Lace Front', style: 'Wavy',      tone: 'Ginger',     img: '/images/ginger.jpg',     price: 319, tag: 'HOT',  rating: 4.7, reviews: 412 },
+  { id: 'bordeaux', num: 'N°04', name: 'Bordeaux 22"',   cat: '360 Lace',   style: 'Body Wave', tone: 'Plum',       img: '/images/bordeaux.jpg',   price: 419, tag: 'NEW',  rating: 4.9, reviews: 67  },
+  { id: 'argent',   num: 'N°05', name: 'Argent 18"',     cat: 'Full Lace',  style: 'Straight',  tone: 'Argent',     img: '/images/argent.jpg',     price: 389, tag: 'EDIT', rating: 4.8, reviews: 189 },
+  { id: 'creme',    num: 'N°06', name: 'Café Crème 16"', cat: 'Closure',    style: 'Wavy',      tone: 'Blond doré', img: '/images/cafe-creme.jpg', price: 289, tag: 'BEST', rating: 4.9, reviews: 288 },
 ];
+
+export const WIG_BY_ID: Record<string, Wig> = Object.fromEntries(WIGS.map(w => [w.id, w]));

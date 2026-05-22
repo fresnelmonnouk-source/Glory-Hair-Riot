@@ -1,71 +1,142 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, User } from 'lucide-react';
+import { CSSProperties } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 
+const PILL: CSSProperties = {
+  border: '2px solid #D4FF3E',
+  padding: '0 14px',
+  borderRadius: 999,
+  height: 36,
+  background: 'transparent',
+  color: '#F4ECD8',
+  fontFamily: 'var(--font-special-elite), monospace',
+  fontSize: 14,
+  display: 'inline-flex',
+  alignItems: 'center',
+  cursor: 'pointer',
+  textDecoration: 'none',
+};
+
+const PILL_HOT: CSSProperties = {
+  ...PILL,
+  background: '#FF7A1A',
+  color: '#0A0A0A',
+  borderColor: '#0A0A0A',
+  fontFamily: 'var(--font-rubik-mono-one), monospace',
+  fontSize: 11,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+};
+
 const NAV_LINKS = [
-  { href: '/catalogue', label: 'Catalogue' },
-  { href: '/essayage', label: 'Essayage' },
-  { href: '/elodie', label: 'Élodie' },
-  { href: '/sav', label: 'SAV' },
-];
+  ['/accueil', 'Accueil'],
+  ['/catalogue', 'Catalogue'],
+  ['/essayage', 'Essayage'],
+  ['/elodie', 'Élodie'],
+  ['/magazine', 'Magazine'],
+  ['/sav', 'SAV'],
+] as const;
 
 export function NavRiot() {
-  const itemCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
+  const count = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
 
   return (
     <nav
-      className="fixed top-8 left-0 right-0 z-[90] bg-forest border-b-2 border-ink"
       aria-label="Navigation principale"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr auto',
+        alignItems: 'center',
+        padding: '18px 32px',
+        borderBottom: '2px solid #D4FF3E',
+        background: '#0E1B14',
+        position: 'sticky',
+        top: 'var(--topbar-h)',
+        zIndex: 90,
+      }}
     >
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="font-['Anton'] text-xl uppercase tracking-tight text-lime hover:text-lime-dim transition-colors"
+      {/* Logo */}
+      <Link
+        href="/"
+        style={{
+          fontFamily: 'var(--font-permanent-marker), cursive',
+          fontSize: 42,
+          lineHeight: 1,
+          color: '#F4ECD8',
+          transform: 'rotate(-3deg)',
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          textDecoration: 'none',
+        }}
+      >
+        <span>
+          Glory{' '}
+          <span
+            style={{
+              color: '#FF7A1A',
+              background: '#D4FF3E',
+              padding: '0 6px',
+              display: 'inline-block',
+              transform: 'rotate(2deg)',
+            }}
+          >
+            Hair!
+          </span>
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--font-special-elite), monospace',
+            fontSize: 10,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: '#D4FF3E',
+            transform: 'rotate(1deg)',
+            display: 'block',
+            marginTop: 2,
+          }}
         >
-          Glory Hair
-          <span className="text-paper text-xs font-['Special_Elite'] ml-1 tracking-widest">RIOT</span>
+          by{' '}
+          <em
+            style={{
+              fontFamily: 'var(--font-yeseva-one), serif',
+              fontStyle: 'italic',
+              color: '#FF7A1A',
+            }}
+          >
+            RHD
+          </em>{' '}
+          Empire
+        </span>
+      </Link>
+
+      {/* Nav links */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 22,
+          justifyContent: 'center',
+          fontFamily: 'var(--font-special-elite), monospace',
+          fontSize: 15,
+        }}
+      >
+        {NAV_LINKS.map(([href, label]) => (
+          <Link key={href} href={href} style={{ color: '#F4ECD8', textDecoration: 'none' }}>
+            {label}
+          </Link>
+        ))}
+      </div>
+
+      {/* Right — pill buttons */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button style={PILL}>FR / EN</button>
+        <Link href="/compte" style={PILL}>Compte</Link>
+        <button style={PILL}>♥ 14</button>
+        <Link href="/panier" style={PILL_HOT}>
+          Panier · {count}
         </Link>
-
-        {/* Links */}
-        <ul className="hidden md:flex items-center gap-6 list-none">
-          {NAV_LINKS.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="font-['Archivo_Black'] text-xs uppercase tracking-widest text-paper hover:text-lime transition-colors"
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/compte"
-            className="text-paper hover:text-lime transition-colors"
-            aria-label="Mon compte"
-          >
-            <User size={20} strokeWidth={2} />
-          </Link>
-
-          <Link
-            href="/panier"
-            className="relative text-paper hover:text-lime transition-colors"
-            aria-label={`Panier — ${itemCount} article${itemCount !== 1 ? 's' : ''}`}
-          >
-            <ShoppingCart size={20} strokeWidth={2} />
-            {itemCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-lime text-ink text-[10px] font-['Archivo_Black'] w-4 h-4 flex items-center justify-center">
-                {itemCount > 9 ? '9+' : itemCount}
-              </span>
-            )}
-          </Link>
-        </div>
       </div>
     </nav>
   );

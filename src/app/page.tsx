@@ -10,7 +10,7 @@ export default function Home() {
     <>
       <Topbar />
       <NavRiot />
-      <main className="pt-16">
+      <main>
         <HeroRiot />
         <Manifeste />
         <CustomerShow />
