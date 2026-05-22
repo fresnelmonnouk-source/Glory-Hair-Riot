@@ -78,12 +78,43 @@ export function CheckoutRiot() {
     );
   }, [address]);
 
-  function goPay() {
+  const [payError, setPayError] = useState<string | null>(null);
+
+  async function goPay() {
     setPaying(true);
-    // Stub : simule traitement puis redirige sur /merci
-    setTimeout(() => {
-      router.push('/merci?ref=' + Math.random().toString(36).slice(2, 8).toUpperCase());
-    }, 1500);
+    setPayError(null);
+    try {
+      const r = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(i => ({
+            wig_slug: i.wig_id,                    // côté client wig_id = slug
+            variant_id: null,                       // pas encore branché aux wig_variants
+            quantity: i.quantity,
+            price_at_added: i.price_at_added,      // €
+          })),
+          address,
+          shipping,
+          payment_method: payment,
+        }),
+      });
+      const json = await r.json();
+      if (!r.ok) {
+        if (r.status === 401) {
+          // Pas logged → redirige connexion avec retour sur checkout
+          router.push('/connexion?redirect=/checkout');
+          return;
+        }
+        setPayError(json.userMessage ?? 'Erreur. Réessaie.');
+        setPaying(false);
+        return;
+      }
+      router.push(`/merci?ref=${json.ref}`);
+    } catch {
+      setPayError('Connexion impossible. Vérifie ton réseau.');
+      setPaying(false);
+    }
   }
 
   if (items.length === 0) {
@@ -167,6 +198,7 @@ export function CheckoutRiot() {
               paying={paying}
               onPrev={() => setStep(2)}
               onPay={goPay}
+              error={payError}
             />
           )}
         </div>
@@ -387,10 +419,11 @@ function StepShipping({ shipping, setShipping, onPrev, onNext }: {
 
 // ═══ Step 3 — Paiement ═══════════════════════════════
 
-function StepPayment({ payment, setPayment, total, paying, onPrev, onPay }: {
+function StepPayment({ payment, setPayment, total, paying, onPrev, onPay, error }: {
   payment: PaymentMode; setPayment: (p: PaymentMode) => void;
   total: number; paying: boolean;
   onPrev: () => void; onPay: () => void;
+  error?: string | null;
 }) {
   return (
     <FormCard title="Mode de paiement" rotate="-0.3deg" shadow="#FF4D8D">
@@ -457,15 +490,27 @@ function StepPayment({ payment, setPayment, total, paying, onPrev, onPay }: {
         fontFamily: 'var(--font-special-elite),monospace',
         fontSize: 11, color: '#5E6A64', lineHeight: 1.4,
       }}>
-        ★ Paiement 100% sécurisé. Données stockées chez le provider (PCI-DSS Level 1).
-        En validant, tu acceptes nos CGV et notre politique de confidentialité.
+        ★ Mode MVP : paiement Stripe pas encore branché. La commande est créée
+        en base sans transaction réelle. (Phase 5.5 : intégration Stripe Checkout.)
       </div>
+
+      {error && (
+        <div style={{
+          marginTop: 14, padding: '10px 14px',
+          background: '#0A0A0A', color: '#FF4D8D',
+          border: '2px solid #FF4D8D',
+          fontFamily: 'var(--font-special-elite),monospace',
+          fontSize: 13, lineHeight: 1.4,
+        }}>
+          ★ {error}
+        </div>
+      )}
 
       <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
         <button type="button" onClick={onPrev} className="btn-bold outline" disabled={paying}>← Retour</button>
         <button type="button" onClick={onPay} className="btn-bold orange" disabled={paying}
           style={paying ? { opacity: 0.6, cursor: 'wait' } : undefined}>
-          {paying ? '⏳ Traitement…' : `→ PAYER ${total.toFixed(2).replace('.', ',')}€`}
+          {paying ? '⏳ Traitement…' : `→ CONFIRMER ${total.toFixed(2).replace('.', ',')}€`}
         </button>
       </div>
     </FormCard>

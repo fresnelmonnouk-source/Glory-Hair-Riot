@@ -84,8 +84,8 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
 // ─── Quotas localStorage (provisoire — Phase 5 → backend) ─
 
 const QUOTA_KEY = 'gh-tryon-quota';
-const QUOTA_LIMIT_ANON = 2;
-const QUOTA_WINDOW_MS = 24 * 60 * 60 * 1000;
+const QUOTA_LIMIT_ANON = 1;
+const QUOTA_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
 
 /**
  * Watermark "★ GLORY HAIR · ISSUE N°01" baked sur l'image résultat via Canvas.
@@ -260,7 +260,7 @@ export function TryonFlow() {
     }
 
     if (quota.count >= QUOTA_LIMIT_ANON) {
-      setError(`Quota atteint (${QUOTA_LIMIT_ANON}/${QUOTA_LIMIT_ANON} essais anonymes). Crée un compte pour 5 essais offerts.`);
+      setError(`Quota atteint (${QUOTA_LIMIT_ANON}/${QUOTA_LIMIT_ANON} essai anonyme). Crée un compte pour +2 essais Premium.`);
       setStatus('error');
       return;
     }
@@ -465,8 +465,8 @@ function Marquee() {
   return (
     <div style={{ background: '#0A0A0A', color: '#D4FF3E', padding: '8px 0', overflow: 'hidden', borderBottom: '3px solid #FF7A1A' }}>
       <div style={{ display: 'flex', gap: 32, whiteSpace: 'nowrap', animation: 'marquee 24s linear infinite', fontFamily: 'var(--font-vt323),monospace', fontSize: 20, letterSpacing: '0.04em', paddingLeft: 32, width: 'max-content' }}>
-        <span>★ ESSAI LIVE ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>2 essais offerts</em> ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>IA réelle</em> ★ Glory Hair ★ ESSAI LIVE ★</span>
-        <span>★ ESSAI LIVE ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>2 essais offerts</em> ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>IA réelle</em> ★ Glory Hair ★ ESSAI LIVE ★</span>
+        <span>★ ESSAI LIVE ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>1 essai offert</em> ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>IA réelle</em> ★ Glory Hair ★ ESSAI LIVE ★</span>
+        <span>★ ESSAI LIVE ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>1 essai offert</em> ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>IA réelle</em> ★ Glory Hair ★ ESSAI LIVE ★</span>
       </div>
     </div>
   );

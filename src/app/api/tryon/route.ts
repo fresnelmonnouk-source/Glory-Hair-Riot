@@ -299,13 +299,14 @@ export async function POST(request: Request) {
 
   if (!user) {
     const ip = getRequestIp(request);
-    const limit = checkLimit(`tryon:${ip}`, 2, 24 * 3600_000);
+    // Nouveaux quotas anon : 1 essai par appareil par 30 jours
+    const limit = checkLimit(`tryon:${ip}`, 1, 30 * 24 * 3600_000);
     if (!limit.allowed) {
       const wait = formatResetDuration(limit.resetMs);
       return NextResponse.json(
         {
           error: 'RATE_LIMITED',
-          userMessage: `Tu as utilisé tes 2 essais gratuits par appareil. Réessaie dans ${wait} ou crée un compte pour 5 essais Premium offerts.`,
+          userMessage: `Tu as utilisé ton essai gratuit par appareil (réessaie dans ${wait}). Crée un compte pour gagner 2 essais Premium en plus.`,
           retryAfterMs: limit.resetMs,
         },
         {

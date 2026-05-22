@@ -160,10 +160,10 @@ export function Manifeste() {
             Et un essayage virtuel qui marche pour de vrai :{' '}
             <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>IA générative image-to-image</span> (Gemini + OpenAI en backup), rendu photo-réaliste en{' '}
             <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>~5 secondes</span>.{' '}
-            <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>2 essais offerts</b>{' '}
+            <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>1 essai offert</b>{' '}
             sans création de compte, ou{' '}
-            <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>5 essais</b>{' '}
-            à l&apos;inscription. Vous testez avant d&apos;acheter — la moindre des choses.
+            <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>+2 essais</b>{' '}
+            à l&apos;inscription (3 au total). Vous testez avant d&apos;acheter — la moindre des choses.
           </p>
 
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>

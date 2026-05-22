@@ -76,7 +76,7 @@ export default function MerciPage() {
           fontSize: 14, lineHeight: 1.5,
         }}>
           Tu viens de débloquer <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>+50 points</b>{' '}
-          + tes <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>5 essais Premium</b>{' '}
+          + tes <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>2 essais Premium</b>{' '}
           dès la création de ton compte.
         </p>
       </div>

@@ -60,7 +60,7 @@ export default function InscriptionPage() {
           Bienvenue, <em>beauté !</em>
         </h2>
         <div className="auth-scrawl">
-          → +5 essais Premium offerts
+          → +2 essais Premium offerts
           <br />à la création ✨
         </div>
       </div>

@@ -9,9 +9,9 @@
  * Phase 5 : migration vers table Supabase `tryon_quotas` pour les comptes.
  */
 
-export const QUOTA_LIMIT_ANON = 2;
-export const QUOTA_LIMIT_LOGGED = 5;
-export const QUOTA_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
+export const QUOTA_LIMIT_ANON = 1;
+export const QUOTA_LIMIT_LOGGED = 2;
+export const QUOTA_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
 
 const STORAGE_KEY_ANON = 'gh-tryon-quota';
 const STORAGE_KEY_LOGGED = 'gh-tryon-quota-logged'; // remplacé par DB Phase 5

@@ -99,9 +99,9 @@ export function TryonMarketing() {
           fontSize: 32, lineHeight: 1.1,
           transform: 'rotate(-3deg)', maxWidth: 300,
         }}>
-          → 2 essais offerts
+          → 1 essai offert
           <br />par appareil ✨
-          <br />5 avec un compte !
+          <br />+2 avec un compte !
         </p>
       </div>
 
@@ -275,7 +275,7 @@ function SidePanel({ quota, mode, limit }: { quota: QuotaState; mode: 'anon' | '
                 fontFamily: 'var(--font-rubik-mono-one),monospace',
                 fontSize: 11, letterSpacing: '0.1em',
                 padding: '2px 8px', border: '2px solid #0A0A0A',
-              }}>+3 essais</span>
+              }}>+2 essais</span>
               {' '}en plus
             </b>
           </div>
@@ -283,7 +283,7 @@ function SidePanel({ quota, mode, limit }: { quota: QuotaState; mode: 'anon' | '
             fontFamily: 'var(--font-special-elite),monospace',
             fontSize: 12, lineHeight: 1.45, marginTop: 4, color: '#0A0A0A',
           }}>
-            Soit <b>5 essais Premium offerts</b> au total. Plus ton historique gardé, ta wishlist sauvée et l&apos;accès au Glory Club (points fidélité).
+            Soit <b>3 essais Premium offerts</b> au total. Plus ton historique gardé, ta wishlist sauvée et l&apos;accès au Glory Club (points fidélité).
           </p>
           <Link
             href="/connexion"

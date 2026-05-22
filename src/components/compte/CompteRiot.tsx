@@ -10,6 +10,7 @@
  */
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 import { useSession } from '@/hooks/use-session';
@@ -49,11 +50,8 @@ interface Order {
   price: number;
 }
 
-const MOCK_ORDERS: Order[] = [
-  { num: '142', month: 'Mai 26', wigId: 'ginger', name: 'Ginger', variant: '22″ · Cuivre flame',  passed: '18 mai 2026 · Livrée 20 mai',  status: { label: '★ LIVRÉE', type: 'delivered' }, price: 349 },
-  { num: '141', month: 'Mai 26', wigId: 'bordeaux', name: 'Bordeaux', variant: '18″ · Vin profond', passed: '02 mai 2026 · En route',          status: { label: 'EN ROUTE', type: 'shipping' }, price: 289 },
-  { num: '128', month: 'Avr 26', wigId: 'velours', name: 'Velours', variant: '14″ · Chocolat',     passed: '18 avril 2026 · Livrée 20 avril', status: { label: '★ LIVRÉE', type: 'delivered' }, price: 259 },
-];
+// TODO Phase 5 suite : remplacer par trpc.orders.list.useQuery() (déjà existant)
+const MOCK_ORDERS: Order[] = [];
 
 interface Essai {
   date: string;
@@ -63,13 +61,11 @@ interface Essai {
   type: 'free' | 'paid';
 }
 
-const MOCK_ESSAIS: Essai[] = [
-  { date: '20 mai 2026 · 14:32', wigId: 'ginger',   name: 'Ginger 22″',     provider: 'openai', type: 'free' },
-  { date: '20 mai 2026 · 14:18', wigId: 'velours',  name: 'Velours 14″',    provider: 'gemini', type: 'free' },
-  { date: '18 mai 2026 · 09:42', wigId: 'bordeaux', name: 'Bordeaux 22″',   provider: 'openai', type: 'paid' },
-];
+// TODO Phase 5 suite : trpc.tryon.history.useQuery() (à créer)
+const MOCK_ESSAIS: Essai[] = [];
 
-const MOCK_WISHLIST = ['mocha', 'argent', 'creme'];
+// TODO Phase 5 suite : trpc.wishlist.list.useQuery() (à créer)
+const MOCK_WISHLIST: string[] = [];
 
 // ─── Tabs config ────────────────────────────────────
 
@@ -91,8 +87,17 @@ interface TabDef {
 // ─── Component ──────────────────────────────────────
 
 export function CompteRiot() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('commandes');
+  const [signingOut, setSigningOut] = useState(false);
   const { user, profile, loading, signOut } = useSession();
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    await signOut();
+    router.replace('/');
+    router.refresh();
+  }
 
   // Données utilisateur dérivées (fallback sur des valeurs neutres si profile null)
   const userView = useMemo(() => {
@@ -190,11 +195,12 @@ export function CompteRiot() {
         {/* Logout */}
         <button
           type="button"
-          onClick={() => { void signOut(); }}
+          onClick={() => { void handleSignOut(); }}
+          disabled={signingOut}
           className="btn-bold outline"
-          style={{ alignSelf: 'flex-end' }}
+          style={{ alignSelf: 'flex-end', opacity: signingOut ? 0.5 : 1 }}
         >
-          ↩ Déconnexion
+          {signingOut ? '↩ Déconnexion…' : '↩ Déconnexion'}
         </button>
       </div>
 
@@ -317,6 +323,11 @@ function TabLink({ tab, active, odd, onClick }: {
 function OrdersList() {
   const shadows = ['#D4FF3E', '#FF7A1A', '#F5E55E', '#FF4D8D'];
   const rotations = ['-0.5deg', '0.5deg', '-0.7deg', '0.4deg'];
+
+  if (MOCK_ORDERS.length === 0) {
+    return <EmptyState icon="▤" title="Aucune commande" sub="Tes commandes apparaîtront ici. Découvre le catalogue ↘" linkHref="/catalogue" linkLabel="→ Voir le catalogue" />;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {MOCK_ORDERS.map((o, i) => (
@@ -393,6 +404,9 @@ function OrdersList() {
 // ─── Tab content : Essayages ────────────────────────
 
 function EssaisList() {
+  if (MOCK_ESSAIS.length === 0) {
+    return <EmptyState icon="●" title="Aucun essai" sub="Tes essais virtuels apparaîtront ici" linkHref="/essayage" linkLabel="▶ Essayer une perruque" />;
+  }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{
@@ -400,7 +414,7 @@ function EssaisList() {
         fontSize: 13, color: '#F4ECD8', opacity: 0.6,
         marginBottom: 6,
       }}>
-        Tes 8 derniers essais virtuels — clique pour relancer
+        Tes derniers essais virtuels — clique pour relancer
       </div>
       {MOCK_ESSAIS.map((e, i) => {
         const wig = WIG_BY_ID[e.wigId];
@@ -464,6 +478,9 @@ function EssaisList() {
 // ─── Tab content : Wishlist ─────────────────────────
 
 function WishlistList() {
+  if (MOCK_WISHLIST.length === 0) {
+    return <EmptyState icon="♡" title="Aucun souhait" sub="Ajoute des perruques à tes souhaits depuis le catalogue" linkHref="/catalogue" linkLabel="→ Voir le catalogue" />;
+  }
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
       {MOCK_WISHLIST.map((id) => {
@@ -622,6 +639,38 @@ function FideliteCard() {
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+// ─── Empty state (commandes/essayages/souhaits vides) ───
+
+function EmptyState({ title, sub, icon, linkHref, linkLabel }: {
+  title: string; sub: string; icon: string; linkHref: string; linkLabel: string;
+}) {
+  return (
+    <div style={{
+      background: '#F4ECD8', color: '#0A0A0A',
+      padding: 40, border: '3px dashed #0A0A0A',
+      textAlign: 'center',
+      transform: 'rotate(-0.5deg)',
+    }}>
+      <div style={{
+        fontSize: 48, marginBottom: 12,
+        fontFamily: 'var(--font-rubik-mono-one),monospace',
+        color: '#FF7A1A',
+      }}>{icon}</div>
+      <h3 style={{
+        fontFamily: 'var(--font-anton),Impact,sans-serif',
+        fontSize: 32, textTransform: 'uppercase', lineHeight: 1,
+      }}>{title}</h3>
+      <p style={{
+        fontFamily: 'var(--font-special-elite),monospace',
+        fontSize: 14, color: '#5E6A64', marginTop: 12, maxWidth: 360, marginInline: 'auto',
+      }}>{sub}</p>
+      <Link href={linkHref} className="btn-bold orange" style={{ marginTop: 18, display: 'inline-flex' }}>
+        {linkLabel}
+      </Link>
     </div>
   );
 }

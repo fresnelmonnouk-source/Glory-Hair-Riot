@@ -32,7 +32,7 @@ const FAQ: FaqItem[] = [
       <>
         Tu actives ta caméra ou tu envoies une photo. Notre IA (Gemini, OpenAI en backup) génère une image photo-réaliste où tu portes la perruque, en ~5 secondes.
         <br /><br />
-        <b>2 essais gratuits</b> par appareil (limite anti-abus basée sur IP + empreinte navigateur). Crée un compte pour passer à <b>5 essais offerts</b> au total + récupère 1 essai bonus tous les 100 pts Glory Club gagnés.
+        <b>1 essai gratuit</b> par appareil (limite anti-abus IP + 30j sliding). Crée un compte pour gagner <b>+2 essais Premium</b> offerts (3 au total) + récupère 1 essai bonus tous les 100 pts Glory Club gagnés.
         Au-delà : <b>4,99€</b> par essai Premium.
       </>
     ),

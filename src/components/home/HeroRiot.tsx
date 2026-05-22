@@ -167,8 +167,8 @@ export function HeroRiot() {
             <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,.4)', textDecorationColor: '#FF7A1A', textDecorationThickness: '3px' }}>
               Pas d&apos;overlay 3D bidon.
             </span>{' '}
-            <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>2 essais gratuits</b> par appareil,
-            ou <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>5 essais à l&apos;inscription</b>.
+            <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>1 essai gratuit</b> par appareil,
+            ou <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>+2 essais à l&apos;inscription</b>.
           </p>
 
           <div style={{ marginTop: 32, display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>

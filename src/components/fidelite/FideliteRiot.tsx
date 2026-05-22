@@ -29,7 +29,7 @@ const REWARDS = [
 
 const EARN_WAYS: { pts: string; bg: string; label: string; note: string }[] = [
   { pts: '+10',  bg: '#D4FF3E', label: 'Chaque euro dépensé',  note: 'par 1€' },
-  { pts: '+50',  bg: '#F5E55E', label: 'Création de compte',   note: '+5 essais' },
+  { pts: '+50',  bg: '#F5E55E', label: 'Création de compte',   note: '+2 essais' },
   { pts: '+200', bg: '#FF7A1A', label: 'Avis vérifié photo',   note: 'par produit' },
   { pts: '+500', bg: '#FF4D8D', label: 'Parrainage validé',    note: 'par filleul' },
   { pts: '+100', bg: '#D4FF3E', label: 'Anniversaire Glory',   note: 'par an' },
