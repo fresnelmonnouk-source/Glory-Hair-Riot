@@ -16,6 +16,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { WIG_BY_ID, type Wig } from '@/lib/wigs-data';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { checkLimit, getRequestIp, formatResetDuration } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -289,13 +290,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Perruque inconnue : ${wigId}` }, { status: 404 });
   }
 
-  // ─── Quota check (logged users) ───────────────────────
-  // Si user logged : on lit tryon_quotas en DB et on bloque si used >= granted.
-  // Si user anon : on continue (le quota localStorage côté client gère, +
-  //   le rate limiting serveur Phase 5 #5 protège l'IP).
+  // ─── Quota check ──────────────────────────────────────
+  // Logged : tryon_quotas en DB (lecture + bump après succès)
+  // Anon : rate limit sliding window par IP (2 / 24h)
   const supabase = createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   let quotaRow: { user_id: string; used_count: number; granted: number } | null = null;
+
+  if (!user) {
+    const ip = getRequestIp(request);
+    const limit = checkLimit(`tryon:${ip}`, 2, 24 * 3600_000);
+    if (!limit.allowed) {
+      const wait = formatResetDuration(limit.resetMs);
+      return NextResponse.json(
+        {
+          error: 'RATE_LIMITED',
+          userMessage: `Tu as utilisé tes 2 essais gratuits par appareil. Réessaie dans ${wait} ou crée un compte pour 5 essais Premium offerts.`,
+          retryAfterMs: limit.resetMs,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(limit.resetMs / 1000)) },
+        },
+      );
+    }
+  }
 
   if (user) {
     const { data } = await supabase

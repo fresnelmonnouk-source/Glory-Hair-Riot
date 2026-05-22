@@ -87,6 +87,56 @@ const QUOTA_KEY = 'gh-tryon-quota';
 const QUOTA_LIMIT_ANON = 2;
 const QUOTA_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Watermark "★ GLORY HAIR · ISSUE N°01" baked sur l'image résultat via Canvas.
+ * Visible + persisté dans le download. Si le browser ne supporte pas, fallback
+ * sur l'image originale.
+ */
+async function applyWatermark(dataUrl: string): Promise<string> {
+  if (typeof window === 'undefined') return dataUrl;
+
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('image load failed'));
+    i.src = dataUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return dataUrl;
+
+  // 1. Dessine l'image source
+  ctx.drawImage(img, 0, 0);
+
+  // 2. Bandeau noir semi-transparent en bas (60px hauteur dynamique)
+  const stripeH = Math.max(48, Math.round(canvas.height * 0.06));
+  ctx.fillStyle = 'rgba(10,10,10,0.78)';
+  ctx.fillRect(0, canvas.height - stripeH, canvas.width, stripeH);
+
+  // 3. Texte "★ GLORY HAIR · ISSUE N°01" centré dans le bandeau, couleur lime
+  ctx.fillStyle = '#D4FF3E';
+  const fontPx = Math.max(14, Math.round(stripeH * 0.42));
+  // Note : Anton n'est pas forcément dispo en Canvas (font face non garanti).
+  // Fallback sur Impact / sans-serif qui visuellement font le job.
+  ctx.font = `bold ${fontPx}px Anton, Impact, "Arial Black", sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  const cy = canvas.height - stripeH / 2;
+  ctx.fillText('★ GLORY HAIR · ISSUE N°01', canvas.width / 2, cy);
+
+  // 4. Petite signature orange à droite (URL site)
+  ctx.fillStyle = '#FF7A1A';
+  ctx.font = `${Math.round(fontPx * 0.5)}px "Courier New", monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('gloryhair.fr', canvas.width - 12, canvas.height - 8);
+
+  // 5. Export en PNG (qualité fixe + watermark visible)
+  return canvas.toDataURL('image/png');
+}
+
 interface QuotaState { count: number; firstAt: number }
 
 function readQuota(): QuotaState {
@@ -280,8 +330,14 @@ export function TryonFlow() {
       const totalMs = Math.round(performance.now() - t0);
       log(`✓ Succès · ${(totalMs/1000).toFixed(1)}s`, 'success');
 
-      const dataUrl = `data:${json.mimeType};base64,${json.resultBase64}`;
-      setResultUrl(dataUrl);
+      const rawDataUrl = `data:${json.mimeType};base64,${json.resultBase64}`;
+      // Watermark client-side : ajoute "★ GLORY HAIR · ISSUE N°01" en bas-droite.
+      // Le résultat affiché ET téléchargé est watermarked.
+      const watermarkedUrl = await applyWatermark(rawDataUrl).catch((e) => {
+        log(`⚠ Watermark skip : ${(e as Error).message}`, 'warn');
+        return rawDataUrl;
+      });
+      setResultUrl(watermarkedUrl);
       setLastCostCents(json.costCents);
       setLastLatencyMs(json.latencyMs ?? totalMs);
       setTotalCostCents(c => c + (json.costCents || 0));

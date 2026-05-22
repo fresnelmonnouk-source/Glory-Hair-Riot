@@ -52,12 +52,33 @@ const LANGUES = 'FR · EN · ES · IT';
 export function FooterRiot() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSubmitted(true);
-    // TODO Phase 5 : POST /api/newsletter avec Resend
+    if (!email.trim() || submitting) return;
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const r = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), source: 'footer' }),
+      });
+      const json = await r.json();
+      if (!r.ok) {
+        setError(json.userMessage ?? 'Erreur. Réessaie.');
+        setSubmitting(false);
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError('Connexion impossible. Vérifie ton réseau.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -191,16 +212,28 @@ export function FooterRiot() {
               />
               <button
                 type="submit"
+                disabled={submitting}
                 style={{
                   background: '#D4FF3E', color: '#0A0A0A',
                   padding: '12px 18px', border: 0,
                   fontFamily: 'var(--font-rubik-mono-one),monospace',
-                  fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer',
+                  fontSize: 11, letterSpacing: '0.1em',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  opacity: submitting ? 0.5 : 1,
                 }}
               >
-                S&apos;INSCRIRE
+                {submitting ? '…' : 'S’INSCRIRE'}
               </button>
             </form>
+          )}
+          {error && (
+            <div style={{
+              marginTop: 10,
+              fontFamily: 'var(--font-special-elite),monospace',
+              fontSize: 12, color: '#FF4D8D',
+            }}>
+              ★ {error}
+            </div>
           )}
         </div>
 
