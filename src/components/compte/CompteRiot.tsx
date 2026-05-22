@@ -233,7 +233,7 @@ export function CompteRiot() {
           {activeTab === 'fidelite' && <FideliteCard />}
           {activeTab === 'adresses' && <Placeholder title="Adresses" icon="📍" />}
           {activeTab === 'paiement' && <Placeholder title="Moyens de paiement" icon="💳" />}
-          {activeTab === 'preferences' && <Placeholder title="Préférences" icon="✨" />}
+          {activeTab === 'preferences' && <PreferencesCard />}
           {activeTab === 'sav' && <Placeholder title="Service après-vente" icon="✉" linkHref="/sav" linkLabel="Aller au centre SAV" />}
         </div>
       </div>
@@ -671,6 +671,96 @@ function EmptyState({ title, sub, icon, linkHref, linkLabel }: {
       <Link href={linkHref} className="btn-bold orange" style={{ marginTop: 18, display: 'inline-flex' }}>
         {linkLabel}
       </Link>
+    </div>
+  );
+}
+
+// ─── Tab content : Préférences (sécurité du compte) ───
+
+function PreferencesCard() {
+  const { user, profile } = useSession();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* Compte */}
+      <div style={{
+        background: '#F4ECD8', color: '#0A0A0A',
+        padding: 24, border: '3px solid #0A0A0A',
+        transform: 'rotate(-0.4deg)',
+        boxShadow: '6px 6px 0 #D4FF3E',
+        position: 'relative',
+      }}>
+        <span aria-hidden style={{
+          position: 'absolute', top: -12, left: 24,
+          width: 120, height: 22,
+          background: 'rgba(212,255,62,.7)',
+          borderLeft: '1px dashed rgba(0,0,0,.3)',
+          borderRight: '1px dashed rgba(0,0,0,.3)',
+          transform: 'rotate(-3deg)',
+        }} />
+        <h3 style={{
+          fontFamily: 'var(--font-permanent-marker),cursive',
+          fontSize: 24, marginBottom: 12,
+          paddingBottom: 8, borderBottom: '2px dashed #0A0A0A',
+        }}>
+          Compte
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontFamily: 'var(--font-special-elite),monospace', fontSize: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+            <span style={{ color: '#5E6A64', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Email</span>
+            <span>{user?.email ?? '—'}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+            <span style={{ color: '#5E6A64', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Nom</span>
+            <span>{profile?.full_name ?? '—'}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+            <span style={{ color: '#5E6A64', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Newsletter</span>
+            <span>{profile?.newsletter ? '✓ Inscrit·e' : '— Non inscrit·e'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sécurité */}
+      <div style={{
+        background: '#F4ECD8', color: '#0A0A0A',
+        padding: 24, border: '3px solid #0A0A0A',
+        transform: 'rotate(0.4deg)',
+        boxShadow: '6px 6px 0 #FF7A1A',
+        position: 'relative',
+      }}>
+        <span aria-hidden style={{
+          position: 'absolute', top: -12, left: 24,
+          width: 120, height: 22,
+          background: 'rgba(255,122,26,.6)',
+          borderLeft: '1px dashed rgba(0,0,0,.3)',
+          borderRight: '1px dashed rgba(0,0,0,.3)',
+          transform: 'rotate(-3deg)',
+        }} />
+        <h3 style={{
+          fontFamily: 'var(--font-permanent-marker),cursive',
+          fontSize: 24, marginBottom: 12,
+          paddingBottom: 8, borderBottom: '2px dashed #0A0A0A',
+        }}>
+          Sécurité
+        </h3>
+        <p style={{
+          fontFamily: 'var(--font-special-elite),monospace',
+          fontSize: 13, color: '#5E6A64', lineHeight: 1.5, marginBottom: 14,
+        }}>
+          Modifie ton mot de passe à tout moment. Tu seras toujours connecté·e après le changement.
+        </p>
+        <Link href="/compte/mot-de-passe" className="btn-bold">
+          → Changer mon mot de passe
+        </Link>
+      </div>
+
+      <div style={{
+        fontFamily: 'var(--font-special-elite),monospace',
+        fontSize: 11, color: '#5E6A64',
+        textAlign: 'center', marginTop: 8,
+      }}>
+        // D&apos;autres préférences arrivent (langue, notifications, RGPD…)
+      </div>
     </div>
   );
 }

@@ -18,7 +18,9 @@ export default function MotDePasseOubliePage() {
     try {
       const supabase = getSupabaseBrowserClient();
       const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/compte/nouveau-mot-de-passe`,
+        // Hors /compte/* pour éviter la redirection middleware avant que la
+        // session de recovery soit établie côté client.
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/nouveau-mot-de-passe`,
       });
       if (authError) {
         setError(authError.message);
