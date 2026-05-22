@@ -1,24 +1,16 @@
+'use client';
+
 /**
  * Page Glory Club RIOT — port fidèle <section class="fid"> Riot.html (2933-3022)
  * + CSS 489-589.
  *
- * Programme de fidélité standalone (vs tab compte) avec :
- * - Head : H2 + me-pts (solde)
- * - Parcours : progress bar + ladder 4 tiers
- * - Récompenses : 5 cards (3 unlocked + 2 locked)
- * - Comment gagner : 5 ways + CTA parrainage
- * - Historique : 6 pts-rows
+ * Phase 5 : user et points lus via useSession() (Supabase).
+ * Historique pts mock pour l'instant (à brancher tRPC trpc.points.list).
  */
 
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
-
-const USER = {
-  prenom: 'Olivia',
-  initiales: 'Olivia M.',
-  memberSince: 'Mars 2024',
-  points: 2480,
-};
+import { useMemo, type CSSProperties } from 'react';
+import { useSession } from '@/hooks/use-session';
 
 const TIERS = [
   { name: 'Bronze', min: 0,    max: 500,  ico: '●'  },
@@ -53,12 +45,40 @@ const PTS_LOG: { label: string; date: string; value: number }[] = [
 ];
 
 export function FideliteRiot() {
-  const currentTier = TIERS.find((t) => USER.points >= t.min && USER.points < t.max) ?? TIERS[2];
+  const { profile, loading } = useSession();
+
+  const USER = useMemo(() => {
+    if (profile) {
+      const prenom = profile.full_name?.split(' ')[0] || profile.email.split('@')[0] || 'Toi';
+      return {
+        prenom,
+        initiales: profile.full_name || profile.email.split('@')[0] || 'Toi',
+        memberSince: new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase()),
+        points: profile.points,
+      };
+    }
+    return { prenom: 'Toi', initiales: 'Toi', memberSince: 'Aujourd\'hui', points: 0 };
+  }, [profile]);
+
+  const currentTier = TIERS.find((t) => USER.points >= t.min && USER.points < t.max) ?? TIERS[0];
   const nextTier = TIERS[TIERS.findIndex((t) => t === currentTier) + 1];
   const progress = nextTier
     ? Math.round(((USER.points - currentTier.min) / (nextTier.min - currentTier.min)) * 100)
     : 100;
   const toNext = nextTier ? nextTier.min - USER.points : 0;
+
+  if (loading) {
+    return (
+      <section style={{ padding: '120px 32px', textAlign: 'center', minHeight: '60vh' }}>
+        <p style={{
+          fontFamily: 'var(--font-vt323),monospace',
+          fontSize: 22, color: '#F4ECD8', opacity: 0.6,
+        }}>
+          ★ Chargement du Glory Club…
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section style={{

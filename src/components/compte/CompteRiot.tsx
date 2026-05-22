@@ -4,26 +4,39 @@
  * Page Compte RIOT — port fidèle <section class="account"> Riot.html (2556-2609)
  * + CSS 1498-1555.
  *
- * Composant client : tabs state-driven (1 seule route /compte).
- *
- * Données mock pour l'instant. Phase 5 : intégration trpc.auth.getSession +
- * routes Supabase (orders, wishlist, addresses, preferences).
+ * Composant client avec session Supabase réelle (Phase 5).
+ * - User réel via useSession() (full_name, points, tier, email, member_since)
+ * - Mocks restants : orders/essayages/wishlist (à brancher tRPC Phase 5 suite)
  */
 
 import Link from 'next/link';
-import { useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { WIG_BY_ID } from '@/lib/wigs-data';
+import { useSession } from '@/hooks/use-session';
 
-// ─── Mock user + données ────────────────────────────
+// ─── Helpers user data ──────────────────────────────
 
-const MOCK_USER = {
-  prenom: 'Olivia',
-  initiales: 'O.M.',
-  niveau: 'OR ★',
-  email: 'olivia@maison-glory.fr',
-  memberSince: 'Mars 2024',
-  points: 2480,
+const TIER_LABEL: Record<string, string> = {
+  bronze: 'Bronze',
+  argent: 'Argent',
+  or:     'OR ★',
+  vip:    'VIP ★★',
 };
+
+function initialesFrom(fullName: string | null, email: string): string {
+  const source = fullName?.trim() || email.split('@')[0] || '';
+  return source
+    .split(/\s+/)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .slice(0, 2)
+    .join('. ') + '.';
+}
+
+function memberSinceFrom(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    .replace(/^./, (c) => c.toUpperCase());
+}
 
 interface Order {
   num: string;
@@ -74,21 +87,59 @@ interface TabDef {
 // Onglets du compte utilisateur. Le back-office /admin est volontairement EXCLU
 // de cette nav — l'admin est une zone séparée réservée aux comptes équipe
 // (gated par adminProcedure tRPC + role check Supabase, Phase 5).
-const TABS: TabDef[] = [
-  { id: 'commandes',   label: 'Commandes', count: String(MOCK_ORDERS.length), star: true },
-  { id: 'essayages',   label: 'Essayages', count: String(MOCK_ESSAIS.length) },
-  { id: 'souhaits',    label: 'Souhaits',  count: String(MOCK_WISHLIST.length) },
-  { id: 'fidelite',    label: 'Glory Club', count: `${MOCK_USER.points.toLocaleString('fr-FR')} pts`, star: true, variant: 'glory' },
-  { id: 'adresses',    label: 'Adresses' },
-  { id: 'paiement',    label: 'Paiement' },
-  { id: 'preferences', label: 'Préférences' },
-  { id: 'sav',         label: 'SAV' },
-];
 
 // ─── Component ──────────────────────────────────────
 
 export function CompteRiot() {
   const [activeTab, setActiveTab] = useState<TabId>('commandes');
+  const { user, profile, loading, signOut } = useSession();
+
+  // Données utilisateur dérivées (fallback sur des valeurs neutres si profile null)
+  const userView = useMemo(() => {
+    if (profile) {
+      const prenom = profile.full_name?.split(' ')[0] || profile.email.split('@')[0] || 'Toi';
+      return {
+        prenom,
+        initiales: initialesFrom(profile.full_name, profile.email),
+        niveau: TIER_LABEL[profile.tier] ?? 'Bronze',
+        email: profile.email,
+        memberSince: memberSinceFrom(profile.created_at),
+        points: profile.points,
+      };
+    }
+    return {
+      prenom: 'Toi',
+      initiales: 'T.O.',
+      niveau: 'Bronze',
+      email: user?.email ?? '—',
+      memberSince: 'Aujourd\'hui',
+      points: 0,
+    };
+  }, [profile, user]);
+
+  const tabs: TabDef[] = useMemo(() => [
+    { id: 'commandes',   label: 'Commandes', count: String(MOCK_ORDERS.length), star: true },
+    { id: 'essayages',   label: 'Essayages', count: String(MOCK_ESSAIS.length) },
+    { id: 'souhaits',    label: 'Souhaits',  count: String(MOCK_WISHLIST.length) },
+    { id: 'fidelite',    label: 'Glory Club', count: `${userView.points.toLocaleString('fr-FR')} pts`, star: true, variant: 'glory' },
+    { id: 'adresses',    label: 'Adresses' },
+    { id: 'paiement',    label: 'Paiement' },
+    { id: 'preferences', label: 'Préférences' },
+    { id: 'sav',         label: 'SAV' },
+  ], [userView.points]);
+
+  if (loading) {
+    return (
+      <section style={{ padding: '120px 32px', textAlign: 'center', minHeight: '60vh' }}>
+        <p style={{
+          fontFamily: 'var(--font-vt323),monospace',
+          fontSize: 22, color: '#F4ECD8', opacity: 0.6,
+        }}>
+          ★ Chargement de ton compte…
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section style={{
@@ -97,7 +148,7 @@ export function CompteRiot() {
     }}>
       {/* Header */}
       <div style={{
-        display: 'grid', gridTemplateColumns: '1fr auto',
+        display: 'grid', gridTemplateColumns: '1fr auto auto',
         alignItems: 'flex-end', gap: 24,
         borderBottom: '3px dashed #D4FF3E',
         paddingBottom: 28, marginBottom: 28,
@@ -113,7 +164,7 @@ export function CompteRiot() {
             fontFamily: 'var(--font-yeseva-one),serif',
             fontStyle: 'italic', textTransform: 'none', color: '#D4FF3E',
           }}>
-            {MOCK_USER.prenom}
+            {userView.prenom}
           </em>
           !
         </h2>
@@ -126,16 +177,25 @@ export function CompteRiot() {
           boxShadow: '4px 4px 0 #D4FF3E',
           textAlign: 'right',
         }}>
-          Membre depuis {MOCK_USER.memberSince}
+          Membre depuis {userView.memberSince}
           <br />
           <b style={{
             display: 'block', fontFamily: 'var(--font-permanent-marker),cursive',
             fontSize: 22, color: '#0A0A0A', fontWeight: 400,
           }}>
-            {MOCK_USER.initiales} — niveau {MOCK_USER.niveau}
+            {userView.initiales} — niveau {userView.niveau}
           </b>
-          {MOCK_USER.email}
+          {userView.email}
         </div>
+        {/* Logout */}
+        <button
+          type="button"
+          onClick={() => { void signOut(); }}
+          className="btn-bold outline"
+          style={{ alignSelf: 'flex-end' }}
+        >
+          ↩ Déconnexion
+        </button>
       </div>
 
       {/* Grid sidebar + content */}
@@ -145,7 +205,7 @@ export function CompteRiot() {
       }}>
         {/* Sidebar tabs */}
         <nav aria-label="Onglets compte" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {TABS.map((t, i) => (
+          {tabs.map((t, i) => (
             <TabLink
               key={t.id}
               tab={t}
@@ -463,16 +523,18 @@ function WishlistList() {
 // ─── Tab content : Glory Club ───────────────────────
 
 function FideliteCard() {
+  const { profile } = useSession();
+  const userPoints = profile?.points ?? 0;
   const PALIERS = [
     { name: 'Bronze',  min: 0,    max: 500,  reward: '−5% sur 1ère commande' },
     { name: 'Argent',  min: 500,  max: 1500, reward: '+1 essai Premium par mois' },
     { name: 'OR',      min: 1500, max: 3000, reward: 'Livraison express offerte' },
-    { name: 'Platine', min: 3000, max: 6000, reward: 'Atelier Paris 9 · pose VIP' },
+    { name: 'VIP',     min: 3000, max: 6000, reward: 'Atelier Paris 9 · pose VIP' },
   ];
-  const current = PALIERS.find(p => MOCK_USER.points >= p.min && MOCK_USER.points < p.max) ?? PALIERS[2]!;
+  const current = PALIERS.find(p => userPoints >= p.min && userPoints < p.max) ?? PALIERS[0]!;
   const nextPalier = PALIERS[PALIERS.findIndex(p => p === current) + 1];
-  const progress = Math.min(100, Math.round(((MOCK_USER.points - current.min) / (current.max - current.min)) * 100));
-  const toNext = nextPalier ? nextPalier.min - MOCK_USER.points : 0;
+  const progress = Math.min(100, Math.round(((userPoints - current.min) / (current.max - current.min)) * 100));
+  const toNext = nextPalier ? nextPalier.min - userPoints : 0;
 
   return (
     <div style={{
@@ -492,7 +554,7 @@ function FideliteCard() {
         fontSize: 64, lineHeight: 1, color: '#0A0A0A',
         letterSpacing: '-0.02em', margin: '8px 0',
       }}>
-        {MOCK_USER.points.toLocaleString('fr-FR')}
+        {userPoints.toLocaleString('fr-FR')}
         <span style={{ fontSize: 24, color: '#FF7A1A', marginLeft: 8 }}>pts</span>
       </div>
       <div style={{

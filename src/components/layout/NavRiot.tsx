@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/stores/cart.store';
+import { useSession } from '@/hooks/use-session';
 
 const NAV_LINKS = [
   ['/',          'Accueil'],
@@ -22,6 +23,8 @@ function isActive(href: string, pathname: string): boolean {
 export function NavRiot() {
   const pathname = usePathname() ?? '/';
   const count = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
+  const { user, profile, loading } = useSession();
+  const prenom = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || null;
 
   return (
     <nav
@@ -109,7 +112,15 @@ export function NavRiot() {
       {/* Right — pill buttons */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button type="button" className="nav-pill">FR / EN</button>
-        <Link href="/compte" className="nav-pill">Compte</Link>
+        {loading ? (
+          <span className="nav-pill" style={{ opacity: 0.4 }}>…</span>
+        ) : user ? (
+          <Link href="/compte" className="nav-pill" title={user.email ?? undefined}>
+            {prenom ? `★ ${prenom}` : 'Compte'}
+          </Link>
+        ) : (
+          <Link href="/connexion" className="nav-pill">Connexion</Link>
+        )}
         <button type="button" className="nav-pill">♥ 14</button>
         <Link href="/panier" className="nav-pill hot">
           Panier · {count}
