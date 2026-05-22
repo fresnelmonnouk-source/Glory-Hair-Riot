@@ -209,22 +209,39 @@ body {
 /* ─── Auth pages (port fidèle Riot.html lignes 101-162) ─── */
 
 .auth-section {
-  padding: 80px 32px;
+  padding: 24px 32px 48px;
   border-bottom: 3px solid #D4FF3E;
   position: relative;
   overflow: hidden;
-  min-height: 100vh;
+  /* Pas de min-height ; le layout flex-grow se charge du centrage vertical */
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 480px);
+  gap: 40px;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .auth-section {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 24px 40px;
+  }
 }
 
 .auth-head {
-  margin-bottom: 48px;
-  text-align: center;
+  text-align: left;
   position: relative;
+}
+
+@media (max-width: 900px) {
+  .auth-head { text-align: center; }
 }
 
 .auth-head h2 {
   font-family: var(--font-anton), Impact, sans-serif;
-  font-size: clamp(72px, 9vw, 140px);
+  font-size: clamp(48px, 6vw, 96px);
   line-height: 0.85;
   text-transform: uppercase;
   color: #F4ECD8;
@@ -242,24 +259,24 @@ body {
   font-family: var(--font-caveat), cursive;
   font-weight: 700;
   color: #FF7A1A;
-  font-size: 26px;
+  font-size: 22px;
   line-height: 1.1;
   transform: rotate(-3deg);
-  margin-top: 14px;
+  margin-top: 12px;
   display: inline-block;
 }
 
 .auth-card {
   background: #F4ECD8;
   color: #0A0A0A;
-  padding: 32px 28px;
+  padding: 24px 22px;
   border: 3px solid #0A0A0A;
   transform: rotate(-1deg);
   box-shadow: 8px 8px 0 #D4FF3E;
   position: relative;
-  max-width: 520px;
+  max-width: 480px;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .auth-card.orange {
@@ -287,10 +304,10 @@ body {
 
 .auth-card h3 {
   font-family: var(--font-anton), Impact, sans-serif;
-  font-size: 48px;
+  font-size: 36px;
   line-height: 0.95;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .auth-card h3 em {
@@ -303,19 +320,19 @@ body {
 
 .auth-card .sub {
   font-family: var(--font-special-elite), monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: #5E6A64;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   letter-spacing: 0.04em;
 }
 
 .auth-card label {
   display: block;
   font-family: var(--font-permanent-marker), cursive;
-  font-size: 14px;
+  font-size: 13px;
   color: #0A0A0A;
-  margin-top: 14px;
-  margin-bottom: 6px;
+  margin-top: 10px;
+  margin-bottom: 4px;
   transform: rotate(-1deg);
 }
 
@@ -324,7 +341,7 @@ body {
 .auth-card input[type="text"] {
   width: 100%;
   border: 3px solid #0A0A0A;
-  padding: 12px 14px;
+  padding: 10px 12px;
   font-family: var(--font-special-elite), monospace;
   font-size: 14px;
   background: #F4ECD8;
@@ -368,16 +385,16 @@ body {
 }
 
 .auth-card .submit {
-  margin-top: 20px;
+  margin-top: 14px;
   width: 100%;
   font-family: var(--font-rubik-mono-one), monospace;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   background: #0A0A0A;
   color: #D4FF3E;
   border: 3px solid #0A0A0A;
-  padding: 14px;
+  padding: 11px;
   cursor: pointer;
   box-shadow: 6px 6px 0 #FF7A1A;
   transition: transform .12s, box-shadow .12s;
@@ -404,7 +421,7 @@ body {
 }
 
 .auth-card .or {
-  margin: 20px 0 14px;
+  margin: 14px 0 10px;
   text-align: center;
   font-family: var(--font-special-elite), monospace;
   font-size: 11px;
@@ -437,9 +454,9 @@ body {
   border: 2px solid #0A0A0A;
   background: #F4ECD8;
   color: #0A0A0A;
-  padding: 10px;
+  padding: 8px;
   font-family: var(--font-special-elite), monospace;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -489,11 +506,12 @@ body {
 }
 
 .auth-switch {
-  margin-top: 18px;
+  margin-top: 14px;
   text-align: center;
   font-family: var(--font-special-elite), monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: #F4ECD8;
+  grid-column: 1 / -1;
 }
 
 .auth-switch a {

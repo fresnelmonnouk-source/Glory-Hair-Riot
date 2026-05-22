@@ -55,7 +55,7 @@ export default function InscriptionPage() {
 
   return (
     <section className="auth-section">
-      <div className="auth-head" style={{ marginTop: 28 }}>
+      <div className="auth-head">
         <h2>
           Bienvenue, <em>beauté !</em>
         </h2>

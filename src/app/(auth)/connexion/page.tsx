@@ -43,7 +43,7 @@ export default function ConnexionPage() {
 
   return (
     <section className="auth-section">
-      <div className="auth-head" style={{ marginTop: 28 }}>
+      <div className="auth-head">
         <h2>
           Hey, <em>salut !</em>
         </h2>

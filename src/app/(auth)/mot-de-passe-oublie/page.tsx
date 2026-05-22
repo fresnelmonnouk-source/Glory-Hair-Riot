@@ -35,7 +35,7 @@ export default function MotDePasseOubliePage() {
 
   return (
     <section className="auth-section">
-      <div className="auth-head" style={{ marginTop: 28 }}>
+      <div className="auth-head">
         <h2>
           Oups, <em>oublié&nbsp;?</em>
         </h2>

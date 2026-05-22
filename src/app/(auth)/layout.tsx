@@ -19,19 +19,19 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         minHeight: '100vh',
         position: 'relative',
       }}>
-        {/* Header simple : logo Glory cliquable */}
+        {/* Header simple : logo Glory cliquable (compact pour fit-on-screen) */}
         <div style={{
-          padding: '24px 32px 0',
+          padding: '16px 32px 0',
           display: 'flex', justifyContent: 'center',
         }}>
           <Link
             href="/"
             style={{
               fontFamily: 'var(--font-permanent-marker), cursive',
-              fontSize: 36, lineHeight: 1, color: '#F4ECD8',
+              fontSize: 28, lineHeight: 1, color: '#F4ECD8',
               transform: 'rotate(-3deg)',
-              display: 'inline-flex', flexDirection: 'column',
-              alignItems: 'center', textDecoration: 'none',
+              display: 'inline-flex', alignItems: 'baseline', gap: 8,
+              textDecoration: 'none',
             }}
           >
             <span>
@@ -51,10 +51,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <span
               style={{
                 fontFamily: 'var(--font-special-elite), monospace',
-                fontSize: 10, letterSpacing: '0.18em',
+                fontSize: 9, letterSpacing: '0.18em',
                 textTransform: 'uppercase', color: '#D4FF3E',
-                transform: 'rotate(1deg)',
-                marginTop: 2,
               }}
             >
               by{' '}
