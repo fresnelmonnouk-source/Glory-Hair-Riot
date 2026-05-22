@@ -60,17 +60,20 @@ const MOCK_WISHLIST = ['mocha', 'argent', 'creme'];
 
 // ─── Tabs config ────────────────────────────────────
 
-type TabId = 'commandes' | 'essayages' | 'souhaits' | 'fidelite' | 'adresses' | 'paiement' | 'preferences' | 'sav' | 'admin';
+type TabId = 'commandes' | 'essayages' | 'souhaits' | 'fidelite' | 'adresses' | 'paiement' | 'preferences' | 'sav';
 
 interface TabDef {
   id: TabId;
   label: string;
   count?: string;
   star?: boolean;
-  variant?: 'default' | 'glory' | 'admin';
+  variant?: 'default' | 'glory';
   external?: string;
 }
 
+// Onglets du compte utilisateur. Le back-office /admin est volontairement EXCLU
+// de cette nav — l'admin est une zone séparée réservée aux comptes équipe
+// (gated par adminProcedure tRPC + role check Supabase, Phase 5).
 const TABS: TabDef[] = [
   { id: 'commandes',   label: 'Commandes', count: String(MOCK_ORDERS.length), star: true },
   { id: 'essayages',   label: 'Essayages', count: String(MOCK_ESSAIS.length) },
@@ -80,7 +83,6 @@ const TABS: TabDef[] = [
   { id: 'paiement',    label: 'Paiement' },
   { id: 'preferences', label: 'Préférences' },
   { id: 'sav',         label: 'SAV' },
-  { id: 'admin',       label: 'Back-office', count: '↗', star: true, variant: 'admin', external: '/admin' },
 ];
 
 // ─── Component ──────────────────────────────────────
@@ -195,17 +197,16 @@ function TabLink({ tab, active, odd, onClick }: {
 
   const variantStyle: CSSProperties =
     tab.variant === 'glory' ? { background: '#F5E55E', boxShadow: '4px 4px 0 #0A0A0A' } :
-    tab.variant === 'admin' ? { background: '#0A0A0A', color: '#D4FF3E', boxShadow: '4px 4px 0 #FF7A1A' } :
     {};
 
-  const activeStyle: CSSProperties = active && tab.variant !== 'glory' && tab.variant !== 'admin'
+  const activeStyle: CSSProperties = active && tab.variant !== 'glory'
     ? { background: '#D4FF3E', boxShadow: '4px 4px 0 #0A0A0A' }
     : {};
 
   const countStyle: CSSProperties = {
     fontFamily: 'var(--font-rubik-mono-one),monospace',
-    background: tab.variant === 'glory' ? '#0A0A0A' : tab.variant === 'admin' ? '#FF7A1A' : '#0A0A0A',
-    color: tab.variant === 'glory' ? '#F5E55E' : tab.variant === 'admin' ? '#0A0A0A' : '#D4FF3E',
+    background: tab.variant === 'glory' ? '#0A0A0A' : '#0A0A0A',
+    color: tab.variant === 'glory' ? '#F5E55E' : '#D4FF3E',
     padding: '2px 8px',
     fontSize: 11,
   };
@@ -234,14 +235,14 @@ function TabLink({ tab, active, odd, onClick }: {
       aria-current={active ? 'page' : undefined}
       style={{ ...baseStyle, ...variantStyle, ...activeStyle, textAlign: 'left', width: '100%' }}
       onMouseEnter={(e) => {
-        if (!active && tab.variant !== 'admin') {
+        if (!active) {
           e.currentTarget.style.transform = 'rotate(0deg) translateX(4px)';
           if (tab.variant !== 'glory') e.currentTarget.style.background = '#D4FF3E';
         }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = `rotate(${rotate})`;
-        if (!active && tab.variant !== 'glory' && tab.variant !== 'admin') {
+        if (!active && tab.variant !== 'glory') {
           e.currentTarget.style.background = '#F4ECD8';
         }
       }}
