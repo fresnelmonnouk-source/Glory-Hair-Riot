@@ -1,8 +1,15 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { WIGS, type Wig } from '@/lib/wigs-data';
+import { ProductCard } from '@/components/product-card';
+
+/* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/[category]/page.tsx
+   (eyebrow + display h1 + compteur, grille grid-cols-2/3/4 gap-x-6 gap-y-12) —
+   Sandy segmente par catégorie via l'URL et n'a pas de filtres client ; les
+   filtres (fonctionnalité déjà existante GloryHairRiot) sont ajoutés entre le
+   header et la grille, avec le même vocabulaire de composant (pilule
+   rounded-full border-line, cf. la puce de conversation du conseiller Sandy). */
 
 type FilterId = 'all' | 'straight' | 'wavy' | 'curly' | 'coily' | 'short' | 'long' | 'budget';
 
@@ -17,49 +24,6 @@ const FILTERS: ReadonlyArray<{ id: FilterId; label: string; match: (w: Wig) => b
   { id: 'budget', label: 'Sous 300€', match: (w) => w.price < 300 },
 ] as const;
 
-function ProductCard({ wig }: { wig: Wig }) {
-  const badge = wig.tag === 'NEW' ? 'Nouveau' : wig.tag === 'HOT' ? 'Populaire' : wig.tag === 'BEST' ? 'Best-seller' : null;
-
-  return (
-    <Link href={`/perruque/${wig.id}`} className="group block">
-      <div className="relative overflow-hidden rounded-sm" style={{ aspectRatio: '4/5', background: 'var(--surface)' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={wig.img}
-          alt={wig.name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-        />
-        {badge && (
-          <span
-            className="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide"
-            style={{ background: 'var(--bg-deepest)', color: 'var(--text-primary)' }}
-          >
-            {badge}
-          </span>
-        )}
-      </div>
-
-      <div className="mt-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="text-[15px]" style={{ color: 'var(--text-primary)' }}>
-            {wig.name.replace(/(\d+")/, '').trim()} <span style={{ color: 'var(--text-faint)' }}>{wig.length}″</span>
-          </h3>
-          <span className="whitespace-nowrap text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-            {wig.price}€
-          </span>
-        </div>
-        <p className="mt-1 text-xs" style={{ color: 'var(--text-faint)' }}>{wig.style} · {wig.tone}</p>
-        <div className="mt-2 flex gap-1.5">
-          {wig.swatches.map((c, i) => (
-            <span key={i} className="h-3.5 w-3.5 rounded-full border" style={{ borderColor: 'var(--border-hairline)', background: c }} />
-          ))}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 export function CatalogueRiot() {
   const [activeId, setActiveId] = useState<FilterId>('all');
 
@@ -71,17 +35,20 @@ export function CatalogueRiot() {
     return { filtered: WIGS.filter(active.match), counts };
   }, [activeId]);
 
+  const count = filtered.length <= 1 ? `${filtered.length} pièce` : `${filtered.length} pièces`;
+
   return (
-    <section className="mx-auto max-w-[1180px] px-5 py-20" data-view="catalogue">
-      <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-[clamp(36px,6vw,64px)]" style={{ color: 'var(--text-primary)' }}>Le catalogue</h1>
-        <p className="text-sm" style={{ color: 'var(--text-faint)' }}>{WIGS.length} pièces tirées à la main</p>
-      </div>
+    <section className="mx-auto max-w-[1180px] px-6 py-16 md:px-11 md:py-20">
+      <header className="mb-12">
+        <p className="eyebrow">Catalogue</p>
+        <h1 className="display mt-4 text-5xl text-ink">Toutes les perruques</h1>
+        <p className="mt-3 text-sm text-faint">{count}</p>
+      </header>
 
       <div className="mb-10 flex flex-wrap gap-2">
         {FILTERS.map((f) => {
-          const count = counts[f.id];
-          const disabled = count === 0;
+          const c = counts[f.id];
+          const disabled = c === 0;
           const active = activeId === f.id;
           return (
             <button
@@ -90,27 +57,28 @@ export function CatalogueRiot() {
               disabled={disabled}
               onClick={() => !disabled && setActiveId(f.id)}
               aria-pressed={active}
-              className="rounded-full border px-4 py-2 text-xs transition-colors"
+              className="rounded-full border px-4 py-2 text-sm transition-colors"
               style={{
-                borderColor: active ? 'var(--accent)' : 'var(--border-input)',
+                borderColor: active ? 'var(--accent)' : 'var(--border-card)',
                 background: active ? 'var(--accent)' : 'transparent',
                 color: active ? 'var(--on-accent)' : 'var(--text-muted)',
                 opacity: disabled ? 0.3 : 1,
                 cursor: disabled ? 'not-allowed' : 'pointer',
               }}
             >
-              {f.label} ({count})
+              {f.label} ({c})
             </button>
           );
         })}
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-sm" style={{ color: 'var(--text-faint)' }}>
-          Aucune perruque dans cette catégorie pour Issue N°01. Reviens pour Issue N°02.
-        </p>
+        <div className="py-20 text-center">
+          <p className="font-display text-2xl text-ink">Aucune perruque dans cette catégorie</p>
+          <p className="mt-2 text-sm text-muted">pour Issue N°01. Reviens pour Issue N°02.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((w) => (
             <ProductCard key={w.id} wig={w} />
           ))}

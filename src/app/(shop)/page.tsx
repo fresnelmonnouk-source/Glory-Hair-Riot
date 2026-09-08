@@ -1,14 +1,15 @@
 import { HeroRiot } from '@/components/home/HeroRiot';
-import { Manifeste } from '@/components/home/Manifeste';
-import { CustomerShow } from '@/components/home/CustomerShow';
-
+import { Selection } from '@/components/home/Selection';
+import { AdvisorTeaser } from '@/components/home/AdvisorTeaser';
+import { ReassuranceBar } from '@/components/ui/ReassuranceBar';
 
 export default function Home() {
   return (
     <>
       <HeroRiot />
-      <Manifeste />
-      <CustomerShow />
+      <ReassuranceBar />
+      <Selection />
+      <AdvisorTeaser />
     </>
   );
 }

@@ -1,60 +1,49 @@
-import { ButtonLink } from '@/components/ui/Button';
+import Link from 'next/link';
 
-const STATS: { value: string; label: string }[] = [
-  { value: '~5s', label: 'Latence de l’essayage IA' },
-  { value: '2', label: 'IA en secours automatique' },
-  { value: '48h', label: 'Livraison France' },
-  { value: '6', label: 'Pièces Issue N°01' },
-];
-
-const GALLERY: { src: string; alt: string }[] = [
-  { src: '/images/ginger.jpg', alt: 'Perruque Ginger N°03' },
-  { src: '/images/argent.jpg', alt: 'Perruque Argent N°05' },
-  { src: '/images/velours.jpg', alt: 'Perruque Velours N°01' },
-  { src: '/images/bordeaux.jpg', alt: 'Perruque Bordeaux N°04' },
-];
+/* Port structurel 1:1 du HERO de sandy-stylish/src/app/(site)/[lang]/page.tsx
+   (grid 2 col, eyebrow + display h1 + CTA primaire+lien texte, 2 plaques
+   photo superposées à droite) — photos wigs au lieu de bijoux/parfum. */
 
 export function HeroRiot() {
   return (
-    <section className="mx-auto max-w-[1180px] px-5 py-20">
-      <div className="grid gap-12 md:grid-cols-2 md:items-center md:gap-16">
-        <div>
-          <p className="eyebrow mb-6">Été 2026 · Nouvelle collection</p>
-
-          <h1 className="display text-[clamp(40px,6vw,68px)]" style={{ color: 'var(--text-primary)' }}>
-            Votre beauté,<br />
-            <em style={{ color: 'var(--accent)' }}>votre couronne.</em>
-          </h1>
-
-          <p className="mt-7 max-w-[460px] text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            6 perruques en cheveux humains 100% Remy, et un essayage virtuel photo-réaliste par IA
-            — pas d&apos;overlay 3D approximatif. 1 essai gratuit par appareil, +2 essais offerts à
-            l&apos;inscription.
-          </p>
-
-          <div className="mt-9 flex flex-wrap items-center gap-4">
-            <ButtonLink href="/catalogue" variant="primary">Voir le catalogue</ButtonLink>
-            <ButtonLink href="/essayage" variant="outline">Essayer en direct</ButtonLink>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {GALLERY.map((img) => (
-            <div key={img.src} className="overflow-hidden rounded-sm" style={{ aspectRatio: '4/5', background: 'var(--surface)' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.src} alt={img.alt} className="h-full w-full object-cover" />
-            </div>
-          ))}
+    <section className="mx-auto grid max-w-[1180px] items-center gap-12 px-6 py-20 md:grid-cols-2 md:py-28">
+      <div>
+        <p className="eyebrow">Été 2026 · Nouvelle collection</p>
+        <h1 className="display mt-6 text-[2rem] leading-[1.06] text-ink sm:text-[2.75rem] md:text-[68px]">
+          Votre beauté,
+          <br />
+          votre couronne.
+        </h1>
+        <p className="mt-8 max-w-[440px] leading-relaxed text-muted">
+          6 perruques en cheveux humains 100% Remy, et un essayage virtuel photo-réaliste
+          par IA — pas d&apos;overlay 3D approximatif.
+        </p>
+        <div className="mt-10 flex flex-wrap items-center gap-6">
+          <Link
+            href="/essayage"
+            className="inline-flex items-center gap-2 rounded-[2px] bg-accent px-7 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
+          >
+            Essayer en direct
+            <span aria-hidden>→</span>
+          </Link>
+          <Link
+            href="/catalogue"
+            className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent"
+          >
+            Voir le catalogue
+          </Link>
         </div>
       </div>
 
-      <div className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-sm border md:grid-cols-4" style={{ borderColor: 'var(--border-hairline)', background: 'var(--border-hairline)' }}>
-        {STATS.map((s) => (
-          <div key={s.label} className="p-6" style={{ background: 'var(--bg-body)' }}>
-            <div className="display text-3xl" style={{ color: 'var(--text-primary)' }}>{s.value}</div>
-            <div className="mt-1 text-xs" style={{ color: 'var(--text-faint)' }}>{s.label}</div>
-          </div>
-        ))}
+      <div aria-hidden className="relative hidden h-[540px] md:block">
+        <div className="absolute right-0 top-0 h-[470px] w-[66%] overflow-hidden rounded-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/ginger.jpg" alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute bottom-0 left-0 h-[300px] w-[44%] overflow-hidden rounded-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/bordeaux.jpg" alt="" className="h-full w-full object-cover" />
+        </div>
       </div>
     </section>
   );
