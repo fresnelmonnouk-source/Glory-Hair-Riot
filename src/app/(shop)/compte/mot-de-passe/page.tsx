@@ -11,6 +11,8 @@
  * Sécurité MVP : updateUser direct sur la session active. Pour Phase 6,
  * ajouter une re-auth (saisie du mot de passe actuel + check via signIn)
  * avant de permettre le changement.
+ *
+ * Réhabillage : même vocabulaire AuthCard que le reste du flow auth.
  */
 
 import Link from 'next/link';
@@ -18,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSession } from '@/hooks/use-session';
+import { AUTH_INPUT, AuthCard, AuthLabel, FormError, IconBadge } from '@/components/auth/ui';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -66,88 +69,73 @@ export default function ChangePasswordPage() {
 
   if (loading) {
     return (
-      <section style={{ padding: '120px 32px', textAlign: 'center', minHeight: '60vh' }}>
-        <p style={{
-          fontFamily: 'var(--font-vt323),monospace',
-          fontSize: 22, color: '#F4ECD8', opacity: 0.6,
-        }}>
-          ★ Vérification…
-        </p>
-      </section>
+      <AuthCard align="center">
+        <p className="text-sm text-faint">Vérification…</p>
+      </AuthCard>
+    );
+  }
+
+  if (success) {
+    return (
+      <AuthCard align="center">
+        <IconBadge icon="check" />
+        <h1 className="display mt-6 text-3xl text-ink">Mot de passe mis à jour !</h1>
+        <p className="mt-4 leading-relaxed text-muted">Redirection vers votre compte…</p>
+      </AuthCard>
     );
   }
 
   return (
-    <section className="auth-section" style={{
-      // override min-height pour s'intégrer dans le layout shop (qui a déjà
-      // Topbar + Nav + Footer en haut)
-      paddingTop: 48,
-      maxWidth: 1140,
-    }}>
-      <div className="auth-head">
-        <h2>
-          Mot de <em>passe.</em>
-        </h2>
-        <div className="auth-scrawl">
-          → choisis-en un nouveau ✨
-          <br />8 caractères minimum
-        </div>
-      </div>
+    <AuthCard align="left">
+      <p className="eyebrow">Compte {user?.email}</p>
+      <h1 className="display mt-4 text-4xl text-ink">Mot de passe.</h1>
+      <p className="mt-4 leading-relaxed text-muted">Choisissez-en un nouveau, 8 caractères minimum.</p>
 
-      <div className="auth-card">
-        <span aria-hidden className="tape" />
-        <h3>
-          Changer
-        </h3>
-        <div className="sub">
-          // Compte {user?.email}
+      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+        <div>
+          <AuthLabel htmlFor="cp-pwd">Nouveau mot de passe</AuthLabel>
+          <input
+            id="cp-pwd"
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="min. 8 caractères"
+            autoComplete="new-password"
+            className={AUTH_INPUT}
+          />
         </div>
 
-        {success ? (
-          <div className="auth-success">
-            <b style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, fontWeight: 400, display: 'block', marginBottom: 4 }}>
-              ★ Mot de passe mis à jour !
-            </b>
-            Redirection vers ton compte…
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="cp-pwd">Nouveau mot de passe</label>
-            <input
-              id="cp-pwd"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="min. 8 caractères"
-              autoComplete="new-password"
-            />
+        <div>
+          <AuthLabel htmlFor="cp-confirm">Confirmez le mot de passe</AuthLabel>
+          <input
+            id="cp-confirm"
+            type="password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="new-password"
+            className={AUTH_INPUT}
+          />
+        </div>
 
-            <label htmlFor="cp-confirm">Confirme le mot de passe</label>
-            <input
-              id="cp-confirm"
-              type="password"
-              required
-              minLength={8}
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
+        {error && <FormError>{error}</FormError>}
 
-            {error && <div className="auth-error">★ {error}</div>}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {submitting ? '…' : 'Mettre à jour'}
+        </button>
+      </form>
 
-            <button type="submit" className="submit" disabled={submitting}>
-              {submitting ? '⏳ Mise à jour…' : '→ Mettre à jour'}
-            </button>
-          </form>
-        )}
-      </div>
-
-      <div className="auth-switch">
-        <Link href="/compte">← Retour au compte</Link>
-      </div>
-    </section>
+      <Link href="/compte" className="mt-6 block text-center text-sm text-muted transition-colors hover:text-accent">
+        ← Retour au compte
+      </Link>
+    </AuthCard>
   );
 }

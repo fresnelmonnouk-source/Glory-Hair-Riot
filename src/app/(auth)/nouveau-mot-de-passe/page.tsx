@@ -15,6 +15,10 @@
  *
  * IMPORTANT : cette route n'est PAS dans le middleware matcher → pas de
  * redirect intempestif. La session recovery est gérée côté client uniquement.
+ *
+ * Réhabillage : port structurel de sandy-stylish/.../auth/reinitialisation
+ * (AuthCard + IconBadge check pour l'état "terminé"). États checking/invalid
+ * inchangés (pas d'équivalent Sandy exact — stylés avec le même vocabulaire).
  */
 
 import Link from 'next/link';
@@ -22,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { AUTH_INPUT, AuthCard, AuthLabel, FormError, IconBadge } from '@/components/auth/ui';
 
 type Status = 'checking' | 'ready' | 'invalid' | 'submitting' | 'success';
 
@@ -95,96 +100,84 @@ export default function NouveauMotDePassePage() {
     }
   }
 
+  if (status === 'checking') {
+    return (
+      <AuthCard align="center">
+        <p className="text-sm text-faint">Vérification du lien…</p>
+      </AuthCard>
+    );
+  }
+
+  if (status === 'invalid') {
+    return (
+      <AuthCard align="center">
+        <p className="eyebrow">Lien invalide</p>
+        <h1 className="display mt-4 text-3xl text-ink">Ce lien a expiré.</h1>
+        <p className="mt-4 leading-relaxed text-muted">Demandez un nouveau lien de réinitialisation.</p>
+        <Link href="/mot-de-passe-oublie" className="mt-8 block w-full rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+          Demander un nouveau lien
+        </Link>
+      </AuthCard>
+    );
+  }
+
+  if (status === 'success') {
+    return (
+      <AuthCard align="center">
+        <IconBadge icon="check" />
+        <h1 className="display mt-6 text-3xl text-ink">Mot de passe mis à jour !</h1>
+        <p className="mt-4 leading-relaxed text-muted">Vous allez être redirigé vers la connexion…</p>
+      </AuthCard>
+    );
+  }
+
   return (
-    <section className="auth-section">
-      <div className="auth-head">
-        <h2>
-          Nouveau <em>mot de passe.</em>
-        </h2>
-        <div className="auth-scrawl">
-          → choisis-en un solide ✨
-          <br />8 caractères minimum
+    <AuthCard align="left">
+      <p className="eyebrow">Réinitialisation</p>
+      <h1 className="display mt-4 text-4xl text-ink">Nouveau mot de passe.</h1>
+      <p className="mt-4 leading-relaxed text-muted">Une fois validé, vous serez déconnecté pour vous reconnecter avec le nouveau mot de passe.</p>
+
+      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+        <div>
+          <AuthLabel htmlFor="np-pwd">Nouveau mot de passe</AuthLabel>
+          <input
+            id="np-pwd"
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="min. 8 caractères"
+            autoComplete="new-password"
+            className={AUTH_INPUT}
+          />
         </div>
-      </div>
 
-      <div className="auth-card">
-        <span aria-hidden className="tape" />
-        <h3>
-          Réinitialiser
-        </h3>
-        <div className="sub">// Une fois validé, tu seras déconnecté·e pour te reconnecter avec le nouveau pwd.</div>
+        <div>
+          <AuthLabel htmlFor="np-confirm">Confirmez le mot de passe</AuthLabel>
+          <input
+            id="np-confirm"
+            type="password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="new-password"
+            className={AUTH_INPUT}
+          />
+        </div>
 
-        {status === 'checking' && (
-          <div className="auth-success" style={{ background: '#F5E55E' }}>
-            <b style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, fontWeight: 400, display: 'block' }}>
-              ⏳ Vérification du lien…
-            </b>
-          </div>
-        )}
+        {error && <FormError>{error}</FormError>}
 
-        {status === 'invalid' && (
-          <>
-            <div className="auth-error">
-              ★ Lien invalide ou expiré. Demande un nouveau lien de réinitialisation.
-            </div>
-            <Link
-              href="/mot-de-passe-oublie"
-              className="submit"
-              style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 14 }}
-            >
-              → Demander un nouveau lien
-            </Link>
-          </>
-        )}
-
-        {status === 'success' && (
-          <div className="auth-success">
-            <b style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, fontWeight: 400, display: 'block', marginBottom: 4 }}>
-              ★ Mot de passe mis à jour !
-            </b>
-            Tu vas être redirigé·e vers la connexion…
-          </div>
-        )}
-
-        {(status === 'ready' || status === 'submitting') && (
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="np-pwd">Nouveau mot de passe</label>
-            <input
-              id="np-pwd"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="min. 8 caractères"
-              autoComplete="new-password"
-            />
-
-            <label htmlFor="np-confirm">Confirme le mot de passe</label>
-            <input
-              id="np-confirm"
-              type="password"
-              required
-              minLength={8}
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
-
-            {error && <div className="auth-error">★ {error}</div>}
-
-            <button type="submit" className="submit" disabled={status === 'submitting'}>
-              {status === 'submitting' ? '⏳ Mise à jour…' : '→ Mettre à jour'}
-            </button>
-          </form>
-        )}
-      </div>
-
-      <div className="auth-switch">
-        Tu te souviens finalement ?{' '}
-        <Link href="/connexion">Se connecter</Link>
-      </div>
-    </section>
+        <button
+          type="submit"
+          disabled={status === 'submitting'}
+          className="w-full rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {status === 'submitting' ? '…' : 'Mettre à jour'}
+        </button>
+      </form>
+    </AuthCard>
   );
 }

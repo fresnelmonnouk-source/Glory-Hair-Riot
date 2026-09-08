@@ -1,8 +1,13 @@
 'use client';
 
+/* Port structurel 1:1 de sandy-stylish/.../auth/mot-de-passe-oublie
+   (AuthCard centré + IconBadge mail pour l'état "envoyé"). Logique
+   resetPasswordForEmail inchangée. */
+
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { AUTH_INPUT, AuthCard, AuthLabel, FormError, IconBadge } from '@/components/auth/ui';
 
 export default function MotDePasseOubliePage() {
   const [email, setEmail] = useState('');
@@ -35,76 +40,57 @@ export default function MotDePasseOubliePage() {
     }
   }
 
+  if (sent) {
+    return (
+      <AuthCard align="center">
+        <IconBadge icon="mail" />
+        <h1 className="display mt-6 text-3xl text-ink">Email envoyé.</h1>
+        <p className="mt-4 leading-relaxed text-muted">
+          On vient d&apos;envoyer un lien de réinitialisation à <b className="text-ink">{email}</b>. Vérifiez
+          votre boîte de réception (et les spams).
+        </p>
+        <Link href="/connexion" className="mt-8 block w-full rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+          Retour à la connexion
+        </Link>
+      </AuthCard>
+    );
+  }
+
   return (
-    <section className="auth-section">
-      <div className="auth-head">
-        <h2>
-          Oups, <em>oublié&nbsp;?</em>
-        </h2>
-        <div className="auth-scrawl">
-          → on t&apos;envoie un lien
-          <br />pour réinitialiser ✨
+    <AuthCard align="left">
+      <p className="eyebrow">Mot de passe oublié</p>
+      <h1 className="display mt-4 text-4xl text-ink">Réinitialiser.</h1>
+      <p className="mt-4 leading-relaxed text-muted">On vous envoie un lien par mail pour en choisir un nouveau.</p>
+
+      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+        <div>
+          <AuthLabel htmlFor="rp-email">E-mail du compte</AuthLabel>
+          <input
+            id="rp-email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ton@email.com"
+            autoComplete="email"
+            className={AUTH_INPUT}
+          />
         </div>
-      </div>
 
-      <div className="auth-card">
-        <span aria-hidden className="tape" />
-        <h3>
-          Réinitialiser
-        </h3>
-        <div className="sub">// On t&apos;envoie un lien par mail.</div>
+        {error && <FormError>{error}</FormError>}
 
-        {sent ? (
-          <>
-            <div className="auth-success">
-              <b style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, fontWeight: 400, display: 'block', marginBottom: 4 }}>
-                ★ Email envoyé.
-              </b>
-              On vient d&apos;envoyer un lien de réinitialisation à <b style={{ fontWeight: 400 }}>{email}</b>. Vérifie ta boîte de réception (et les spams).
-            </div>
-            <div style={{ marginTop: 14 }}>
-              <Link
-                href="/connexion"
-                className="submit"
-                style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
-              >
-                ← Retour à la connexion
-              </Link>
-            </div>
-          </>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="rp-email">E-mail du compte</label>
-            <input
-              id="rp-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ton@email.com"
-              autoComplete="email"
-            />
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {loading ? '…' : 'Envoyer le lien'}
+        </button>
+      </form>
 
-            {error && <div className="auth-error">★ {error}</div>}
-
-            <button type="submit" className="submit" disabled={loading}>
-              {loading ? '⏳ Envoi…' : '→ Envoyer le lien'}
-            </button>
-
-            <div className="legal" style={{ textAlign: 'center', marginTop: 18 }}>
-              Tu te souviens finalement ?{' '}
-              <Link href="/connexion" style={{ color: '#0A0A0A', textDecoration: 'underline', textDecorationColor: '#FF7A1A', textDecorationThickness: 2 }}>
-                Connexion
-              </Link>
-            </div>
-          </form>
-        )}
-      </div>
-
-      <div className="auth-switch">
-        Pas encore de compte ?{' '}
-        <Link href="/inscription">Créer un compte</Link>
-      </div>
-    </section>
+      <Link href="/connexion" className="mt-6 block text-center text-sm text-muted transition-colors hover:text-accent">
+        Tu te souviens finalement ? Connexion
+      </Link>
+    </AuthCard>
   );
 }

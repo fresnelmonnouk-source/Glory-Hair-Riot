@@ -1,9 +1,16 @@
 'use client';
 
+/* Port structurel 1:1 de sandy-stylish/.../commande/confirmation
+   (IconBadge check + eyebrow/display + bandeau infos + récap bordé).
+   Sandy relit la vraie commande en base (service_role) ; GloryHairRiot
+   n'a qu'une référence passée en query param (paiement mocké, pas de
+   lookup réel possible) — logique de vidage panier + contenu inchangés. */
+
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 import { useCartStore } from '@/stores/cart.store';
+import { IconBadge } from '@/components/auth/ui';
 
 export default function MerciPage() {
   return (
@@ -22,76 +29,30 @@ function MerciContent() {
   useEffect(() => { clear(); }, [clear]);
 
   return (
-    <section style={{
-      padding: '120px 32px',
-      minHeight: '70vh',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      textAlign: 'center', gap: 28,
-    }}>
-      <div style={{
-        fontFamily: 'var(--font-rubik-mono-one),monospace',
-        fontSize: 14, letterSpacing: '0.12em',
-        color: '#D4FF3E', border: '3px solid #D4FF3E',
-        padding: '8px 16px', transform: 'rotate(-3deg)',
-      }}>
-        ★ COMMANDE CONFIRMÉE
-      </div>
-
-      <h1 style={{
-        fontFamily: 'var(--font-anton),Impact,sans-serif',
-        fontSize: 'clamp(72px,9vw,140px)',
-        lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8',
-      }}>
-        Merci{' '}
-        <em style={{
-          fontFamily: 'var(--font-yeseva-one),serif',
-          fontStyle: 'italic', color: '#FF7A1A',
-        }}>
-          beauté.
-        </em>
-      </h1>
-
-      <p style={{
-        fontFamily: 'var(--font-special-elite),monospace',
-        fontSize: 17, lineHeight: 1.5, color: '#F4ECD8',
-        maxWidth: 520,
-      }}>
-        Ta commande{' '}
-        <b style={{
-          background: '#D4FF3E', color: '#0A0A0A',
-          padding: '2px 8px', fontWeight: 400,
-          fontFamily: 'var(--font-rubik-mono-one),monospace',
-        }}>#{ref}</b>{' '}
-        est partie en atelier. Tu vas recevoir un mail de confirmation dans quelques minutes.
-        Livraison sous 48h en France métropolitaine.
+    <section className="mx-auto max-w-[820px] px-6 py-16 text-center md:px-11 md:py-24">
+      <IconBadge icon="check" size="lg" />
+      <p className="eyebrow mt-6">Commande confirmée</p>
+      <h1 className="display mt-4 text-4xl text-ink md:text-5xl">Merci beauté.</h1>
+      <p className="mx-auto mt-4 max-w-prose leading-relaxed text-muted">
+        Votre commande <b className="text-ink">#{ref}</b> est partie en atelier. Vous allez recevoir un mail
+        de confirmation dans quelques minutes. Livraison sous 48h en France métropolitaine.
       </p>
 
-      <div style={{
-        background: '#F4ECD8', color: '#0A0A0A',
-        border: '3px solid #0A0A0A', padding: 24,
-        transform: 'rotate(-1deg)',
-        boxShadow: '6px 6px 0 #D4FF3E',
-        maxWidth: 480,
-      }}>
-        <h3 style={{
-          fontFamily: 'var(--font-permanent-marker),cursive',
-          fontSize: 24, marginBottom: 12,
-        }}>
-          ★ Bonus Glory Club
-        </h3>
-        <p style={{
-          fontFamily: 'var(--font-special-elite),monospace',
-          fontSize: 14, lineHeight: 1.5,
-        }}>
-          Tu viens de débloquer <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>+50 points</b>{' '}
-          + tes <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>2 essais Premium</b>{' '}
-          dès la création de ton compte.
+      <div className="mt-10 rounded-lg border border-hairline bg-app p-6 text-left">
+        <p className="eyebrow">Bonus Glory Club</p>
+        <p className="mt-3 leading-relaxed text-muted">
+          Vous venez de débloquer <b className="text-accent">+50 points</b> et vos{' '}
+          <b className="text-accent">2 essais Premium</b> dès la création de votre compte.
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Link href="/connexion" className="btn-bold">→ Activer mon compte</Link>
-        <Link href="/catalogue" className="btn-bold outline">Continuer mes achats</Link>
+      <div className="mt-10 flex flex-wrap justify-center gap-4">
+        <Link href="/connexion" className="rounded-[2px] bg-accent px-7 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+          Activer mon compte
+        </Link>
+        <Link href="/catalogue" className="rounded-[2px] border border-line px-7 py-3 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] hover:text-accent">
+          Continuer mes achats
+        </Link>
       </div>
     </section>
   );
