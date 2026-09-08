@@ -12,7 +12,7 @@ import { sendEmail } from '@/lib/email/send';
 export const runtime = 'nodejs';
 
 export async function POST() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });

@@ -15,7 +15,7 @@ export const runtime = 'nodejs';
 const WELCOME_MARKER_LABEL = 'Welcome email sent';
 
 export async function POST() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });

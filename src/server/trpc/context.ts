@@ -7,7 +7,7 @@ import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
  * Contains authenticated user and database client
  */
 export async function createTRPCContext(_opts?: FetchCreateContextFnOptions) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const {
     data: { user },

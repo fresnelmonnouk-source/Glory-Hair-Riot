@@ -323,7 +323,7 @@ export async function POST(request: Request) {
   // ─── Quota check ──────────────────────────────────────
   // Logged : tryon_quotas en DB (lecture + bump après succès)
   // Anon : rate limit sliding window par IP (2 / 24h)
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   let quotaRow: { user_id: string; used_count: number; granted: number } | null = null;
 

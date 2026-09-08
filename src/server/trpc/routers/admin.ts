@@ -29,17 +29,17 @@ export const adminRouter = router({
     // CA + count commandes 24h
     const { data: recent } = await supabase
       .from('orders')
-      .select('total_amount, created_at')
+      .select('total_cents, created_at')
       .gte('created_at', last24h);
 
     const { data: prevDay } = await supabase
       .from('orders')
-      .select('total_amount')
+      .select('total_cents')
       .gte('created_at', prev24h)
       .lt('created_at', last24h);
 
-    const ca24h = (recent ?? []).reduce((sum, o) => sum + (o.total_amount ?? 0), 0);
-    const caPrev = (prevDay ?? []).reduce((sum, o) => sum + (o.total_amount ?? 0), 0);
+    const ca24h = (recent ?? []).reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
+    const caPrev = (prevDay ?? []).reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
     const ordersCount = recent?.length ?? 0;
     const ordersPrev = prevDay?.length ?? 0;
     const avgBasket = ordersCount > 0 ? Math.round(ca24h / ordersCount) : 0;
@@ -80,7 +80,7 @@ export const adminRouter = router({
     .query(async ({ ctx, input }) => {
       let q = ctx.supabase
         .from('orders')
-        .select('id, user_id, total_amount, status, created_at, users(full_name, email)', { count: 'exact' })
+        .select('id, user_id, total_cents, status, created_at, users(full_name, email)', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(input.offset, input.offset + input.limit - 1);
 
@@ -180,7 +180,7 @@ export const adminRouter = router({
       const { data, error } = await ctx.supabase
         .from('orders')
         .select(`
-          id, user_id, total_amount, status, created_at, shipping_address, payment_intent_id,
+          id, user_id, total_cents, status, created_at, shipping_address, payment_intent_id,
           users(full_name, email, phone),
           order_items(id, wig_id, quantity, price_at_purchase, wigs(slug, name))
         `)

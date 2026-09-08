@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     : 'footer';
 
   // 3. Insert Supabase (idempotent via UNIQUE constraint sur email)
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { error: dbError } = await supabase
     .from('newsletter_subscribers')
     .upsert({ email, source }, { onConflict: 'email', ignoreDuplicates: true });

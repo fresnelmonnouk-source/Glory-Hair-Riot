@@ -77,7 +77,7 @@ export function AdminDashboard() {
                   <span className="font-display text-lg text-ink group-hover:text-accent">#{o.id.slice(0, 8).toUpperCase()}</span>
                   <span className="ml-auto text-sm text-faint">{new Date(o.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   <OrderStatusPill status={o.status} />
-                  <span className="w-20 text-right text-sm text-accent">{Math.round((o.total_amount ?? 0) / 100).toLocaleString('fr-FR')}€</span>
+                  <span className="w-20 text-right text-sm text-accent">{Math.round((o.total_cents ?? 0) / 100).toLocaleString('fr-FR')}€</span>
                 </Link>
               </li>
             ))}

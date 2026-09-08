@@ -110,7 +110,7 @@ export default function AdminCommandesPage() {
                       </td>
                       <td className="px-4 py-5"><OrderStatusPill status={o.status as string} /></td>
                       <td className="px-4 py-5 text-right text-sm text-accent tabular-nums">
-                        {Math.round((o.total_amount ?? 0) / 100).toLocaleString('fr-FR')}€
+                        {Math.round((o.total_cents ?? 0) / 100).toLocaleString('fr-FR')}€
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-end gap-4">
