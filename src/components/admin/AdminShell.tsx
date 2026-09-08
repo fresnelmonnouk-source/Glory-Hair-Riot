@@ -1,24 +1,22 @@
 'use client';
 
+/* Port structurel 1:1 de sandy-stylish/src/app/(admin)/admin/(protected)/layout.tsx
+   (header sticky pleine largeur, puis flex : aside 220px + main max-w-[980px]).
+   Drawer mobile conservé (fonctionnalité réelle existante, absente du fichier
+   Sandy mais utile pour un back-office consulté depuis un téléphone). */
+
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminTopbar } from './AdminTopbar';
 
-/**
- * AdminShell — wrapper client qui gère le drawer mobile.
- * Desktop : sidebar fixe 240px à gauche.
- * Mobile : sidebar masquée par défaut, drawer overlay via burger.
- */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Fermer drawer au changement de route
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
-  // Lock body scroll quand drawer ouvert
   useEffect(() => {
     if (!drawerOpen) return;
     const prev = document.body.style.overflow;
@@ -27,42 +25,40 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [drawerOpen]);
 
   return (
-    <div className="admin-shell">
-      {/* Sidebar : sticky desktop, drawer mobile */}
-      <div className={`admin-sidebar-wrap${drawerOpen ? ' open' : ''}`}>
-        <AdminSidebar />
+    <div className="min-h-full">
+      <div className="flex items-stretch border-b border-hairline md:border-b-0">
+        <button
+          type="button"
+          aria-label={drawerOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+          aria-expanded={drawerOpen}
+          onClick={() => setDrawerOpen((v) => !v)}
+          className="flex w-14 shrink-0 items-center justify-center text-ink md:hidden"
+        >
+          {drawerOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <AdminTopbar />
+        </div>
       </div>
 
-      {/* Backdrop mobile */}
-      {drawerOpen && (
-        <div
-          className="admin-drawer-backdrop"
-          role="button"
-          tabIndex={-1}
-          aria-label="Fermer le menu"
-          onClick={() => setDrawerOpen(false)}
-        />
-      )}
+      <div className="flex">
+        <aside className={`shrink-0 border-r border-hairline px-4 py-8 md:block md:w-[220px] ${drawerOpen ? 'fixed inset-y-0 left-0 z-50 w-[220px] bg-app' : 'hidden'}`}>
+          <AdminSidebar />
+        </aside>
 
-      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'stretch' }}>
-          {/* Burger mobile */}
-          <button
-            type="button"
-            className="admin-burger"
-            aria-label={drawerOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-            aria-expanded={drawerOpen}
-            onClick={() => setDrawerOpen((v) => !v)}
-          >
-            {drawerOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={2.5} />}
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <AdminTopbar />
-          </div>
-        </div>
-        <div className="admin-content">
-          {children}
-        </div>
+        {drawerOpen && (
+          <div
+            role="button"
+            tabIndex={-1}
+            aria-label="Fermer le menu"
+            onClick={() => setDrawerOpen(false)}
+            className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          />
+        )}
+
+        <main className="min-w-0 flex-1 px-6 py-10 md:px-10">
+          <div className="mx-auto max-w-[980px]">{children}</div>
+        </main>
       </div>
     </div>
   );
