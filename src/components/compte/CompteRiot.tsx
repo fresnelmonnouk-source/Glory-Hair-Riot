@@ -7,7 +7,7 @@
    conservés, stylés avec le même vocabulaire de carte que "commandes". */
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { WIG_BY_ID } from '@/lib/wigs-data';
@@ -34,9 +34,16 @@ const STATUS_LABEL: Record<string, string> = {
   pending: 'En attente', paid: 'Payée', shipped: 'En route', delivered: 'Livrée', cancelled: 'Annulée',
 };
 
+const TAB_IDS = TABS.map((t) => t.id);
+function isTabId(v: string | null): v is TabId {
+  return !!v && (TAB_IDS as string[]).includes(v);
+}
+
 export function CompteRiot() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>('commandes');
+  const searchParams = useSearchParams();
+  const initialTab = searchParams?.get('tab') ?? null;
+  const [activeTab, setActiveTab] = useState<TabId>(isTabId(initialTab) ? initialTab : 'commandes');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { user, profile, loading, signOut } = useSession();

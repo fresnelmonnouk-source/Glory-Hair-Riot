@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { WIGS, type Wig } from '@/lib/wigs-data';
 import { useCartStore } from '@/stores/cart.store';
+import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
 import { ProductCard } from '@/components/product-card';
 import { ProductGallery } from './ProductGallery';
 
@@ -22,15 +25,22 @@ const DENSITIES = [
 ] as const;
 
 export function ProduitRiot({ wig }: { wig: Wig }) {
+  const router = useRouter();
+  const { user } = useSession();
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedSize, setSelectedSize] = useState<number>(wig.length);
   const [selectedDensity, setSelectedDensity] = useState<number>(180);
   const [added, setAdded] = useState(false);
+  const [favorited, setFavorited] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
   const nameOnly = wig.name.replace(/\s*\d+"$/, '').trim();
 
   const similar = useMemo(() => WIGS.filter((w) => w.id !== wig.id).slice(0, 4), [wig.id]);
+
+  const addFavoriteM = trpc.wishlist.addBySlug.useMutation({
+    onSuccess: () => setFavorited(true),
+  });
 
   function handleAddToCart() {
     addItem({
@@ -43,6 +53,14 @@ export function ProduitRiot({ wig }: { wig: Wig }) {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
+  }
+
+  function handleAddFavorite() {
+    if (!user) {
+      router.push(`/connexion?redirect=/perruque/${wig.id}`);
+      return;
+    }
+    addFavoriteM.mutate({ slug: wig.id });
   }
 
   return (
@@ -163,8 +181,14 @@ export function ProduitRiot({ wig }: { wig: Wig }) {
             </Link>
           </div>
 
-          <button type="button" className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink" aria-label="Ajouter aux favoris">
-            <span aria-hidden>♡</span> Ajouter aux favoris
+          <button
+            type="button"
+            onClick={handleAddFavorite}
+            disabled={favorited || addFavoriteM.isPending}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink disabled:cursor-default disabled:hover:text-muted"
+            aria-label="Ajouter aux favoris"
+          >
+            <span aria-hidden>{favorited ? '♥' : '♡'}</span> {favorited ? 'Dans vos favoris' : 'Ajouter aux favoris'}
           </button>
 
           <dl className="mt-12 space-y-2 border-t border-hairline pt-6 text-sm">

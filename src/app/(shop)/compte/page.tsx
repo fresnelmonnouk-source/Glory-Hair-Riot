@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { CompteRiot } from '@/components/compte/CompteRiot';
 
 
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function ComptePage() {
-  return <CompteRiot />;
+  return (
+    <Suspense fallback={null}>
+      <CompteRiot />
+    </Suspense>
+  );
 }

@@ -72,6 +72,20 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
+    // La coquille /admin n'était protégée par aucun rôle — n'importe quel
+    // compte connecté pouvait la charger (les données restaient protégées
+    // côté tRPC via adminProcedure, mais pas la navigation elle-même).
+    if (isAdmin && user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile?.role !== 'admin') {
+        return NextResponse.redirect(new URL('/compte', request.url));
+      }
+    }
+
     if (isAuthPage && user) {
       return NextResponse.redirect(new URL('/compte', request.url));
     }
