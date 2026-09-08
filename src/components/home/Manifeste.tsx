@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ButtonLink } from '@/components/ui/Button';
 
 export function Manifeste() {
   return (
@@ -33,14 +34,8 @@ export function Manifeste() {
             de compte, +2 à l&apos;inscription. Vous testez avant d&apos;acheter — la moindre des choses.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/catalogue"
-              className="rounded-sm px-6 py-3 text-sm font-medium"
-              style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
-            >
-              Voir le catalogue
-            </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <ButtonLink href="/catalogue" variant="primary">Voir le catalogue</ButtonLink>
             <Link href="/magazine" className="text-sm underline underline-offset-4" style={{ color: 'var(--text-primary)' }}>
               Lire le magazine
             </Link>

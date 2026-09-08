@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
+import { ButtonLink } from '@/components/ui/Button';
 
 const NAV_LINKS: ReadonlyArray<readonly [string, string]> = [
   ['/', 'Accueil'],
@@ -107,15 +108,10 @@ export function NavRiot() {
             <Heart size={16} strokeWidth={1.75} />
             {user ? (wishlistCount.data ?? 0) : 0}
           </Link>
-          <Link
-            href="/panier"
-            aria-label="Panier"
-            className="inline-flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium"
-            style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
-          >
-            <ShoppingBag size={15} strokeWidth={1.75} />
-            {cartCount}
-          </Link>
+          <ButtonLink href="/panier" variant="primary" size="sm">
+            <ShoppingBag size={15} strokeWidth={1.75} aria-hidden />
+            <span aria-label="Panier">{cartCount}</span>
+          </ButtonLink>
         </div>
 
         <button
@@ -163,13 +159,9 @@ export function NavRiot() {
             <Link href="/compte?tab=souhaits" className="text-sm" style={{ color: 'var(--text-primary)' }}>
               Favoris · {user ? (wishlistCount.data ?? 0) : 0}
             </Link>
-            <Link
-              href="/panier"
-              className="rounded-sm px-4 py-3 text-center text-sm font-medium"
-              style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
-            >
+            <ButtonLink href="/panier" variant="primary" className="w-full">
               Voir le panier · {cartCount}
-            </Link>
+            </ButtonLink>
             <button type="button" className="text-xs" style={{ color: 'var(--text-muted)' }}>
               FR / EN
             </button>

@@ -99,7 +99,7 @@ export function FooterRiot() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-3 text-xs font-medium tracking-wide uppercase"
+                  className="px-5 py-3 text-sm font-medium"
                   style={{ background: 'var(--accent)', color: 'var(--on-accent)', opacity: submitting ? 0.6 : 1 }}
                 >
                   {submitting ? '…' : "S'inscrire"}

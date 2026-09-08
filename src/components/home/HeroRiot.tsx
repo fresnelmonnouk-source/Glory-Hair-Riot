@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { ButtonLink } from '@/components/ui/Button';
 
 const STATS: { value: string; label: string }[] = [
   { value: '~5s', label: 'Latence de l’essayage IA' },
@@ -16,7 +16,7 @@ const GALLERY: { src: string; alt: string }[] = [
 
 export function HeroRiot() {
   return (
-    <section className="mx-auto max-w-[1180px] px-5 pb-20 pt-16 md:pt-24">
+    <section className="mx-auto max-w-[1180px] px-5 py-20">
       <div className="grid gap-12 md:grid-cols-2 md:items-center md:gap-16">
         <div>
           <p className="eyebrow mb-6">Été 2026 · Nouvelle collection</p>
@@ -33,20 +33,8 @@ export function HeroRiot() {
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-4">
-            <Link
-              href="/catalogue"
-              className="rounded-sm px-6 py-3 text-sm font-medium"
-              style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
-            >
-              Voir le catalogue
-            </Link>
-            <Link
-              href="/essayage"
-              className="rounded-sm border px-6 py-3 text-sm font-medium"
-              style={{ borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}
-            >
-              Essayer en direct
-            </Link>
+            <ButtonLink href="/catalogue" variant="primary">Voir le catalogue</ButtonLink>
+            <ButtonLink href="/essayage" variant="outline">Essayer en direct</ButtonLink>
           </div>
         </div>
 
@@ -62,7 +50,7 @@ export function HeroRiot() {
 
       <div className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-sm border md:grid-cols-4" style={{ borderColor: 'var(--border-hairline)', background: 'var(--border-hairline)' }}>
         {STATS.map((s) => (
-          <div key={s.label} className="px-6 py-6" style={{ background: 'var(--bg-body)' }}>
+          <div key={s.label} className="p-6" style={{ background: 'var(--bg-body)' }}>
             <div className="display text-3xl" style={{ color: 'var(--text-primary)' }}>{s.value}</div>
             <div className="mt-1 text-xs" style={{ color: 'var(--text-faint)' }}>{s.label}</div>
           </div>

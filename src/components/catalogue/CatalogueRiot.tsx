@@ -72,7 +72,7 @@ export function CatalogueRiot() {
   }, [activeId]);
 
   return (
-    <section className="mx-auto max-w-[1180px] px-5 py-16" data-view="catalogue">
+    <section className="mx-auto max-w-[1180px] px-5 py-20" data-view="catalogue">
       <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-[clamp(36px,6vw,64px)]" style={{ color: 'var(--text-primary)' }}>Le catalogue</h1>
         <p className="text-sm" style={{ color: 'var(--text-faint)' }}>{WIGS.length} pièces tirées à la main</p>

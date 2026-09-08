@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { ButtonLink } from '@/components/ui/Button';
 
 const TESTIMONIALS = [
   { quote: "Le lace est invisible, j'ai eu 3 compliments le 1er jour.", author: 'Naomi', location: 'Paris' },
@@ -16,8 +16,8 @@ export function CustomerShow() {
         <p className="text-sm" style={{ color: 'var(--text-faint)' }}>Taguez @gloryhair pour apparaître</p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-[1.1fr_1fr] md:items-start">
-        <div className="overflow-hidden rounded-sm" style={{ aspectRatio: '4/3', background: 'var(--surface)' }}>
+      <div className="grid gap-12 md:grid-cols-[1.1fr_1fr] md:items-start md:gap-16">
+        <div className="overflow-hidden rounded-sm" style={{ aspectRatio: '4/5', background: 'var(--surface)' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/customer-show.jpg"
@@ -29,7 +29,7 @@ export function CustomerShow() {
 
         <div className="flex flex-col gap-4">
           {TESTIMONIALS.map((t) => (
-            <div key={t.author} className="rounded-sm border p-5" style={{ borderColor: 'var(--border-card)', background: 'var(--surface)' }}>
+            <div key={t.author} className="rounded-sm border p-6" style={{ borderColor: 'var(--border-card)', background: 'var(--surface)' }}>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>“{t.quote}”</p>
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-xs" style={{ color: 'var(--text-faint)' }}>{t.author} · {t.location}</span>
@@ -38,13 +38,9 @@ export function CustomerShow() {
             </div>
           ))}
 
-          <Link
-            href="/avis"
-            className="mt-1 self-start rounded-sm border px-5 py-2.5 text-sm"
-            style={{ borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}
-          >
+          <ButtonLink href="/avis" variant="outline" className="mt-1 self-start">
             Voir tous les avis (12 482)
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </section>
