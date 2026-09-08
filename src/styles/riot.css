@@ -4,13 +4,13 @@
 
 /* Tailwind v4 CSS-first theme. */
 @theme {
-  --color-bg-deepest: #0c1510;
-  --color-bg-body: #0f1c15;
-  --color-bg-canvas: #101a15;
-  --color-bg-app: #172a20;
-  --color-surface: #131f19;
-  --color-surface-alt: #122019;
-  --color-surface-inset: #10201a;
+  --color-bg-deepest: #150c10;
+  --color-bg-body: #1c0f15;
+  --color-bg-canvas: #1a1015;
+  --color-bg-app: #2a1720;
+  --color-surface: #1f1319;
+  --color-surface-alt: #201219;
+  --color-surface-inset: #20101a;
 
   --color-accent-deep: #4A0F1E;
   --color-accent: #641828;
@@ -48,14 +48,17 @@
 }
 
 :root {
-  /* Fonds — forêt profonde (structure identique à Sandy Stylish) */
-  --bg-deepest:     #0c1510;
-  --bg-body:        #0f1c15;
-  --bg-canvas:      #101a15;
-  --bg-app:         #172a20;
-  --surface:        #131f19;
-  --surface-alt:    #122019;
-  --surface-inset:  #10201a;
+  /* Fonds — bordeaux profond (teinte pivotée depuis le vert forêt de Sandy Stylish
+     à la demande de Fresnel 2026-09-08 : le bordeaux doit être la couleur DOMINANTE,
+     pas un simple accent sur un fond resté vert. Même structure de profondeur/
+     contraste que Sandy, teinte différente.) */
+  --bg-deepest:     #150c10;
+  --bg-body:        #1c0f15;
+  --bg-canvas:      #1a1015;
+  --bg-app:         #2a1720;
+  --surface:        #1f1319;
+  --surface-alt:    #201219;
+  --surface-inset:  #20101a;
 
   /* Accent — bordeaux (DA Vincent, remplace l'or Sandy Stylish) */
   --accent-deep:    #4A0F1E;
