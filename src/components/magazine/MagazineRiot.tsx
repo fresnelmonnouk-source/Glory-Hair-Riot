@@ -2,30 +2,33 @@
 
 /* Réhabillage dans le langage Sandy Stylish (aucun équivalent chez Sandy).
    Hero éditorial + grille d'articles (mêmes proportions que le catalogue)
-   + crédits de la rédaction. Contenu (articles, bios) inchangé ; les
+   + crédits de la rédaction. Contenu (bios rédaction) inchangé ; les
    éléments purement décoratifs de l'identité punk abandonnée (tampons
-   "PUNK SINCE 2024") sont retirés. */
+   "PUNK SINCE 2024") sont retirés.
+
+   Grille "Au sommaire" : rendue dynamique (migration 007, table `articles`)
+   à la place de l'ancienne grille basée sur WIGS/ARTICLE_TITLES qui pointait
+   vers des fiches produit et n'affichait aucun vrai article. Articles passés
+   en props depuis src/app/(shop)/magazine/page.tsx (Server Component, même
+   pattern que CataloguePage → getWigs()). État vide propre tant qu'aucun
+   article n'est publié (normal avant la 1ère génération IA). */
 
 import Link from 'next/link';
-import { WIGS, type Wig } from '@/lib/wigs-data';
-
-const ARTICLE_TITLES: Record<string, string> = {
-  velours: "Body wave : l'art du naturel travaillé",
-  mocha: "Le moka, ce neutre qui n'est pas neutre",
-  ginger: 'Comment porter le copper sans rougir',
-  bordeaux: 'Plum profond : la couleur dont personne ne parle',
-  argent: "Argent : 8 façons de l'assumer",
-  creme: 'Blond doré : retour de hype',
-};
+import type { Article } from '@/lib/articles/service';
 
 const TEAM = [
   { role: 'Direction artistique', name: 'Olivia M.', bio: 'Couleurs, mise en page, direction visuelle.' },
   { role: 'Photographe', name: 'Naomi A.', bio: 'Lumière naturelle, sans retouche.' },
-  { role: 'Styliste IA', name: 'Élodie', bio: 'Forme de visage, occasion, budget — 24/7.' },
-  { role: 'Atelier Paris 9', name: '12 NDL', bio: 'Nœud, lavage, brushing — Sandra & Léna.' },
+  { role: 'Styliste IA', name: 'Élodie', bio: 'Forme de visage, occasion, budget, disponible 24/7.' },
+  { role: 'Atelier Paris 9', name: '12 NDL', bio: 'Nœud, lavage, brushing : Sandra & Léna.' },
 ];
 
-export function MagazineRiot() {
+function estimateReadingMinutes(content: string): number {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(2, Math.round(words / 200));
+}
+
+export function MagazineRiot({ articles }: { articles: Article[] }) {
   return (
     <>
       <section className="mx-auto max-w-[1180px] px-6 pt-16 md:pt-20">
@@ -49,9 +52,18 @@ export function MagazineRiot() {
 
       <section className="mx-auto max-w-[1180px] px-6 py-16 md:py-20">
         <p className="eyebrow">Au sommaire</p>
-        <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
-          {WIGS.map((wig, i) => <ArticleCard key={wig.id} wig={wig} index={i} />)}
-        </div>
+        {articles.length === 0 ? (
+          <div className="mt-6 rounded-lg border border-hairline bg-surface px-8 py-16 text-center">
+            <p className="font-display text-xl text-ink">Le prochain numéro arrive bientôt.</p>
+            <p className="mx-auto mt-2 max-w-[420px] text-sm text-muted">
+              Aucun article publié pour l&apos;instant : reviens vite, la rédaction prépare déjà l&apos;Issue N°01.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
+            {articles.map((article) => <ArticleCard key={article.id} article={article} />)}
+          </div>
+        )}
       </section>
 
       <section className="border-t border-hairline">
@@ -67,7 +79,7 @@ export function MagazineRiot() {
             ))}
           </div>
           <p className="mt-10 border-t border-hairline pt-6 text-xs text-faint">
-            Issue N°01 · Été 2026 — prochaine édition à l&apos;automne.
+            Issue N°01 · Été 2026. Prochaine édition à l&apos;automne.
           </p>
         </div>
       </section>
@@ -75,18 +87,27 @@ export function MagazineRiot() {
   );
 }
 
-function ArticleCard({ wig, index }: { wig: Wig; index: number }) {
-  const title = ARTICLE_TITLES[wig.id] ?? ARTICLE_TITLES.ginger!;
-
+function ArticleCard({ article }: { article: Article }) {
   return (
-    <Link href={`/perruque/${wig.id}`} className="group block">
+    <Link href={`/magazine/${article.slug}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={wig.img} alt={wig.name} className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03]" loading="lazy" />
+        {article.cover_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.cover_image_url}
+            alt={article.title}
+            className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03]"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-app">
+            <span className="font-display text-lg text-faint">Glory Hair</span>
+          </div>
+        )}
       </div>
-      <p className="mt-3 text-xs uppercase tracking-wide text-faint">{wig.tone}</p>
-      <h3 className="mt-1 font-display text-lg text-ink">{title}</h3>
-      <p className="mt-2 text-xs text-faint">{3 + (index % 3)} min de lecture</p>
+      {article.tag && <p className="mt-3 text-xs uppercase tracking-wide text-faint">{article.tag}</p>}
+      <h3 className="mt-1 font-display text-lg text-ink">{article.title}</h3>
+      <p className="mt-2 text-xs text-faint">{estimateReadingMinutes(article.content)} min de lecture</p>
     </Link>
   );
 }
