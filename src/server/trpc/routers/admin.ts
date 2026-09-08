@@ -184,6 +184,50 @@ export const adminRouter = router({
       return { ok: true };
     }),
 
+  // ─── Réglages paiement (clé FedaPay, migration 006) ──
+  // Le secret n'est JAMAIS renvoyé en clair — seulement s'il est configuré
+  // ou non. Le vrai appel API FedaPay (checkout) lit la valeur via
+  // src/lib/settings/service.ts en service_role, pas via cette query.
+  getPaymentSettings: adminProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('settings')
+      .select('key, value')
+      .in('key', ['fedapay_public_key', 'fedapay_secret_key', 'fedapay_environment']);
+
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+    const map = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
+    return {
+      fedapay_public_key: map.fedapay_public_key ?? '',
+      fedapay_environment: (map.fedapay_environment === 'sandbox' ? 'sandbox' : 'live') as 'live' | 'sandbox',
+      fedapay_secret_configured: !!map.fedapay_secret_key,
+    };
+  }),
+
+  savePaymentSettings: adminProcedure
+    .input(z.object({
+      fedapay_public_key: z.string().optional(),
+      fedapay_secret_key: z.string().optional(), // vide/absent = on garde l'existant
+      fedapay_environment: z.enum(['live', 'sandbox']).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString();
+      const rows: { key: string; value: string; updated_at: string; updated_by: string }[] = [];
+      if (input.fedapay_public_key !== undefined) {
+        rows.push({ key: 'fedapay_public_key', value: input.fedapay_public_key, updated_at: now, updated_by: ctx.user.id });
+      }
+      if (input.fedapay_secret_key) {
+        rows.push({ key: 'fedapay_secret_key', value: input.fedapay_secret_key, updated_at: now, updated_by: ctx.user.id });
+      }
+      if (input.fedapay_environment !== undefined) {
+        rows.push({ key: 'fedapay_environment', value: input.fedapay_environment, updated_at: now, updated_by: ctx.user.id });
+      }
+      if (rows.length === 0) return { ok: true };
+
+      const { error } = await ctx.supabase.from('settings').upsert(rows, { onConflict: 'key' });
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      return { ok: true };
+    }),
+
   // ─── Détail d'une commande ───────────────────────
   orderDetails: adminProcedure
     .input(z.object({ orderId: z.string().uuid() }))

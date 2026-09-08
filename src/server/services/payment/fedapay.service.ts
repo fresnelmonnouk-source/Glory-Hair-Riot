@@ -1,7 +1,16 @@
 import crypto from 'crypto';
+import { getFedaPayEnvironment, getFedaPaySecretKey } from '@/lib/settings/service';
 
-const FEDAPAY_API_URL = 'https://api.fedapay.com/v1';
-const FEDAPAY_SECRET_KEY = process.env.FEDAPAY_SECRET_KEY;
+/* Clé secrète + environnement lus depuis la table `settings` (configurable
+   depuis /admin/reglages, migration 006) plutôt que figés au chargement du
+   module — avant, FEDAPAY_SECRET_KEY était lu une fois depuis
+   process.env au démarrage : impossible à changer sans redéploiement.
+   Fallback sur les variables d'environnement si rien n'est configuré en
+   admin (cf. src/lib/settings/service.ts). */
+async function fedaPayBaseUrl(): Promise<string> {
+  const env = await getFedaPayEnvironment();
+  return env === 'sandbox' ? 'https://sandbox-api.fedapay.com/v1' : 'https://api.fedapay.com/v1';
+}
 
 export interface CreateTransactionParams {
   amount: number; // in cents
@@ -19,11 +28,12 @@ export async function createTransaction({
   metadata,
 }: CreateTransactionParams) {
   try {
-    const response = await fetch(`${FEDAPAY_API_URL}/transactions`, {
+    const [secretKey, baseUrl] = await Promise.all([getFedaPaySecretKey(), fedaPayBaseUrl()]);
+    const response = await fetch(`${baseUrl}/transactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${FEDAPAY_SECRET_KEY}`,
+        Authorization: `Bearer ${secretKey}`,
       },
       body: JSON.stringify({
         amount,
@@ -55,11 +65,12 @@ export async function createTransaction({
 
 export async function getTransactionStatus(transactionId: string) {
   try {
+    const [secretKey, baseUrl] = await Promise.all([getFedaPaySecretKey(), fedaPayBaseUrl()]);
     const response = await fetch(
-      `${FEDAPAY_API_URL}/transactions/${transactionId}`,
+      `${baseUrl}/transactions/${transactionId}`,
       {
         headers: {
-          Authorization: `Bearer ${FEDAPAY_SECRET_KEY}`,
+          Authorization: `Bearer ${secretKey}`,
         },
       }
     );
@@ -81,13 +92,14 @@ export async function getTransactionStatus(transactionId: string) {
   }
 }
 
-export function verifyWebhookSignature(
+export async function verifyWebhookSignature(
   body: string,
   signature: string
-): boolean {
+): Promise<boolean> {
   try {
+    const secretKey = await getFedaPaySecretKey();
     const hash = crypto
-      .createHmac('sha256', FEDAPAY_SECRET_KEY || '')
+      .createHmac('sha256', secretKey || '')
       .update(body)
       .digest('hex');
 
@@ -100,13 +112,14 @@ export function verifyWebhookSignature(
 
 export async function refundTransaction(transactionId: string) {
   try {
+    const [secretKey, baseUrl] = await Promise.all([getFedaPaySecretKey(), fedaPayBaseUrl()]);
     const response = await fetch(
-      `${FEDAPAY_API_URL}/transactions/${transactionId}/refund`,
+      `${baseUrl}/transactions/${transactionId}/refund`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${FEDAPAY_SECRET_KEY}`,
+          Authorization: `Bearer ${secretKey}`,
         },
       }
     );

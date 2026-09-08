@@ -1,20 +1,24 @@
-/* /api/checkout — Création de commande (sans Stripe pour l'instant).
+/* /api/checkout — Création de commande.
  *
- * Flow MVP (mocké, sans paiement réel) :
+ * Flow (mocké côté Stripe/FedaPay, réel côté paiement à la livraison) :
  *   1. POST { items[], address, shipping, payment_method }
- *   2. Vérifie auth (FORBIDDEN si pas logged — guest checkout pas supporté
- *      en MVP, requiert un user_id pour orders.user_id NOT NULL)
+ *   2. Auth optionnelle — checkout invité supporté (comme Sandy Stylish :
+ *      "le checkout n'est jamais bloqué"). Si connecté, la commande est
+ *      rattachée au compte (historique, points) ; sinon guest_email/
+ *      guest_phone snapshotent le contact.
  *   3. Lookup wigs.id via wig.slug (côté client on stocke le slug)
- *   4. INSERT orders avec status='paid' (mock — en réalité ce serait 'pending'
- *      jusqu'au webhook Stripe)
+ *   4. INSERT orders :
+ *        - payment_method='cod'            → status='pending' (payé à la
+ *          livraison, rien à mocker : c'est le vrai comportement)
+ *        - payment_method='stripe'|'fedapay' → status='paid' mocké (pas
+ *          d'appel API réel depuis ce endpoint — Phase 5.5, cf. payments.ts)
  *   5. INSERT order_items pour chaque ligne
- *   6. Bump points fidélité : +10 pts par euro
+ *   6. Bump points fidélité (+10 pts/€) — uniquement si connecté
  *   7. Retourne { ref, orderId } pour redirect /merci
  *
- * Phase 5.5 — remplacement Stripe :
- *   - L'endpoint actuel deviendra 'pending'
- *   - Création Stripe Checkout Session côté serveur
- *   - Webhook /api/webhook/stripe → status='paid' + autres effets
+ * Toutes les écritures passent par service_role : la table orders n'a pas
+ * de policy INSERT publique (RLS reste stricte pour les accès directs
+ * PostgREST), ce endpoint valide le payload lui-même (zod) avant d'écrire.
  */
 
 import { NextResponse } from 'next/server';
@@ -42,7 +46,7 @@ const BodySchema = z.object({
     telephone: z.string().max(40).optional().nullable(),
   }),
   shipping: z.enum(['standard', 'express', 'atelier']),
-  payment_method: z.enum(['stripe', 'fedapay']),
+  payment_method: z.enum(['stripe', 'fedapay', 'cod']),
 });
 
 const SHIPPING_CENTS: Record<'standard' | 'express' | 'atelier', number> = {
@@ -64,19 +68,14 @@ export async function POST(request: Request) {
     );
   }
 
-  // 2. Auth check
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', userMessage: 'Connecte-toi pour finaliser ta commande.' },
-      { status: 401 },
-    );
-  }
+  // 2. Auth optionnelle — checkout invité supporté
+  const session = await createServerSupabaseClient();
+  const { data: { user } } = await session.auth.getUser();
 
-  // 3. Lookup wig.id via slug
+  // 3. Lookup wig.id via slug (service_role : lecture publique de toute façon)
+  const admin = await createServerSupabaseClient(true);
   const slugs = [...new Set(body.items.map(i => i.wig_slug))];
-  const { data: wigs, error: wigsErr } = await supabase
+  const { data: wigs, error: wigsErr } = await admin
     .from('wigs')
     .select('id, slug, name, base_price')
     .in('slug', slugs);
@@ -102,13 +101,19 @@ export async function POST(request: Request) {
   const shipping_cents = SHIPPING_CENTS[body.shipping];
   const total_cents = subtotal_cents + shipping_cents;
 
-  // 5. INSERT order (status='paid' en mode mock — le vrai workflow sera
-  // 'pending' jusqu'au webhook Stripe)
-  const { data: order, error: orderErr } = await supabase
+  // 5. INSERT order
+  //    - cod : pas de mock à faire, c'est le vrai statut (payé à la livraison)
+  //    - stripe/fedapay : toujours mocké pour l'instant (pas d'appel API réel
+  //      depuis ce endpoint — cf. src/server/trpc/routers/payments.ts pour le
+  //      flow réel déjà écrit, pas encore branché à cette UI)
+  const isCod = body.payment_method === 'cod';
+  const { data: order, error: orderErr } = await admin
     .from('orders')
     .insert({
-      user_id: user.id,
-      status: 'paid',
+      user_id: user?.id ?? null,
+      guest_email: user ? null : body.address.email,
+      guest_phone: user ? null : (body.address.telephone ?? null),
+      status: isCod ? 'pending' : 'paid',
       subtotal_cents,
       shipping_cents,
       discount_cents: 0,
@@ -120,8 +125,8 @@ export async function POST(request: Request) {
       delivery_postal_code: body.address.codePostal,
       delivery_country: body.address.pays,
       payment_method: body.payment_method,
-      payment_status: 'succeeded',
-      notes: 'MVP mock payment (no Stripe API call yet).',
+      payment_status: isCod ? 'pending' : 'succeeded',
+      notes: isCod ? 'Paiement à la livraison.' : 'MVP mock payment (no Stripe/FedaPay API call yet).',
     })
     .select('id, created_at')
     .single();
@@ -146,35 +151,39 @@ export async function POST(request: Request) {
     };
   });
 
-  const { error: itemsErr } = await supabase.from('order_items').insert(items);
+  const { error: itemsErr } = await admin.from('order_items').insert(items);
   if (itemsErr) {
     console.error('[checkout] order_items error:', itemsErr);
     // L'order existe mais sans items → rollback manuel
-    await supabase.from('orders').delete().eq('id', order.id);
+    await admin.from('orders').delete().eq('id', order.id);
     return NextResponse.json(
       { error: 'ORDER_ITEMS', userMessage: 'Impossible d\'enregistrer les articles. Réessaie.' },
       { status: 500 },
     );
   }
 
-  // 7. Bump points fidélité (+10 par euro = +1 par 10 cents)
-  const pointsEarned = Math.floor(total_cents / 1000) * 10; // 1€ = 10 pts
-  if (pointsEarned > 0) {
-    await supabase.rpc('increment_user_points', { p_user_id: user.id, p_amount: pointsEarned }).then(() => {}, () => {
-      // RPC pas définie → fallback manuel
-      void supabase.from('users').select('points').eq('id', user.id).single().then(({ data }) => {
-        if (data) {
-          void supabase.from('users').update({ points: data.points + pointsEarned }).eq('id', user.id);
-        }
+  // 7. Bump points fidélité (+10 par euro = +1 par 10 cents) — uniquement
+  //    si connecté (un invité n'a pas de solde de points à créditer)
+  let pointsEarned = 0;
+  if (user) {
+    pointsEarned = Math.floor(total_cents / 1000) * 10; // 1€ = 10 pts
+    if (pointsEarned > 0) {
+      await admin.rpc('increment_user_points', { p_user_id: user.id, p_amount: pointsEarned }).then(() => {}, () => {
+        // RPC pas définie → fallback manuel
+        void admin.from('users').select('points').eq('id', user.id).single().then(({ data }) => {
+          if (data) {
+            void admin.from('users').update({ points: data.points + pointsEarned }).eq('id', user.id);
+          }
+        });
       });
-    });
-    await supabase.from('glory_club_points_log').insert({
-      user_id: user.id,
-      label: `Commande ${order.id.slice(0, 8).toUpperCase()}`,
-      value: pointsEarned,
-      source: 'order',
-      reference_id: order.id,
-    });
+      await admin.from('glory_club_points_log').insert({
+        user_id: user.id,
+        label: `Commande ${order.id.slice(0, 8).toUpperCase()}`,
+        value: pointsEarned,
+        source: 'order',
+        reference_id: order.id,
+      });
+    }
   }
 
   // 8. Build short ref pour /merci
@@ -220,6 +229,7 @@ export async function POST(request: Request) {
 
       // Email admin
       const itemsList = itemsForEmail.map(i => `${i.name} ×${i.quantity}`).join(', ');
+      const paymentLabel = body.payment_method === 'stripe' ? 'Stripe (CB)' : body.payment_method === 'fedapay' ? 'FedaPay (Mobile Money)' : 'Paiement à la livraison';
       await sendAdminEmail({
         subject: `[ADMIN] Nouvelle commande #${ref} · ${(total_cents / 100).toFixed(2)}€`,
         template: 'email-admin-new-order.html',
@@ -229,7 +239,7 @@ export async function POST(request: Request) {
           CustomerName: fullName,
           CustomerEmail: body.address.email,
           Total: (total_cents / 100).toFixed(2).replace('.', ','),
-          PaymentMethod: body.payment_method === 'stripe' ? 'Stripe (CB)' : 'FedaPay (Mobile Money)',
+          PaymentMethod: paymentLabel,
           ItemCount: itemsForEmail.length,
           ItemsList: itemsList,
           OrderURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/admin/commandes`,

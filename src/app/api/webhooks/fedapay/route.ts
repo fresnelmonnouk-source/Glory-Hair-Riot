@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('x-fedapay-signature') || '';
 
   // Verify webhook signature
-  if (!verifyWebhookSignature(body, signature)) {
+  if (!(await verifyWebhookSignature(body, signature))) {
     console.error('FedaPay signature verification failed');
     return NextResponse.json(
       { error: 'Invalid signature' },

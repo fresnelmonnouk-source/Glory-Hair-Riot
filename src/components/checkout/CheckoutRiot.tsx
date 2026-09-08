@@ -6,18 +6,22 @@
    GloryHairRiot) ajoutée comme un groupe de plus, stylée avec les mêmes cartes
    radio que le choix de paiement de Sandy. Paiement Stripe/FedaPay = choix
    existant GloryHairRiot ; le MVP disclaimer (paiement pas encore branché) est
-   conservé tel quel, c'est une information réelle sur l'état du backend. */
+   conservé, mais seulement pour ces deux options — "Paiement à la livraison"
+   (demande Fresnel) n'a rien à mocker, c'est son comportement réel. Checkout
+   invité supporté (comme Sandy Stylish) : pas de garde de connexion ici, le
+   formulaire prérempli email/nom si une session existe, reste éditable sinon. */
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useCartStore } from '@/stores/cart.store';
+import { useSession } from '@/hooks/use-session';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 
 const TVA_RATE = 0.20;
 
 type ShippingMode = 'standard' | 'express' | 'atelier';
-type PaymentMode = 'stripe' | 'fedapay';
+type PaymentMode = 'stripe' | 'fedapay' | 'cod';
 
 interface Address {
   email: string;
@@ -39,6 +43,7 @@ const SHIPPING_OPTIONS: { id: ShippingMode; label: string; eta: string; price: n
 const PAYMENT_OPTIONS: { id: PaymentMode; title: string; desc: string }[] = [
   { id: 'stripe', title: 'Carte bancaire', desc: 'Visa · Mastercard · CB · Amex' },
   { id: 'fedapay', title: 'Mobile Money', desc: "MTN · Moov · Wave (Afrique de l'Ouest)" },
+  { id: 'cod', title: 'Paiement à la livraison', desc: 'Espèces ou mobile money remis au livreur' },
 ];
 
 const COUNTRIES = ['France', 'Belgique', 'Suisse', 'Luxembourg', 'Canada', "Côte d'Ivoire", 'Sénégal', 'Bénin', 'Togo', 'Maroc'];
@@ -48,6 +53,7 @@ const INPUT_CLASS =
 
 export function CheckoutRiot() {
   const router = useRouter();
+  const { user, profile } = useSession();
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.getSubtotal());
 
@@ -62,6 +68,18 @@ export function CheckoutRiot() {
   useEffect(() => {
     if (items.length === 0) router.replace('/panier');
   }, [items.length, router]);
+
+  // Checkout invité : formulaire vide par défaut. Si une session existe,
+  // préremplit email/nom pour éviter de retaper une info déjà connue —
+  // reste entièrement éditable, pas une contrainte.
+  useEffect(() => {
+    if (!user) return;
+    setAddress((a) => {
+      if (a.email) return a; // déjà saisi par l'utilisateur, ne pas écraser
+      const [prenom = '', ...rest] = (profile?.full_name ?? '').split(' ');
+      return { ...a, email: user.email ?? '', prenom, nom: rest.join(' ') };
+    });
+  }, [user, profile]);
 
   const shippingPrice = SHIPPING_OPTIONS.find((s) => s.id === shipping)?.price ?? 0;
   const total = subtotal + shippingPrice;
@@ -200,10 +218,12 @@ export function CheckoutRiot() {
             })}
           </div>
 
-          <div className="mt-4 rounded-sm border border-hairline bg-surface px-4 py-3.5 text-xs leading-relaxed text-muted">
-            Mode démo : le paiement en ligne n&apos;est pas encore branché. La commande est
-            créée sans transaction réelle.
-          </div>
+          {payment !== 'cod' && (
+            <div className="mt-4 rounded-sm border border-hairline bg-surface px-4 py-3.5 text-xs leading-relaxed text-muted">
+              Mode démo : le paiement en ligne n&apos;est pas encore branché. La commande est
+              créée sans transaction réelle.
+            </div>
+          )}
         </div>
 
         <aside className="md:sticky md:top-24 md:self-start">
