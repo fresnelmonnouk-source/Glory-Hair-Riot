@@ -1,6 +1,6 @@
 'use client';
 
-/* TryonFlow — Essai Live RIOT (Next.js port du sandbox tryon-live.jsx)
+/* TryonFlow — Essai Live (Next.js port du sandbox tryon-live.jsx)
  *
  * Flow séquentiel 4 étapes :
  *   00 INTRO   → splash + CTA
@@ -16,9 +16,19 @@
  * Quotas (systeme.md §9.4) :
  *   - 2 essais anon / device / 24h (localStorage, temporaire avant table Supabase)
  *   - À terme : table tryon_quotas + adminProcedure backend
+ *
+ * Réhabillage visuel dans le langage Sandy Stylish (aucun équivalent chez
+ * Sandy — flow caméra + IA propre à GloryHairRiot) : cartes rounded-lg
+ * border-hairline bg-app, boutons bg-accent/rounded-sm, eyebrow+display,
+ * mêmes proportions de grille que catalogue/panier. Éléments décoratifs
+ * punk sans fonction (marquee ticker, coins caméra façon HUD, scanlines,
+ * polaroids scotchés, stickers) retirés. Toute la logique (états, hooks,
+ * appels API, validation, watermark, quotas, caméra/WebRTC) est strictement
+ * inchangée.
  */
 
-import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { WIGS, type Wig } from '@/lib/wigs-data';
 import { ConsentModal } from './ConsentModal';
 
@@ -166,12 +176,6 @@ const STEPS = [
   { id: 3, num: '03', label: 'Le résultat' },
 ] as const;
 
-const INTRO_PICS: Array<{ wigId: string; pos: CSSProperties; tape: CSSProperties }> = [
-  { wigId: 'mocha',    pos: { top: 20,    right: 30, width: 240, transform: 'rotate(-5deg)', zIndex: 3 }, tape: { left: 40, transform: 'rotate(-3deg)' } },
-  { wigId: 'ginger',   pos: { top: 160,   left: 20,  width: 200, transform: 'rotate(6deg)',  zIndex: 2 }, tape: { left: 30, transform: 'rotate(4deg)'  } },
-  { wigId: 'bordeaux', pos: { bottom: 40, right: 80, width: 210, transform: 'rotate(2deg)',  zIndex: 4 }, tape: { right: 40, transform: 'rotate(6deg)' } },
-];
-
 // ─── Flag debug : invisible par défaut. Activer via ?debug=1 dans l'URL. ───────
 
 function useDebugEnabled(): boolean {
@@ -251,10 +255,10 @@ export function TryonFlow() {
   };
 
   /* Génération (appel /api/tryon) -------------- */
-  const startGeneration = useCallback(async () => {
+  const startGeneration = useCallback(async (consentOverride = false) => {
     if (!personBlob || !selectedWig) return;
 
-    if (!consentGiven) {
+    if (!consentGiven && !consentOverride) {
       setConsentOpen(true);
       return;
     }
@@ -396,10 +400,10 @@ export function TryonFlow() {
 
   /* CTA label par étape ------------------------- */
   const ctaLabel = (() => {
-    if (step === 0) return '▶ Commencer →';
+    if (step === 0) return 'Commencer →';
     if (step === 1) return 'Suivant : perruque →';
-    if (step === 2) return '▶ LANCER L\'ESSAI';
-    if (status === 'done' || status === 'error') return '↺ Refaire';
+    if (step === 2) return 'Lancer l\'essai';
+    if (status === 'done' || status === 'error') return 'Refaire';
     return '…';
   })();
 
@@ -407,11 +411,10 @@ export function TryonFlow() {
 
   /* Render --------------------------------------- */
   return (
-    <div style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column', paddingBottom: 90 }}>
-      <Marquee />
+    <div className="flex min-h-[calc(100vh-200px)] flex-col pb-24">
       <Stepper step={step} sessionCount={sessionCount} totalCostCents={totalCostCents} quota={quota} />
 
-      <main className="container-pad" style={{ flex: 1, position: 'relative', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 4vw, 32px)', display: 'flex', justifyContent: 'center' }}>
+      <main className="relative flex flex-1 justify-center px-4 py-10 md:px-8 md:py-14">
         {step === 0 && <ScreenIntro onStart={() => setStep(1)} />}
         {step === 1 && <ScreenPhoto
           personBlob={personBlob}
@@ -452,7 +455,7 @@ export function TryonFlow() {
 
       <ConsentModal
         isOpen={consentOpen}
-        onAccept={() => { setConsentGiven(true); setConsentOpen(false); setTimeout(() => void startGeneration(), 50); }}
+        onAccept={() => { setConsentGiven(true); setConsentOpen(false); setTimeout(() => void startGeneration(true), 50); }}
         onDecline={() => { setConsentOpen(false); setStep(0); }}
       />
     </div>
@@ -461,43 +464,31 @@ export function TryonFlow() {
 
 // ─── Sous-composants ──────────────────────────────────
 
-function Marquee() {
-  return (
-    <div style={{ background: '#0A0A0A', color: '#D4FF3E', padding: '8px 0', overflow: 'hidden', borderBottom: '3px solid #FF7A1A' }}>
-      <div style={{ display: 'flex', gap: 32, whiteSpace: 'nowrap', animation: 'marquee 24s linear infinite', fontFamily: 'var(--font-vt323),monospace', fontSize: 20, letterSpacing: '0.04em', paddingLeft: 32, width: 'max-content' }}>
-        <span>★ ESSAI LIVE ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>1 essai offert</em> ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>IA réelle</em> ★ Glory Hair ★ ESSAI LIVE ★</span>
-        <span>★ ESSAI LIVE ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>1 essai offert</em> ★ ESSAI LIVE ★ <em style={{ fontStyle: 'normal', color: '#FF7A1A' }}>IA réelle</em> ★ Glory Hair ★ ESSAI LIVE ★</span>
-      </div>
-    </div>
-  );
-}
-
 function Stepper({ step, sessionCount, totalCostCents, quota }: { step: number; sessionCount: number; totalCostCents: number; quota: QuotaState }) {
   return (
-    <header className="tryon-stepper" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 14, padding: 'clamp(12px, 2vw, 16px) clamp(14px, 3vw, 28px)', borderBottom: '2px solid #D4FF3E', background: '#0E1B14' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', flexWrap: 'wrap' }}>
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline bg-surface px-4 py-4 md:px-8">
+      <div className="flex flex-wrap items-center gap-2">
         {STEPS.map((s, i) => (
-          <span key={s.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '6px 10px',
-              border: `2px solid ${step === s.id ? '#FF7A1A' : step > s.id ? '#D4FF3E' : '#5E6A64'}`,
-              color: step === s.id ? '#FF7A1A' : step > s.id ? '#D4FF3E' : '#5E6A64',
-              background: step === s.id ? 'rgba(255,122,26,.1)' : step > s.id ? 'rgba(212,255,62,.06)' : 'transparent',
-              transform: step === s.id ? 'rotate(-1deg)' : undefined,
-              boxShadow: step === s.id ? '3px 3px 0 #D4FF3E' : undefined,
-            }}>
-              <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 12 }}>{s.num}</span>
-              <span>{s.label}</span>
+          <span key={s.id} className="flex items-center gap-2">
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors"
+              style={{
+                borderColor: step === s.id ? 'var(--accent)' : step > s.id ? 'var(--border-accent)' : 'var(--border-hairline)',
+                color: step === s.id ? 'var(--accent)' : step > s.id ? 'var(--text-primary)' : 'var(--text-faint)',
+                background: step === s.id ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'transparent',
+              }}
+            >
+              <span className="font-display">{s.num}</span>
+              <span className="hidden sm:inline">{s.label}</span>
             </span>
-            {i < STEPS.length - 1 && <span style={{ color: '#5E6A64', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 14 }}>→</span>}
+            {i < STEPS.length - 1 && <span aria-hidden className="text-xs text-faint">→</span>}
           </span>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div className="flex items-center gap-2">
         <Pill label="quota" value={`${quota.count}/${QUOTA_LIMIT_ANON}`} hot={quota.count >= QUOTA_LIMIT_ANON} />
         <Pill label="essais" value={String(sessionCount)} />
-        <Pill label="€" value={(totalCostCents / 100).toFixed(2)} />
+        <Pill label="coût" value={`${(totalCostCents / 100).toFixed(2)}€`} />
       </div>
     </header>
   );
@@ -505,14 +496,8 @@ function Stepper({ step, sessionCount, totalCostCents, quota }: { step: number; 
 
 function Pill({ label, value, hot }: { label: string; value: string; hot?: boolean }) {
   return (
-    <span style={{
-      fontFamily: 'var(--font-special-elite),monospace', fontSize: 11,
-      padding: '6px 12px', borderRadius: 999,
-      border: `2px solid ${hot ? '#FF3D00' : '#F4ECD8'}`,
-      color: hot ? '#FF3D00' : '#F4ECD8',
-      display: 'inline-flex', alignItems: 'center', gap: 6,
-    }}>
-      {label} · <b style={{ color: hot ? '#FF3D00' : '#D4FF3E', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 12 }}>{value}</b>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs ${hot ? 'border-[color:var(--danger)] text-[color:var(--danger)]' : 'border-line text-faint'}`}>
+      {label} · <b className="text-ink">{value}</b>
     </span>
   );
 }
@@ -520,75 +505,61 @@ function Pill({ label, value, hot }: { label: string; value: string; hot?: boole
 // ─── SCREEN 00 : INTRO ──────────────────────────
 
 function ScreenIntro({ onStart }: { onStart: () => void }) {
+  const heroWigA = WIGS.find((w) => w.id === 'ginger') ?? WIGS[0]!;
+  const heroWigB = WIGS.find((w) => w.id === 'bordeaux') ?? WIGS[1] ?? WIGS[0]!;
+
   return (
-    <div className="row-grid row-1-15" style={{ width: '100%', maxWidth: 1320, gap: 'clamp(28px, 5vw, 60px)', alignItems: 'center', minHeight: 'calc(100vh - 280px)' }}>
+    <div className="grid w-full max-w-[1180px] items-center gap-12 md:grid-cols-2">
       <div>
-        <div style={{ display: 'inline-block', background: '#FF7A1A', color: '#0A0A0A', padding: '8px 14px', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', transform: 'rotate(-2deg)', marginBottom: 24, border: '2px solid #0A0A0A', boxShadow: '3px 3px 0 #D4FF3E' }}>
-          ★ Sandbox · IA réelle · v1.0
-        </div>
-        <h1 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 'clamp(80px,11vw,180px)', lineHeight: 0.82, letterSpacing: '-0.01em', textTransform: 'uppercase', color: '#F4ECD8' }}>
-          ESSAI <span style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 0.08em', display: 'inline-block', transform: 'rotate(-1deg)', boxShadow: '6px 6px 0 #FF7A1A' }}>LIVE.</span><br />
-          <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', fontWeight: 400, textTransform: 'none', color: '#D4FF3E' }}>photo-réaliste,</em><br />
-          <span style={{ fontFamily: 'var(--font-permanent-marker),cursive', color: '#FF7A1A', display: 'inline-block', transform: 'rotate(-3deg)', fontSize: '0.7em', textTransform: 'none' }}>pas un filtre cheap.</span>
+        <p className="eyebrow">Essai live · IA réelle</p>
+        <h1 className="display mt-4 text-[clamp(2.25rem,6vw,4rem)] text-ink">
+          Photo-réaliste, pas un filtre.
         </h1>
-        <p style={{ marginTop: 28, maxWidth: 520, fontFamily: 'var(--font-special-elite),monospace', fontSize: 17, lineHeight: 1.55, color: '#F4ECD8' }}>
-          On envoie ta photo + la perruque à <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>notre IA</span> (Gemini, OpenAI en backup), elle te rend une image <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>photo-réaliste</span> en quelques secondes. Pas <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,.4)', textDecorationColor: '#FF7A1A', textDecorationThickness: '3px' }}>d&apos;overlay 3D bidon</span>, pas de cheveux qui flottent à 10cm de ton crâne.
+        <p className="mt-6 max-w-[460px] leading-relaxed text-muted">
+          On envoie votre photo et la perruque choisie à notre IA (Gemini, OpenAI en
+          secours) : elle vous rend une image photo-réaliste en quelques secondes. Pas
+          d&apos;overlay 3D approximatif, pas de cheveux qui flottent au-dessus du crâne.
         </p>
 
-        <div style={{ marginTop: 32, display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button type="button" onClick={onStart} className="btn-bold">
-            ▶ C&apos;est parti
-          </button>
-          <a
-            href="/essayage"
-            className="btn-bold outline"
+        <div className="mt-8 flex flex-wrap items-center gap-6">
+          <button
+            type="button"
+            onClick={onStart}
+            className="inline-flex items-center gap-2 rounded-[2px] bg-accent px-7 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
           >
+            Commencer <span aria-hidden>→</span>
+          </button>
+          <Link href="/essayage" className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
             Comment ça marche ?
-          </a>
+          </Link>
         </div>
 
-        <div className="row-grid row-3" style={{ marginTop: 48, gap: 12 }}>
-          <IntroStat value="~5s" label="Latence moyenne" rotate="-1deg" shadow="#D4FF3E" />
-          <IntroStat value="2" label="IA en backup auto" rotate="1deg" shadow="#FF7A1A" />
-          <IntroStat value="~4¢" label="Coût par essai" rotate="-1.2deg" shadow="#F5E55E" />
+        <div className="mt-12 grid grid-cols-3 gap-3">
+          <IntroStat value="~5s" label="Latence moyenne" />
+          <IntroStat value="2 IA" label="Fallback auto" />
+          <IntroStat value="~4¢" label="Coût par essai" />
         </div>
       </div>
 
-      <div className="hide-mobile" style={{ position: 'relative', height: 540 }}>
-        <Sticker style={{ top: -10, left: 60, transform: 'rotate(-12deg)', background: '#FF7A1A' }}>★ TRY ME</Sticker>
-        <Sticker style={{ bottom: 160, left: -10, transform: 'rotate(8deg)' }}>No filter ★</Sticker>
-        {INTRO_PICS.map((pic, i) => {
-          const wig = WIGS.find(w => w.id === pic.wigId)!;
-          return (
-            <div key={i} style={{ position: 'absolute', background: '#F4ECD8', padding: '12px 12px 44px', filter: 'drop-shadow(4px 6px 0 rgba(0,0,0,.5))', ...pic.pos }}>
-              <span aria-hidden style={{ position: 'absolute', top: -12, width: 90, height: 22, background: 'rgba(245,229,94,.7)', borderLeft: '1px dashed rgba(0,0,0,.3)', borderRight: '1px dashed rgba(0,0,0,.3)', ...pic.tape }} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={wig.img} alt={wig.name} style={{ aspectRatio: '3/4', width: '100%', objectFit: 'cover', filter: 'contrast(1.05) saturate(1.05)' }} />
-              <div style={{ position: 'absolute', left: 14, right: 14, bottom: 8, fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 16, color: '#0A0A0A', lineHeight: 1 }}>
-                {wig.name.toUpperCase()}
-                <small style={{ display: 'block', fontFamily: 'var(--font-special-elite),monospace', fontSize: 10, color: '#5E6A64', marginTop: 3 }}>{wig.cat} · {wig.tone}</small>
-              </div>
-            </div>
-          );
-        })}
+      <div aria-hidden className="relative hidden h-[480px] md:block">
+        <div className="absolute right-0 top-0 h-[420px] w-[64%] overflow-hidden rounded-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={heroWigA.img} alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute bottom-0 left-0 h-[260px] w-[42%] overflow-hidden rounded-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={heroWigB.img} alt="" className="h-full w-full object-cover" />
+        </div>
       </div>
     </div>
   );
 }
 
-function Sticker({ style, children }: { style: CSSProperties; children: React.ReactNode }) {
+function IntroStat({ value, label }: { value: string; label: string }) {
   return (
-    <div style={{ position: 'absolute', background: '#D4FF3E', color: '#0A0A0A', padding: '10px 16px', borderRadius: 999, fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 16, border: '2px solid #0A0A0A', boxShadow: '2px 3px 0 #0A0A0A', zIndex: 7, ...style }}>
-      {children}
-    </div>
-  );
-}
-
-function IntroStat({ value, label, rotate, shadow }: { value: string; label: string; rotate: string; shadow: string }) {
-  return (
-    <div style={{ background: '#F4ECD8', color: '#0A0A0A', padding: '14px 16px', border: '3px solid #0A0A0A', transform: `rotate(${rotate})`, boxShadow: `4px 4px 0 ${shadow}` }}>
-      <div style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 32, lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</div>
-      <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, color: '#5E6A64', marginTop: 6, letterSpacing: '0.06em' }}>{label}</div>
+    <div className="rounded-sm border border-hairline bg-app p-4">
+      <p className="font-display text-2xl text-ink">{value}</p>
+      <p className="mt-1 text-xs text-faint">{label}</p>
     </div>
   );
 }
@@ -665,27 +636,27 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
   const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 
   return (
-    <div style={{ width: '100%', maxWidth: 1320 }}>
-      <ScreenHead num="01" stk="-o" word="tronche." scrawl="selfie de face, bonne lumière." />
-      <div className="row-grid row-15-1" style={{ gap: 24, alignItems: 'start' }}>
-        <div className="tryon-cam-box" style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
-          <CamCorners />
-          <Scanlines />
+    <div className="w-full max-w-[1180px]">
+      <ScreenHead eyebrow="Étape 01" title="Votre photo" subtitle="Selfie de face, bonne lumière." />
 
+      <div className="grid gap-8 md:grid-cols-[1.3fr_1fr] md:items-start">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-hairline bg-surface sm:aspect-square">
           {mode === 'idle' && !personBlob && (
-            <div className="tryon-cam-intro" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 'clamp(18px, 4vw, 40px)', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 'clamp(10px, 1.5vw, 13px)', letterSpacing: '0.14em', color: '#FF7A1A', border: '3px solid #FF7A1A', padding: '6px 12px', transform: 'rotate(-3deg)' }}>
-                ★ WAITING SIGNAL
-              </div>
-              <h3 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 'clamp(24px, 6vw, 60px)', lineHeight: 0.9, textTransform: 'uppercase', color: '#F4ECD8' }}>
-                Allume ta <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', textTransform: 'none', color: '#D4FF3E' }}>caméra.</em>
-              </h3>
-              <p className="hide-sm" style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 14, color: '#F4ECD8', maxWidth: 380, lineHeight: 1.5 }}>
-                Ou balance une photo depuis ton tél.<br />JPEG, PNG · 400×400 minimum.
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-8 text-center">
+              <p className="eyebrow">En attente</p>
+              <h3 className="display text-2xl text-ink md:text-3xl">Allumez votre caméra.</h3>
+              <p className="max-w-[360px] text-sm leading-relaxed text-muted">
+                Ou envoyez une photo depuis votre téléphone.<br />JPEG, PNG · 400×400 minimum.
               </p>
-              <div className="tryon-choice-grid row-grid row-2" style={{ gap: 12, marginTop: 6, width: '100%', maxWidth: 440 }}>
-                <BigChoice onClick={startCamera} icon="▶" name="Caméra" sub="getUserMedia" rotate="-1deg" shadow="#D4FF3E" />
-                <BigChoice onClick={() => fileRef.current?.click()} icon="↑" name="Importer" sub="JPEG · PNG" rotate="1deg" shadow="#FF7A1A" />
+              <div className="mt-2 grid w-full max-w-[420px] grid-cols-2 gap-3">
+                <button type="button" onClick={startCamera} className="rounded-lg border border-hairline bg-app px-4 py-5 text-center transition-colors hover:border-[color:var(--border-accent)]">
+                  <span className="block font-display text-lg text-ink">Caméra</span>
+                  <span className="mt-1 block text-xs text-faint">Accès direct</span>
+                </button>
+                <button type="button" onClick={() => fileRef.current?.click()} className="rounded-lg border border-hairline bg-app px-4 py-5 text-center transition-colors hover:border-[color:var(--border-accent)]">
+                  <span className="block font-display text-lg text-ink">Importer</span>
+                  <span className="mt-1 block text-xs text-faint">JPEG · PNG</span>
+                </button>
               </div>
               <input ref={fileRef} type="file" accept="image/*" onChange={onFile} hidden />
             </div>
@@ -693,16 +664,16 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
 
           {mode === 'camera' && (
             <>
-              <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', fontFamily: 'var(--font-vt323),monospace', fontSize: 18, color: '#FF7A1A', display: 'flex', gap: 8, alignItems: 'center', zIndex: 3 }}>
-                <span style={{ width: 10, height: 10, background: '#FF7A1A', borderRadius: '50%' }} />
-                ★ REC · LIVE
+              <div className="absolute left-4 top-4 z-[3] rounded-full bg-black/60 px-2.5 py-1 text-xs text-ink">{Math.round(fps)} fps</div>
+              <div className="absolute left-1/2 top-4 z-[3] flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs text-[color:var(--danger)]">
+                <span aria-hidden className="h-2 w-2 rounded-full bg-[color:var(--danger)]" />
+                REC · live
               </div>
-              <div style={{ position: 'absolute', top: 18, left: 56, fontFamily: 'var(--font-vt323),monospace', fontSize: 16, color: '#D4FF3E', zIndex: 3 }}>FPS {Math.round(fps)}</div>
-              <div style={{ position: 'absolute', bottom: 18, right: 56, fontFamily: 'var(--font-vt323),monospace', fontSize: 16, color: '#D4FF3E', zIndex: 3 }}>{timeStr}</div>
-              <video ref={videoRef} playsInline muted autoPlay style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-              <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, display: 'flex', gap: 10, justifyContent: 'center', zIndex: 4 }}>
-                <button type="button" onClick={() => { stopCamera(); setMode('idle'); }} style={btnOutline}>Annuler</button>
-                <button type="button" onClick={snap} style={btnOrange}>▶ Capturer</button>
+              <div className="absolute bottom-4 right-4 z-[3] rounded-full bg-black/60 px-2.5 py-1 text-xs text-ink">{timeStr}</div>
+              <video ref={videoRef} playsInline muted autoPlay className="h-full w-full object-cover" style={{ transform: 'scaleX(-1)' }} />
+              <div className="absolute inset-x-0 bottom-6 z-[4] flex justify-center gap-3">
+                <button type="button" onClick={() => { stopCamera(); setMode('idle'); }} className="rounded-sm border border-line bg-black/40 px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">Annuler</button>
+                <button type="button" onClick={snap} className="rounded-sm bg-accent px-6 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">Capturer</button>
               </div>
             </>
           )}
@@ -710,75 +681,37 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
           {mode === 'preview' && personUrl && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={personUrl} alt="Vous" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={personUrl} alt="Vous" className="h-full w-full object-cover" />
               {validation && (
-                <div style={{
-                  position: 'absolute', top: 60, left: 20,
-                  fontFamily: 'var(--font-vt323),monospace', fontSize: 16,
-                  padding: '8px 14px', zIndex: 4,
-                  display: 'inline-flex', alignItems: 'center', gap: 8, width: 'fit-content',
-                  background: validation.ok ? '#D4FF3E' : '#FF7A1A',
-                  color: '#0A0A0A', border: '2px solid #0A0A0A',
-                }}>
-                  {validation.ok ? `✓ ${validation.width}×${validation.height} · lum ${validation.brightness}/255 · OK` : `✗ ${validation.reason}`}
+                <div className={`absolute left-4 top-4 z-[4] rounded-full bg-black/70 px-3 py-1.5 text-xs ${validation.ok ? 'text-[color:var(--success)]' : 'text-[color:var(--danger)]'}`}>
+                  {validation.ok ? `${validation.width}×${validation.height} · lum ${validation.brightness}/255 · OK` : validation.reason}
                 </div>
               )}
-              <button type="button" onClick={reset} style={{ position: 'absolute', top: 14, right: 14, background: '#0A0A0A', color: '#D4FF3E', border: '2px solid #D4FF3E', padding: '8px 14px', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 10, letterSpacing: '0.1em', zIndex: 5, cursor: 'pointer' }}>↻ Reprendre</button>
+              <button type="button" onClick={reset} className="absolute right-4 top-4 z-[5] rounded-full border border-line bg-black/60 px-3 py-1.5 text-xs text-ink transition-colors hover:border-[color:var(--border-accent)]">
+                ↻ Reprendre
+              </button>
             </>
           )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <TipCard title='Pour que' titleEm='ça marche bien' shadow="#FF7A1A" tapeBg="rgba(255,122,26,.7)" items={['Visage de face, regard caméra', 'Lumière douce, pas de contre-jour', 'Cheveux dégagés du visage', 'Cadrage tête + épaules']} />
-          <TipCard title='Vie privée ·' titleEm='RGPD' shadow="#D4FF3E" tapeBg="rgba(212,255,62,.7)" items={['Ta photo est envoyée à Gemini ou OpenAI', 'Stockage 30j max, suppression sur demande', 'Pas d\'entraînement modèle (T&C provider)']} rotate=".8deg" />
-          <TipCard title='Ce que ça' titleEm='fait' shadow="#F5E55E" tapeBg="rgba(245,229,94,.7)" items={['Capture ou upload', 'Validation locale (résolution, luminosité)', 'Appel IA côté serveur (Gemini → OpenAI)', 'Image résultat + téléchargement']} rotate="-.5deg" />
+        <div className="flex flex-col gap-4">
+          <TipCard title="Pour que ça marche bien" items={['Visage de face, regard caméra', 'Lumière douce, pas de contre-jour', 'Cheveux dégagés du visage', 'Cadrage tête + épaules']} />
+          <TipCard title="Vie privée · RGPD" items={['Votre photo est envoyée à Gemini ou OpenAI', 'Stockage 30 jours max, suppression sur demande', "Pas d'entraînement modèle (T&C provider)"]} />
+          <TipCard title="Ce que ça fait" items={['Capture ou import', 'Validation locale (résolution, luminosité)', 'Appel IA côté serveur (Gemini → OpenAI)', 'Image résultat + téléchargement']} />
         </div>
       </div>
     </div>
   );
 }
 
-function CamCorners() {
-  const cs: CSSProperties = { position: 'absolute', width: 32, height: 32, border: '3px solid #D4FF3E', zIndex: 3 };
+function TipCard({ title, items }: { title: string; items: string[] }) {
   return (
-    <>
-      <span style={{ ...cs, top: 14, left: 14, borderRight: 0, borderBottom: 0 }} />
-      <span style={{ ...cs, top: 14, right: 14, borderLeft: 0, borderBottom: 0 }} />
-      <span style={{ ...cs, bottom: 14, left: 14, borderRight: 0, borderTop: 0 }} />
-      <span style={{ ...cs, bottom: 14, right: 14, borderLeft: 0, borderTop: 0 }} />
-    </>
-  );
-}
-
-function Scanlines() {
-  return <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent 0 3px, rgba(212,255,62,.06) 3px 4px)', pointerEvents: 'none' }} />;
-}
-
-function BigChoice({ onClick, icon, name, sub, rotate, shadow }: { onClick: () => void; icon: string; name: string; sub: string; rotate: string; shadow: string }) {
-  return (
-    <button type="button" onClick={onClick} style={{
-      background: '#F4ECD8', color: '#0A0A0A', padding: '18px 14px',
-      border: '3px solid #0A0A0A', transform: `rotate(${rotate})`,
-      boxShadow: `5px 5px 0 ${shadow}`,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-      fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, cursor: 'pointer',
-    }}>
-      <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 32, color: '#FF7A1A', lineHeight: 1 }}>{icon}</span>
-      <span style={{ fontSize: 20, lineHeight: 1 }}>{name}</span>
-      <span style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, color: '#5E6A64', letterSpacing: '0.06em' }}>{sub}</span>
-    </button>
-  );
-}
-
-function TipCard({ title, titleEm, items, shadow, tapeBg, rotate = '-.8deg' }: { title: string; titleEm: string; items: string[]; shadow: string; tapeBg: string; rotate?: string }) {
-  return (
-    <div style={{ background: '#F4ECD8', color: '#0A0A0A', padding: '18px 20px', border: '3px solid #0A0A0A', transform: `rotate(${rotate})`, boxShadow: `5px 5px 0 ${shadow}`, position: 'relative' }}>
-      <span aria-hidden style={{ position: 'absolute', top: -12, left: 24, width: 80, height: 18, background: tapeBg, borderLeft: '1px dashed rgba(0,0,0,.3)', borderRight: '1px dashed rgba(0,0,0,.3)', transform: 'rotate(-3deg)' }} />
-      <h4 style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18, marginBottom: 6 }}>{title} <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', color: '#FF7A1A' }}>{titleEm}</em></h4>
-      <ul style={{ listStyle: 'none', padding: 0, fontFamily: 'var(--font-special-elite),monospace', fontSize: 13, lineHeight: 1.6 }}>
+    <div className="rounded-lg border border-hairline bg-app p-6">
+      <p className="eyebrow">{title}</p>
+      <ul className="mt-4 space-y-2.5 p-0 text-sm">
         {items.map((it, i) => (
-          <li key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '3px 0' }}>
-            <span style={{ color: '#FF7A1A', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 13, flexShrink: 0 }}>→</span>
+          <li key={i} className="flex items-start gap-2.5 text-muted">
+            <span aria-hidden className="mt-0.5 shrink-0 text-accent">→</span>
             <span>{it}</span>
           </li>
         ))}
@@ -791,43 +724,43 @@ function TipCard({ title, titleEm, items, shadow, tapeBg, rotate = '-.8deg' }: {
 
 function ScreenWig({ selectedWig, setSelectedWig, quota }: { selectedWig: Wig; setSelectedWig: (w: Wig) => void; quota: QuotaState }) {
   return (
-    <div style={{ width: '100%', maxWidth: 1320 }}>
-      <ScreenHead num="02" stk="" word="perruque." scrawl={`choisis ta couronne · ${WIGS.length} modèles dispo`} />
+    <div className="w-full max-w-[1180px]">
+      <ScreenHead eyebrow="Étape 02" title="Votre perruque" subtitle={`${WIGS.length} modèles disponibles`} />
+
       {quota.count >= QUOTA_LIMIT_ANON && (
-        <div style={{ background: '#FF3D00', color: '#F4ECD8', padding: '14px 18px', border: '3px solid #0A0A0A', boxShadow: '4px 4px 0 #0A0A0A', marginBottom: 24, fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 12, letterSpacing: '0.1em' }}>
-          ⚠ QUOTA ATTEINT · {quota.count}/{QUOTA_LIMIT_ANON} ESSAIS ANONYMES · CRÉE UN COMPTE POUR 5 ESSAIS OFFERTS
+        <div className="mb-8 rounded-sm border border-[color:var(--danger)] bg-app px-5 py-3.5 text-sm text-[color:var(--danger)]">
+          Quota atteint · {quota.count}/{QUOTA_LIMIT_ANON} essai anonyme — créez un compte pour 2 essais Premium offerts.
         </div>
       )}
-      <div className="row-grid row-3" style={{ gap: '32px 24px' }}>
-        {WIGS.map((w, i) => {
+
+      <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3" role="radiogroup">
+        {WIGS.map((w) => {
           const isActive = selectedWig.id === w.id;
-          const r = i % 3 === 0 ? '-1.2deg' : i % 3 === 1 ? '1.4deg' : '-1deg';
-          const sh = i % 3 === 0 ? '#D4FF3E' : i % 3 === 1 ? '#FF7A1A' : '#FF4D8D';
           return (
-            <button key={w.id} type="button" onClick={() => setSelectedWig(w)} style={{
-              background: '#F4ECD8', color: '#0A0A0A',
-              padding: '12px 12px 18px',
-              transform: isActive ? 'rotate(0) scale(1.03)' : `rotate(${r})`,
-              transition: 'transform .25s, box-shadow .25s',
-              boxShadow: isActive ? `8px 10px 0 #D4FF3E, 0 0 0 4px #D4FF3E` : `5px 6px 0 ${sh}`,
-              cursor: 'pointer', position: 'relative', textAlign: 'left', border: 'none', zIndex: isActive ? 6 : 1,
-            }}>
-              <span aria-hidden style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%) rotate(-3deg)', width: 70, height: 16, background: 'rgba(245,229,94,.7)', borderLeft: '1px dashed rgba(0,0,0,.3)', borderRight: '1px dashed rgba(0,0,0,.3)', zIndex: 2 }} />
-              <div style={{ background: '#0A0A0A', aspectRatio: '4/5', position: 'relative', overflow: 'hidden' }}>
+            <button
+              key={w.id}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              onClick={() => setSelectedWig(w)}
+              className="group block text-left"
+            >
+              <div
+                className="relative aspect-[4/5] overflow-hidden rounded-sm border-2 bg-surface transition-colors"
+                style={{ borderColor: isActive ? 'var(--accent)' : 'transparent' }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={w.img} alt={w.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.08) saturate(1.05)' }} />
-                <div style={{ position: 'absolute', top: 8, left: 10, fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 30, color: '#F4ECD8', textShadow: '2px 2px 0 #0A0A0A', lineHeight: 1 }}>{w.num}</div>
+                <img src={w.img} alt={w.name} className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03]" loading="lazy" />
                 {w.tag && (
-                  <div style={{ position: 'absolute', top: 14, right: 14, background: isActive ? '#D4FF3E' : '#FF7A1A', color: '#0A0A0A', padding: '4px 10px', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 10, letterSpacing: '0.12em', border: '2px solid #0A0A0A', transform: 'rotate(6deg)' }}>{w.tag}</div>
+                  <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[10px] uppercase tracking-wide text-on-accent">{w.tag}</span>
+                )}
+                {isActive && (
+                  <span aria-hidden className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs text-on-accent">✓</span>
                 )}
               </div>
-              <div style={{ padding: '12px 4px 0' }}>
-                <div style={{ fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 22, lineHeight: 1, color: '#0A0A0A' }}>{w.name}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, fontFamily: 'var(--font-special-elite),monospace', fontSize: 12, color: '#5E6A64' }}>
-                  <span>{w.cat} · {w.style} · {w.tone}</span>
-                  <span style={{ background: isActive ? '#FF7A1A' : '#D4FF3E', color: '#0A0A0A', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 14, padding: '3px 8px', letterSpacing: '-0.01em', transform: 'rotate(-2deg)' }}>{w.price}€</span>
-                </div>
-              </div>
+              <h3 className="mt-3 font-display text-lg text-ink">{w.name}</h3>
+              <p className="mt-1 line-clamp-1 text-xs text-faint">{w.cat} · {w.style} · {w.tone}</p>
+              <p className="mt-1.5 text-sm text-accent">{w.price}€</p>
             </button>
           );
         })}
@@ -846,91 +779,99 @@ function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progre
 }) {
   const [showBefore, setShowBefore] = useState(false);
 
+  const subtitle =
+    status === 'generating' ? 'Génération en cours…' :
+    status === 'done' ? 'Maintenez le clic pour voir avant/après' :
+    status === 'error' ? 'Une erreur est survenue' : 'Prêt à lancer';
+
   return (
-    <div style={{ width: '100%', maxWidth: 1320 }}>
-      <ScreenHead num="03" stk="" word="résultat." scrawl={
-        status === 'generating' ? '★ génération en cours…' :
-        status === 'done' ? '★ tiens · maintien clic sur AVANT/APRÈS' :
-        status === 'error' ? '✗ raté · réessaie ou recommence' : '★ prêt à lancer…'
-      } />
+    <div className="w-full max-w-[1180px]">
+      <ScreenHead eyebrow="Étape 03" title="Le résultat" subtitle={subtitle} />
 
-      <div className="row-grid row-15-1" style={{ gap: 24, alignItems: 'start' }}>
-        <div className="tryon-cam-box" style={{ position: 'relative', background: '#142A1F', border: '3px solid #F4ECD8', aspectRatio: '1/1', overflow: 'hidden', boxShadow: '8px 8px 0 #D4FF3E' }}>
-          <CamCorners />
-          <Scanlines />
-
+      <div className="grid gap-8 md:grid-cols-[1.3fr_1fr] md:items-start">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-hairline bg-surface sm:aspect-square">
           {status === 'generating' && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,27,20,.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 40, textAlign: 'center', zIndex: 8 }}>
-              <h3 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 48, lineHeight: 0.9, textTransform: 'uppercase', color: '#F4ECD8' }}>
-                Génération <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', textTransform: 'none', color: '#D4FF3E' }}>en cours…</em>
-              </h3>
-              <div style={{ fontFamily: 'var(--font-vt323),monospace', fontSize: 20, color: '#D4FF3E', minHeight: 24 }}>{loaderMsg}</div>
-              <div style={{ width: '80%', maxWidth: 320, height: 18, background: 'rgba(255,255,255,.1)', border: '3px solid #F4ECD8', position: 'relative', overflow: 'hidden' }}>
-                <span style={{ position: 'absolute', inset: 0, left: 0, width: `${progress}%`, background: '#D4FF3E', transition: 'width .3s' }} />
+            <div className="absolute inset-0 z-[8] flex flex-col items-center justify-center gap-5 bg-surface/95 p-8 text-center">
+              <h3 className="display text-2xl text-ink md:text-3xl">Génération en cours…</h3>
+              <p className="text-sm text-faint">{loaderMsg}</p>
+              <div className="h-2 w-full max-w-[280px] overflow-hidden rounded-full bg-app">
+                <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${progress}%` }} />
               </div>
-              <div style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, color: '#5E6A64', letterSpacing: '0.1em' }}>via /api/tryon · Gemini → OpenAI fallback</div>
+              <p className="text-xs text-faint">via /api/tryon · Gemini → OpenAI en secours</p>
             </div>
           )}
 
           {status === 'error' && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,27,20,.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: 40, textAlign: 'center', zIndex: 8 }}>
-              <div style={{ background: '#FF3D00', color: '#F4ECD8', padding: '8px 14px', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', border: '3px solid #F4ECD8', transform: 'rotate(-3deg)' }}>✗ ÉCHEC · ERROR</div>
-              <h3 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 48, lineHeight: 0.9, textTransform: 'uppercase', color: '#F4ECD8' }}>
-                Ça a <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', textTransform: 'none', color: '#FF7A1A' }}>cassé.</em>
-              </h3>
-              <div style={{ background: '#F4ECD8', color: '#0A0A0A', padding: '14px 18px', fontFamily: 'var(--font-vt323),monospace', fontSize: 14, border: '3px solid #F4ECD8', maxWidth: 420, wordBreak: 'break-word', textAlign: 'left', transform: 'rotate(-1deg)', boxShadow: '4px 4px 0 #FF7A1A' }}>{error}</div>
+            <div className="absolute inset-0 z-[8] flex flex-col items-center justify-center gap-4 bg-surface/95 p-8 text-center">
+              <span className="rounded-full border border-[color:var(--danger)] px-3 py-1 text-xs uppercase tracking-wide text-[color:var(--danger)]">Échec</span>
+              <h3 className="display text-2xl text-ink md:text-3xl">Ça n&apos;a pas fonctionné.</h3>
+              <p className="max-w-[360px] rounded-sm border border-hairline bg-app px-4 py-3 text-sm text-muted">{error}</p>
             </div>
           )}
 
           {(status === 'done' || status === 'idle') && resultUrl && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={showBefore ? (personUrl ?? '') : resultUrl} alt={showBefore ? 'Avant' : 'Après'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', top: 18, left: 18, background: '#0A0A0A', color: showBefore ? '#FF7A1A' : '#D4FF3E', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11, padding: '6px 12px', letterSpacing: '0.12em', border: `2px solid ${showBefore ? '#FF7A1A' : '#D4FF3E'}`, zIndex: 5 }}>
-                {showBefore ? '★ AVANT' : '★ APRÈS · GLORY'}
+              <img src={showBefore ? (personUrl ?? '') : resultUrl} alt={showBefore ? 'Avant' : 'Après'} className="h-full w-full object-cover" />
+              <div className="absolute left-4 top-4 z-[5] rounded-full bg-black/70 px-3 py-1.5 text-xs text-ink">
+                {showBefore ? 'Avant' : 'Après · Glory Hair'}
               </div>
               {costCents != null && (
-                <div style={{ position: 'absolute', bottom: 18, right: 18, background: '#FF7A1A', color: '#0A0A0A', fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11, padding: '6px 12px', letterSpacing: '0.06em', border: '2px solid #0A0A0A', transform: 'rotate(-3deg)', zIndex: 5, boxShadow: '3px 3px 0 #0A0A0A' }}>
-                  {(costCents/100).toFixed(2)} € · {((latencyMs ?? 0)/1000).toFixed(1)}s
+                <div className="absolute bottom-4 right-4 z-[5] rounded-full bg-black/70 px-3 py-1.5 text-xs text-faint">
+                  {(costCents/100).toFixed(2)}€ · {((latencyMs ?? 0)/1000).toFixed(1)}s
                 </div>
               )}
             </>
           )}
 
           {status === 'idle' && !resultUrl && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,27,20,.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center', padding: 40, zIndex: 8 }}>
-              <h3 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 42, textTransform: 'uppercase', color: '#F4ECD8' }}>Prêt à <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', textTransform: 'none', color: '#D4FF3E' }}>lancer.</em></h3>
-              <div style={{ fontFamily: 'var(--font-vt323),monospace', fontSize: 18, color: '#D4FF3E' }}>Clique sur ▶ en bas pour démarrer</div>
+            <div className="absolute inset-0 z-[8] flex flex-col items-center justify-center gap-3 p-8 text-center">
+              <h3 className="display text-2xl text-ink md:text-3xl">Prêt à lancer.</h3>
+              <p className="text-sm text-faint">Cliquez sur « Lancer l&apos;essai » en bas</p>
             </div>
           )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ background: '#F4ECD8', color: '#0A0A0A', padding: 20, border: '3px solid #0A0A0A', transform: 'rotate(-1deg)', boxShadow: '6px 6px 0 #D4FF3E', position: 'relative' }}>
-            <span aria-hidden style={{ position: 'absolute', top: -12, left: 24, width: 120, height: 22, background: 'rgba(212,255,62,.7)', borderLeft: '1px dashed rgba(0,0,0,.3)', borderRight: '1px dashed rgba(0,0,0,.3)', transform: 'rotate(-3deg)' }} />
-            <h4 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 32, lineHeight: 0.9, textTransform: 'uppercase' }}>Tu <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', textTransform: 'none', color: '#FF7A1A' }}>essaies.</em></h4>
-            <SummaryRow k="Perruque" v={selectedWig.name} />
-            <SummaryRow k="Style" v={`${selectedWig.cat} · ${selectedWig.style} · ${selectedWig.tone}`} />
-            <SummaryRow k="Prix" v={`${selectedWig.price} €`} />
-            {/* Nom du moteur IA volontairement masqué côté utilisateur (cf. UX décisions session 3) */}
+        <div className="flex flex-col gap-4">
+          <div className="rounded-lg border border-hairline bg-app p-6">
+            <p className="eyebrow">Vous essayez</p>
+            <div className="mt-3 divide-y divide-hairline text-sm">
+              <SummaryRow k="Perruque" v={selectedWig.name} />
+              <SummaryRow k="Style" v={`${selectedWig.cat} · ${selectedWig.style} · ${selectedWig.tone}`} />
+              <SummaryRow k="Prix" v={`${selectedWig.price}€`} />
+            </div>
           </div>
 
           {status === 'done' && resultUrl && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button type="button"
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
                 onMouseDown={() => setShowBefore(true)} onMouseUp={() => setShowBefore(false)} onMouseLeave={() => setShowBefore(false)}
                 onTouchStart={() => setShowBefore(true)} onTouchEnd={() => setShowBefore(false)}
-                style={{ ...btnLime, width: '100%' }}>★ Maintenir · voir AVANT</button>
-              <button type="button" onClick={onDownload} style={{ ...btnOrange, width: '100%' }}>↓ Télécharger</button>
-              <button type="button" onClick={onRegenerate} style={{ ...btnOutline, width: '100%' }}>↻ Re-générer</button>
-              <button type="button" onClick={onRestart} style={{ ...btnOutline, width: '100%' }}>← Tout recommencer</button>
+                className="w-full rounded-sm border border-line px-5 py-3 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]"
+              >
+                Maintenir · voir avant
+              </button>
+              <button type="button" onClick={onDownload} className="w-full rounded-sm bg-accent px-5 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+                Télécharger
+              </button>
+              <button type="button" onClick={onRegenerate} className="w-full rounded-sm border border-line px-5 py-3 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
+                Re-générer
+              </button>
+              <button type="button" onClick={onRestart} className="w-full rounded-sm border border-line px-5 py-3 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
+                Tout recommencer
+              </button>
             </div>
           )}
 
           {status === 'error' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button type="button" onClick={onRegenerate} style={{ ...btnLime, width: '100%' }}>↻ Réessayer</button>
-              <button type="button" onClick={onRestart} style={{ ...btnOutline, width: '100%' }}>← Recommencer</button>
+            <div className="flex flex-col gap-2.5">
+              <button type="button" onClick={onRegenerate} className="w-full rounded-sm bg-accent px-5 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+                Réessayer
+              </button>
+              <button type="button" onClick={onRestart} className="w-full rounded-sm border border-line px-5 py-3 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
+                Recommencer
+              </button>
             </div>
           )}
         </div>
@@ -941,25 +882,23 @@ function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progre
 
 function SummaryRow({ k, v }: { k: string; v: string }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 12, padding: '8px 0', borderBottom: '2px dashed #0A0A0A', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
-      <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 10, letterSpacing: '0.1em', color: '#FF7A1A', textTransform: 'uppercase', paddingTop: 2 }}>{k}</span>
-      <span>{v}</span>
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <span className="text-xs uppercase tracking-wide text-faint">{k}</span>
+      <span className="text-ink">{v}</span>
     </div>
   );
 }
 
 // ─── Screen head commun ─────────────────────────
 
-function ScreenHead({ num, stk, word, scrawl }: { num: string; stk: string; word: string; scrawl: string }) {
-  const stkBg = stk === '-o' ? '#FF7A1A' : '#D4FF3E';
+function ScreenHead({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 18, borderBottom: '3px dashed #D4FF3E', paddingBottom: 24, marginBottom: 32 }}>
-      <h2 style={{ fontFamily: 'var(--font-anton),Impact,sans-serif', fontSize: 'clamp(56px,8vw,120px)', lineHeight: 0.85, textTransform: 'uppercase', color: '#F4ECD8', letterSpacing: '-0.01em' }}>
-        {num} · TA <span style={{ background: stkBg, color: '#0A0A0A', padding: '0 0.08em', display: 'inline-block', transform: 'rotate(-1deg)' }}>{word}</span>
-      </h2>
-      <div style={{ fontFamily: 'var(--font-caveat),cursive', fontWeight: 700, color: '#D4FF3E', fontSize: 28, lineHeight: 1.1, transform: 'rotate(-3deg)', maxWidth: 300 }}>
-        → {scrawl}
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b border-hairline pb-6">
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2 className="display mt-2 text-3xl text-ink md:text-4xl">{title}</h2>
       </div>
+      <p className="text-sm text-faint">{subtitle}</p>
     </div>
   );
 }
@@ -973,19 +912,29 @@ function FooterNav({ step, totalSteps, canNext, onPrev, onNext, ctaLabel, debugO
 }) {
   const pct = Math.round((step / (totalSteps - 1)) * 100);
   return (
-    <div className="tryon-footer" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, background: '#0A0A0A', color: '#F4ECD8', borderTop: '3px solid #D4FF3E', padding: 'clamp(10px, 1.6vw, 14px) clamp(12px, 3vw, 28px)', display: 'flex', alignItems: 'center', gap: 14, zIndex: 50, flexWrap: 'wrap' }}>
-      <button type="button" onClick={onPrev} disabled={step === 0} style={footerBtn(step === 0)}>← Précédent</button>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 14, fontFamily: 'var(--font-vt323),monospace', fontSize: 16, color: '#D4FF3E' }}>
-        <span>STEP {String(step).padStart(2,'0')}/{String(totalSteps-1).padStart(2,'0')}</span>
-        <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,.1)', border: '2px solid #F4ECD8', position: 'relative', overflow: 'hidden' }}>
-          <span style={{ position: 'absolute', inset: 0, left: 0, width: `${pct}%`, background: '#D4FF3E', transition: 'width .35s' }} />
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-hairline bg-surface/95 px-4 py-3 backdrop-blur md:px-8">
+      <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-3">
+        <button type="button" onClick={onPrev} disabled={step === 0} className="shrink-0 rounded-sm border border-line px-4 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] disabled:cursor-not-allowed disabled:opacity-40">
+          ← Précédent
+        </button>
+
+        <div className="flex min-w-[120px] flex-1 items-center gap-3 text-xs text-faint">
+          <span className="shrink-0 tabular-nums">Étape {step}/{totalSteps - 1}</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-app">
+            <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${pct}%` }} />
+          </div>
         </div>
-        <span>{pct}%</span>
+
+        {showDebug && (
+          <button type="button" onClick={toggleDebug} className="shrink-0 rounded-sm border border-line px-3 py-2.5 text-xs text-ink transition-colors hover:border-[color:var(--border-accent)]">
+            {debugOpen ? '▼' : '▲'} Debug
+          </button>
+        )}
+
+        <button type="button" onClick={onNext} disabled={!canNext} className="shrink-0 rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:cursor-not-allowed disabled:opacity-40">
+          {ctaLabel}
+        </button>
       </div>
-      {showDebug && (
-        <button type="button" onClick={toggleDebug} style={{ fontFamily: 'var(--font-vt323),monospace', fontSize: 16, color: '#D4FF3E', background: 'transparent', border: '2px solid #D4FF3E', padding: '8px 14px', cursor: 'pointer' }}>{debugOpen ? '▼' : '▲'} Debug</button>
-      )}
-      <button type="button" onClick={onNext} disabled={!canNext} style={{ ...footerBtn(!canNext), background: '#D4FF3E', color: '#0A0A0A', borderColor: '#0A0A0A', boxShadow: '4px 4px 0 #FF7A1A' }}>{ctaLabel}</button>
     </div>
   );
 }
@@ -994,25 +943,19 @@ function DebugDrawer({ open, logs }: { open: boolean; logs: LogEntry[] }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => { if (ref.current) ref.current.scrollTop = ref.current.scrollHeight; }, [logs]);
   return (
-    <div style={{
-      position: 'fixed', left: 0, right: 0, bottom: 60,
-      background: '#0A0A0A', color: '#F4ECD8',
-      borderTop: '3px solid #FF7A1A', zIndex: 40,
-      transform: open ? 'translateY(0)' : 'translateY(100%)',
-      transition: 'transform .3s cubic-bezier(.2,.7,.2,1)',
-      maxHeight: '40vh', display: 'flex', flexDirection: 'column',
-    }}>
-      <div style={{ padding: '10px 18px', borderBottom: '2px solid #2c2418', fontFamily: 'var(--font-vt323),monospace', fontSize: 14, color: '#D4FF3E' }}>
-        &gt; LOGS · {logs.length}
-      </div>
-      <div ref={ref} style={{ flex: 1, overflowY: 'auto', padding: '14px 18px', fontFamily: 'var(--font-vt323),monospace', fontSize: 14, lineHeight: 1.6, minHeight: 120 }}>
+    <div
+      className="fixed inset-x-0 bottom-[60px] z-40 flex max-h-[40vh] flex-col border-t border-hairline bg-surface transition-transform"
+      style={{ transform: open ? 'translateY(0)' : 'translateY(100%)' }}
+    >
+      <div className="border-b border-hairline px-5 py-2.5 text-xs text-faint">Logs · {logs.length}</div>
+      <div ref={ref} className="min-h-[120px] flex-1 overflow-y-auto px-5 py-3.5 font-mono text-xs leading-relaxed">
         {logs.length === 0 ? (
-          <div style={{ color: '#5E6A64', textAlign: 'center', padding: 30 }}>// no logs yet</div>
+          <div className="py-8 text-center text-faint">// aucun log</div>
         ) : logs.map((l, i) => {
-          const color = l.level === 'error' ? '#FF3D00' : l.level === 'warn' ? '#F5E55E' : l.level === 'success' ? '#D4FF3E' : '#F4ECD8';
+          const color = l.level === 'error' ? 'var(--danger)' : l.level === 'warn' ? 'var(--warning)' : l.level === 'success' ? 'var(--success)' : 'var(--text-primary)';
           return (
-            <div key={i} style={{ display: 'flex', gap: 12 }}>
-              <span style={{ color: '#5E6A64', flexShrink: 0 }}>[{l.t}]</span>
+            <div key={i} className="flex gap-3">
+              <span className="shrink-0 text-faint">[{l.t}]</span>
               <span style={{ color }}>{l.msg}</span>
             </div>
           );
@@ -1020,26 +963,4 @@ function DebugDrawer({ open, logs }: { open: boolean; logs: LogEntry[] }) {
       </div>
     </div>
   );
-}
-
-// ─── Boutons partagés ───────────────────────────
-
-const btnLime: CSSProperties = {
-  fontFamily: 'var(--font-rubik-mono-one),sans-serif', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
-  background: '#D4FF3E', color: '#0A0A0A', border: '3px solid #0A0A0A', padding: '14px 22px', cursor: 'pointer',
-  boxShadow: '5px 5px 0 #FF7A1A',
-};
-const btnOrange: CSSProperties = { ...btnLime, background: '#FF7A1A', boxShadow: '5px 5px 0 #D4FF3E' };
-const btnOutline: CSSProperties = { ...btnLime, background: 'transparent', color: '#F4ECD8', borderColor: '#F4ECD8', boxShadow: '5px 5px 0 #D4FF3E' };
-
-function footerBtn(disabled: boolean): CSSProperties {
-  return {
-    fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11,
-    letterSpacing: '0.14em', textTransform: 'uppercase',
-    padding: '10px 16px',
-    background: 'transparent', color: '#F4ECD8',
-    border: '2px solid #F4ECD8',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.3 : 1,
-  };
 }
