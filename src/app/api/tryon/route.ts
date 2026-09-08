@@ -17,6 +17,7 @@ import path from 'node:path';
 import { WIG_BY_ID, type Wig } from '@/lib/wigs-data';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { checkLimit, getRequestIp, formatResetDuration } from '@/lib/rate-limit';
+import { verifyFaceIdentity } from '@/server/services/tryon/face-verify.service';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -48,9 +49,20 @@ interface ProviderDef {
 }
 
 // ─── Prompt (renforcé v2 — zéro modif accessoires/peau/visage + fidélité wig stricte) ───
+// v2.1 : rappel d'identité déplacé tout en haut (primer avant les inputs, poids attentionnel
+// plus fort en tête de prompt). Complété par un filet de sécurité déterministe post-génération
+// — voir verifyFaceIdentity() plus bas et src/server/services/tryon/face-verify.service.ts —
+// car un prompt seul ne peut jamais GARANTIR le comportement d'un LLM multimodal.
 
 function buildTryOnPrompt(wig: Wig): string {
   return [
+    // ─── PRIMER — placé EN TOUT PREMIER, avant même la description des inputs ───
+    // Les modèles multimodaux pondèrent généralement plus fort les tout premiers tokens
+    // d'un prompt long. Ce bloc ne remplace PAS ABSOLUTE RULE #1/#5 plus bas (qui restent
+    // la spec détaillée) — c'est un rappel court et à fort signal pour que la contrainte
+    // d'identité soit lue avant tout le reste, y compris avant la description de IMAGE 1/2.
+    `STOP. READ THIS BEFORE ANYTHING ELSE: this is a HAIR-ONLY edit. The face in IMAGE 1 must NOT change in any way — not the bone structure, not the eyes, not the skin, not the expression. A downstream automated check will compare the output face to IMAGE 1's face pixel-region and REJECT the entire generation if they don't match the same person. Getting the face identical is more important than getting the wig right. If you are ever unsure whether a pixel belongs to the face, DO NOT touch it.`,
+    ``,
     `TASK — Surgical hair-only inpainting. ONE region changes (the hair). EVERYTHING ELSE is FROZEN.`,
     ``,
     `MENTAL MODEL — Think of IMAGE 1 as a LOCKED BASE LAYER. You have a binary mask covering ONLY the hair region of IMAGE 1. INSIDE the mask: paint the wig from IMAGE 2. OUTSIDE the mask: COPY pixels 1-to-1 from IMAGE 1 without any change. There is NO "rest of the image to regenerate" — only the hair region is regenerated.`,
@@ -389,7 +401,7 @@ export async function POST(request: Request) {
     );
   }
 
-  type ErrKind = 'quota' | 'auth' | 'safety' | 'timeout' | 'network' | 'other';
+  type ErrKind = 'quota' | 'auth' | 'safety' | 'timeout' | 'network' | 'identity_mismatch' | 'other';
   function classify(msg: string): ErrKind {
     const m = msg.toLowerCase();
     if (/429|quota|rate.?limit|exceeded/.test(m)) return 'quota';
@@ -400,11 +412,18 @@ export async function POST(request: Request) {
     return 'other';
   }
 
+  // Seuil de confiance minimum pour accepter un rendu comme "même personne" (voir
+  // verifyFaceIdentity ci-dessous). En-dessous, on traite le rendu comme un échec de
+  // fidélité et on bascule sur le provider suivant de la chaîne, comme une erreur classique.
+  const FACE_MATCH_MIN_CONFIDENCE = 60;
+
   function userMessageFor(kinds: ErrKind[]): string {
     if (kinds.includes('safety')) return 'Cette photo n\'a pas pu être traitée. Essaie avec une autre photo (visage bien visible, fond neutre).';
+    if (kinds.length > 0 && kinds.every(k => k === 'identity_mismatch')) return 'Le rendu n\'a pas respecté fidèlement ton visage. Réessaie avec une photo de face, nette et bien éclairée.';
     if (kinds.every(k => k === 'quota')) return 'Le service est très demandé en ce moment. Réessaie dans quelques minutes.';
     if (kinds.every(k => k === 'auth')) return 'Le service d\'essai virtuel est en maintenance. L\'équipe a été prévenue.';
     if (kinds.every(k => k === 'timeout' || k === 'network')) return 'La connexion au service a échoué. Vérifie ta connexion et réessaie.';
+    if (kinds.includes('identity_mismatch')) return 'Le rendu n\'a pas respecté fidèlement ton visage. Réessaie avec une photo de face, nette et bien éclairée.';
     return 'L\'essai n\'a pas pu être généré pour le moment. Réessaie dans un instant.';
   }
 
@@ -421,6 +440,37 @@ export async function POST(request: Request) {
         wig,
         apiKey: process.env[p.envKey]!,
       });
+
+      // ─── Filet de sécurité : vérification de fidélité faciale post-génération ───
+      // Le prompt (buildTryOnPrompt) ne peut pas GARANTIR que le modèle préserve le
+      // visage — voir face-verify.service.ts pour le détail. On compare donc ici le
+      // visage de la photo originale à celui du rendu, via un modèle vision séparé,
+      // léger et bon marché. Si le vérificateur lui-même échoue techniquement
+      // (checked: false), on ne bloque JAMAIS l'essai à cause de ça (fail-open
+      // volontaire, documenté dans face-verify.service.ts) : on logue et on continue
+      // comme si de rien n'était.
+      const verify = await verifyFaceIdentity({
+        originalBase64: personBase64,
+        originalMime: personMime,
+        generatedBase64: r.resultBase64,
+        generatedMime: r.mimeType,
+        preferredProvider: p.id,
+      });
+
+      if (!verify.checked) {
+        console.warn(`[tryon] face-identity verifier unavailable (${verify.reason}) — passing ${p.id} result through ungated (fail-open by design).`);
+      } else if (!verify.samePerson || verify.confidence < FACE_MATCH_MIN_CONFIDENCE) {
+        const reason = `identity_mismatch · confidence=${verify.confidence} · ${verify.reason}`;
+        attempts.push({ provider: p.id, ok: false, latencyMs: Math.round(performance.now() - t), error: reason, kind: 'identity_mismatch' });
+        const next = chain[i + 1];
+        if (next) {
+          console.warn(`[tryon] ${p.id} generated an image but FAILED face-identity check → fallback ${next.id}. ${reason}`);
+        } else {
+          console.error(`[tryon] all providers failed. last=${p.id} failed face-identity check. ${reason}`);
+        }
+        continue; // traité comme un échec de ce provider — on enchaîne sur le suivant
+      }
+
       attempts.push({ provider: p.id, ok: true, latencyMs: r.latencyMs });
 
       // Bump quota DB pour user logged + log dans tryon_results
