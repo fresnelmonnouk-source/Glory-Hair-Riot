@@ -153,6 +153,17 @@ export const adminRouter = router({
       return { items: data ?? [], total: count ?? 0 };
     }),
 
+  // ─── Liste des feature flags ─────────────────────
+  listFlags: adminProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('feature_flags')
+      .select('key, enabled, description, updated_at')
+      .order('key', { ascending: true });
+
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+    return data ?? [];
+  }),
+
   // ─── Toggle feature flag ─────────────────────────
   toggleFlag: adminProcedure
     .input(z.object({

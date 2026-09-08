@@ -6,6 +6,11 @@ const PROTECTED_ROUTES = ['/compte'];
 const ADMIN_ROUTES = ['/admin'];
 const AUTH_ROUTES = ['/connexion', '/inscription', '/mot-de-passe-oublie'];
 
+// Exempté du gate maintenance : la page elle-même (pas de boucle), l'admin
+// (pour pouvoir se connecter et le désactiver), et /connexion (requis pour
+// atteindre l'admin).
+const MAINTENANCE_EXEMPT = ['/maintenance', '/admin', '/connexion'];
+
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
@@ -38,31 +43,45 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // ─── Mode maintenance ─────────────────────────────
+  // Flag `feature_flags.maintenance` (table posée en migration 002, jamais
+  // câblée jusqu'ici — voir admin/reglages). Lecture publique (RLS
+  // feature_flags_public_select), une requête légère par navigation.
+  const isMaintenanceExempt = MAINTENANCE_EXEMPT.some((r) => pathname.startsWith(r));
+  if (!isMaintenanceExempt) {
+    const { data: flag } = await supabase
+      .from('feature_flags')
+      .select('enabled')
+      .eq('key', 'maintenance')
+      .maybeSingle();
+    if (flag?.enabled) {
+      return NextResponse.redirect(new URL('/maintenance', request.url));
+    }
+  }
 
   const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
   const isAdmin = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
   const isAuthPage = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
-  if ((isProtected || isAdmin) && !user) {
-    const loginUrl = new URL('/connexion', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  if (isProtected || isAdmin || isAuthPage) {
+    const { data: { user } } = await supabase.auth.getUser();
 
-  if (isAuthPage && user) {
-    return NextResponse.redirect(new URL('/compte', request.url));
+    if ((isProtected || isAdmin) && !user) {
+      const loginUrl = new URL('/connexion', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (isAuthPage && user) {
+      return NextResponse.redirect(new URL('/compte', request.url));
+    }
   }
 
   return response;
 }
 
 export const config = {
-  matcher: [
-    '/compte/:path*',
-    '/admin/:path*',
-    '/connexion',
-    '/inscription',
-    '/mot-de-passe-oublie',
-  ],
+  // Tout sauf les assets statiques et l'API (webhooks Stripe/FedaPay doivent
+  // rester joignables même en maintenance, et n'ont pas besoin de ce middleware).
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
 };
