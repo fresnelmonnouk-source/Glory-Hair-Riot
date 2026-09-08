@@ -1,5 +1,12 @@
 'use client';
 
+/* Port structurel 1:1 de sandy-stylish/.../admin/clients/page.tsx (h1 display +
+   table rounded-lg border-hairline bg-surface). Sandy n'a ni tier de fidélité
+   ni gestion de rôle depuis cette table (juste un lien détail) ; GloryHairRiot
+   a le Glory Club (tier/points, réel) et la gestion de rôle (customer/support/
+   admin, réel) — conservés, stylés avec pills + select alignés sur le
+   vocabulaire de la table. */
+
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { useSession } from '@/hooks/use-session';
@@ -7,18 +14,6 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 const TIERS = ['all', 'bronze', 'argent', 'or', 'vip'] as const;
 type Tier = typeof TIERS[number];
-
-const TIER_COLOR: Record<string, string> = {
-  bronze: '#C18A4A',
-  argent: '#B8B8B8',
-  or: '#F5E55E',
-  vip: '#FF4D8D',
-};
-const ROLE_COLOR: Record<string, string> = {
-  customer: '#F4ECD8',
-  admin: '#FF7A1A',
-  support: '#D4FF3E',
-};
 
 const PAGE_SIZE = 20;
 
@@ -43,15 +38,10 @@ export default function AdminClientsPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <AdminPageHeader
-        title="Clients"
-        accent="ients"
-        sub={`// ${total} client${total > 1 ? 's' : ''} au total`}
-      />
+    <div>
+      <AdminPageHeader title="Clients" sub={`${total} client${total > 1 ? 's' : ''} au total`} />
 
-      {/* Filtres tier */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="mt-8 flex flex-wrap gap-3">
         {TIERS.map((t) => {
           const active = t === tier;
           return (
@@ -59,16 +49,7 @@ export default function AdminClientsPage() {
               key={t}
               type="button"
               onClick={() => { setTier(t); setPage(0); }}
-              style={{
-                fontFamily: 'var(--font-rubik-mono-one),monospace',
-                fontSize: 11, letterSpacing: '0.08em',
-                padding: '6px 12px',
-                background: active ? '#0A0A0A' : '#F4ECD8',
-                color: active ? '#D4FF3E' : '#0A0A0A',
-                border: '2px solid #0A0A0A',
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-              }}
+              className={`inline-flex items-center rounded-full border px-4 py-2 text-sm capitalize transition-colors ${active ? 'border-transparent bg-accent text-on-accent' : 'border-hairline text-muted hover:text-ink'}`}
             >
               {t === 'all' ? 'Tous' : t}
             </button>
@@ -76,151 +57,82 @@ export default function AdminClientsPage() {
         })}
       </div>
 
-      {/* Tableau */}
-      <div style={{
-        background: '#F4ECD8', color: '#0A0A0A',
-        border: '3px solid #0A0A0A', padding: 18,
-        boxShadow: '4px 4px 0 #FF4D8D',
-      }}>
-        {listQ.isLoading ? (
-          <div style={emptyStyle}>Chargement…</div>
-        ) : items.length === 0 ? (
-          <div style={emptyStyle}>Aucun client.</div>
-        ) : (
-          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-special-elite),monospace', fontSize: 13 }}>
+      <div className="mt-6 overflow-hidden rounded-lg border border-hairline bg-surface">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
             <thead>
-              <tr style={{ borderBottom: '2px dashed #0A0A0A' }}>
-                <Th>Nom</Th>
-                <Th>Email</Th>
-                <Th>Inscrit</Th>
-                <Th align="right">Points</Th>
-                <Th>Tier</Th>
-                <Th>News</Th>
-                <Th>Rôle</Th>
-                <Th align="right">Actions</Th>
+              <tr className="border-b border-hairline text-[11px] uppercase tracking-[0.14em] text-faint">
+                <th className="px-6 py-4 font-normal">Client</th>
+                <th className="px-4 py-4 font-normal">Inscrit</th>
+                <th className="px-4 py-4 text-right font-normal">Points</th>
+                <th className="px-4 py-4 font-normal">Tier</th>
+                <th className="px-4 py-4 font-normal">News.</th>
+                <th className="px-6 py-4 text-right font-normal">Rôle</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((c) => {
-                const isSelf = user?.id === c.id;
-                return (
-                  <tr key={c.id} style={{ borderBottom: '1px dashed rgba(0,0,0,0.15)' }}>
-                    <Td label="Nom">{c.full_name ?? '—'}</Td>
-                    <Td label="Email">
-                      <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 11 }}>
-                        {c.email}
-                      </span>
-                    </Td>
-                    <Td label="Inscrit">{new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}</Td>
-                    <Td align="right" label="Points">
-                      <span style={{ fontFamily: 'var(--font-rubik-mono-one),monospace' }}>{c.points}</span>
-                    </Td>
-                    <Td label="Tier">
-                      <span style={{
-                        fontFamily: 'var(--font-rubik-mono-one),monospace',
-                        fontSize: 10, letterSpacing: '0.08em',
-                        padding: '3px 8px',
-                        background: TIER_COLOR[c.tier] ?? '#F4ECD8',
-                        color: '#0A0A0A',
-                        border: '1px solid #0A0A0A',
-                        textTransform: 'uppercase',
-                      }}>
-                        {c.tier}
-                      </span>
-                    </Td>
-                    <Td label="News">{c.newsletter ? '✓' : '—'}</Td>
-                    <Td label="Rôle">
-                      <span style={{
-                        fontFamily: 'var(--font-rubik-mono-one),monospace',
-                        fontSize: 10, letterSpacing: '0.08em',
-                        padding: '3px 8px',
-                        background: ROLE_COLOR[c.role] ?? '#F4ECD8',
-                        color: '#0A0A0A',
-                        border: '1px solid #0A0A0A',
-                        textTransform: 'uppercase',
-                      }}>
-                        {c.role}
-                      </span>
-                    </Td>
-                    <Td align="right" label="Actions">
-                      <select
-                        value={c.role}
-                        disabled={isSelf || setRoleM.isPending}
-                        onChange={(e) => {
-                          const newRole = e.target.value as 'customer' | 'admin' | 'support';
-                          if (newRole !== c.role) {
-                            if (confirm(`Changer le rôle de ${c.email} vers "${newRole}" ?`)) {
-                              setRoleM.mutate({ userId: c.id, role: newRole });
+              {listQ.isLoading ? (
+                <tr><td colSpan={6} className="px-6 py-10 text-center text-muted">Chargement…</td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={6} className="px-6 py-10 text-center text-muted">Aucun client.</td></tr>
+              ) : (
+                items.map((c) => {
+                  const isSelf = user?.id === c.id;
+                  return (
+                    <tr key={c.id} className="border-b border-hairline last:border-0">
+                      <td className="px-6 py-5">
+                        <div className="font-display text-lg text-ink">{c.full_name ?? '—'}</div>
+                        <div className="mt-0.5 text-xs text-faint">{c.email}</div>
+                      </td>
+                      <td className="px-4 py-5 text-sm text-faint">
+                        {new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
+                      </td>
+                      <td className="px-4 py-5 text-right text-sm text-ink tabular-nums">{c.points.toLocaleString('fr-FR')}</td>
+                      <td className="px-4 py-5">
+                        <span className="inline-flex items-center rounded-full border border-hairline px-2.5 py-0.5 text-[10px] uppercase tracking-[0.1em] text-muted">
+                          {c.tier}
+                        </span>
+                      </td>
+                      <td className="px-4 py-5 text-sm text-faint">{c.newsletter ? '✓' : '—'}</td>
+                      <td className="px-6 py-5 text-right">
+                        <select
+                          value={c.role}
+                          disabled={isSelf || setRoleM.isPending}
+                          onChange={(e) => {
+                            const newRole = e.target.value as 'customer' | 'admin' | 'support';
+                            if (newRole !== c.role) {
+                              if (confirm(`Changer le rôle de ${c.email} vers "${newRole}" ?`)) {
+                                setRoleM.mutate({ userId: c.id, role: newRole });
+                              }
                             }
-                          }
-                        }}
-                        style={{
-                          fontFamily: 'var(--font-rubik-mono-one),monospace',
-                          fontSize: 11,
-                          padding: '4px 6px',
-                          background: '#FAF7F0',
-                          border: '2px solid #0A0A0A',
-                          cursor: isSelf ? 'not-allowed' : 'pointer',
-                          opacity: isSelf ? 0.5 : 1,
-                        }}
-                      >
-                        <option value="customer">customer</option>
-                        <option value="support">support</option>
-                        <option value="admin">admin</option>
-                      </select>
-                    </Td>
-                  </tr>
-                );
-              })}
+                          }}
+                          className="rounded-sm border border-input bg-transparent px-2 py-1.5 text-sm text-ink outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="customer">customer</option>
+                          <option value="support">support</option>
+                          <option value="admin">admin</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
-        )}
+        </div>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, alignItems: 'center' }}>
-          <button
-            type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}
-            style={pageBtn}
-          >← Préc.</button>
-          <span style={{
-            fontFamily: 'var(--font-rubik-mono-one),monospace', fontSize: 12, color: '#D4FF3E',
-          }}>
-            {page + 1} / {totalPages}
-          </span>
-          <button
-            type="button" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page + 1 >= totalPages}
-            style={pageBtn}
-          >Suiv. →</button>
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="rounded-sm border border-line px-4 py-2 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] disabled:cursor-not-allowed disabled:opacity-40">
+            ← Précédent
+          </button>
+          <span className="text-sm text-faint tabular-nums">{page + 1} / {totalPages}</span>
+          <button type="button" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page + 1 >= totalPages} className="rounded-sm border border-line px-4 py-2 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] disabled:cursor-not-allowed disabled:opacity-40">
+            Suivant →
+          </button>
         </div>
       )}
     </div>
   );
 }
-
-function Th({ children, align }: { children: React.ReactNode; align?: 'left' | 'right' }) {
-  return (
-    <th style={{
-      textAlign: align ?? 'left',
-      padding: '10px 8px',
-      fontFamily: 'var(--font-rubik-mono-one),monospace',
-      fontSize: 10, letterSpacing: '0.1em',
-      color: '#5E6A64', textTransform: 'uppercase',
-    }}>{children}</th>
-  );
-}
-function Td({ children, align, label }: { children: React.ReactNode; align?: 'left' | 'right'; label?: string }) {
-  return <td data-label={label} style={{ textAlign: align ?? 'left', padding: '10px 8px', verticalAlign: 'middle' }}>{children}</td>;
-}
-const emptyStyle: React.CSSProperties = {
-  textAlign: 'center', padding: '40px 0',
-  fontFamily: 'var(--font-special-elite),monospace', color: '#5E6A64',
-};
-const pageBtn: React.CSSProperties = {
-  fontFamily: 'var(--font-rubik-mono-one),monospace',
-  fontSize: 11, letterSpacing: '0.06em',
-  padding: '6px 12px',
-  background: 'transparent', color: '#F4ECD8',
-  border: '2px solid #D4FF3E', cursor: 'pointer',
-};

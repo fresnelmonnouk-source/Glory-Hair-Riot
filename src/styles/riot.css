@@ -965,47 +965,6 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Admin table : transformer en cards sur mobile */
-@media (max-width: 768px) {
-  .admin-table {
-    display: block !important;
-  }
-  .admin-table thead {
-    display: none !important;
-  }
-  .admin-table tbody,
-  .admin-table tr {
-    display: block !important;
-  }
-  .admin-table tr {
-    background: #FAF7F0;
-    border: 2px solid #0A0A0A;
-    padding: 12px;
-    margin-bottom: 10px;
-  }
-  .admin-table td {
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 6px 0 !important;
-    border-bottom: 1px dashed rgba(0,0,0,0.1);
-    text-align: left !important;
-  }
-  .admin-table td:last-child {
-    border-bottom: 0;
-  }
-  .admin-table td::before {
-    content: attr(data-label);
-    font-family: var(--font-rubik-mono-one), monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: #5E6A64;
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-}
-
 /* ─── Compte mobile ─── */
 @media (max-width: 768px) {
   .compte-head {
