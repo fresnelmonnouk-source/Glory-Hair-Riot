@@ -8,6 +8,7 @@
    Vocabulaire de carte identique au reste de l'admin. */
 
 import { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
@@ -45,7 +46,7 @@ function FeatureFlagsSection() {
 
       {maintenanceOn && (
         <div className="mt-4 rounded-sm border border-[color:var(--danger)] bg-app px-5 py-3.5 text-sm text-[color:var(--danger)]">
-          Le mode maintenance est actif — le site public redirige tous les visiteurs vers la page « en maintenance ». Seul l&apos;admin reste accessible.
+          Le mode maintenance est actif : le site public redirige tous les visiteurs vers la page « en maintenance ». Seul l&apos;admin reste accessible.
         </div>
       )}
 
@@ -86,87 +87,151 @@ function PaymentSettingsSection() {
   const utils = trpc.useUtils();
   const settingsQ = trpc.admin.getPaymentSettings.useQuery(undefined, { staleTime: 10_000 });
   const saveM = trpc.admin.savePaymentSettings.useMutation({
-    onSuccess: () => { void utils.admin.getPaymentSettings.invalidate(); setSecretInput(''); setSaved(true); setTimeout(() => setSaved(false), 2000); },
+    onSuccess: () => {
+      void utils.admin.getPaymentSettings.invalidate();
+      setFedaSecretInput('');
+      setStripeSecretInput('');
+      setStripeWebhookInput('');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    },
   });
 
-  const [publicKey, setPublicKey] = useState('');
-  const [secretInput, setSecretInput] = useState('');
-  const [environment, setEnvironment] = useState<'live' | 'sandbox'>('live');
+  const [fedaPublicKey, setFedaPublicKey] = useState('');
+  const [fedaSecretInput, setFedaSecretInput] = useState('');
+  const [fedaEnvironment, setFedaEnvironment] = useState<'live' | 'sandbox'>('live');
+  const [stripePublicKey, setStripePublicKey] = useState('');
+  const [stripeSecretInput, setStripeSecretInput] = useState('');
+  const [stripeWebhookInput, setStripeWebhookInput] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (settingsQ.data) {
-      setPublicKey(settingsQ.data.fedapay_public_key);
-      setEnvironment(settingsQ.data.fedapay_environment);
+      setFedaPublicKey(settingsQ.data.fedapay_public_key);
+      setFedaEnvironment(settingsQ.data.fedapay_environment);
+      setStripePublicKey(settingsQ.data.stripe_publishable_key);
     }
   }, [settingsQ.data]);
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
     saveM.mutate({
-      fedapay_public_key: publicKey,
-      fedapay_secret_key: secretInput || undefined,
-      fedapay_environment: environment,
+      fedapay_public_key: fedaPublicKey,
+      fedapay_secret_key: fedaSecretInput || undefined,
+      fedapay_environment: fedaEnvironment,
+      stripe_publishable_key: stripePublicKey,
+      stripe_secret_key: stripeSecretInput || undefined,
+      stripe_webhook_secret: stripeWebhookInput || undefined,
     });
   }
 
   return (
     <section>
-      <p className="eyebrow">Paiement · FedaPay</p>
+      <p className="eyebrow">Paiement</p>
       <p className="mt-2 max-w-xl text-sm text-muted">
-        Clé FedaPay branchée ici plutôt que figée dans les variables d&apos;environnement — modifiable sans redéploiement.
+        Clés FedaPay et Stripe branchées ici plutôt que figées dans les variables d&apos;environnement : modifiables sans redéploiement. Le client choisit son mode de paiement (carte, mobile money ou à la livraison) au moment du checkout.
       </p>
 
-      <form onSubmit={handleSave} className="mt-4 flex max-w-xl flex-col gap-5 rounded-lg border border-hairline bg-surface p-6">
-        <div>
-          <label htmlFor="fp-env" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Environnement</label>
-          <div className="flex gap-2">
-            {(['live', 'sandbox'] as const).map((env) => (
-              <button
-                key={env}
-                type="button"
-                onClick={() => setEnvironment(env)}
-                className={`rounded-full border px-4 py-2 text-sm transition-colors ${environment === env ? 'border-transparent bg-accent text-on-accent' : 'border-hairline text-muted hover:text-ink'}`}
-              >
-                {env === 'live' ? 'Production' : 'Test (sandbox)'}
-              </button>
-            ))}
+      <form onSubmit={handleSave} className="mt-4 flex max-w-xl flex-col gap-8 rounded-lg border border-hairline bg-surface p-6">
+        <div className="flex flex-col gap-5">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-faint">FedaPay (mobile money)</p>
+
+          <div>
+            <label htmlFor="fp-env" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Environnement</label>
+            <div className="flex gap-2">
+              {(['live', 'sandbox'] as const).map((env) => (
+                <button
+                  key={env}
+                  type="button"
+                  onClick={() => setFedaEnvironment(env)}
+                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${fedaEnvironment === env ? 'border-transparent bg-accent text-on-accent' : 'border-hairline text-muted hover:text-ink'}`}
+                >
+                  {env === 'live' ? 'Production' : 'Test (sandbox)'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="fp-public" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Clé publique</label>
+            <input
+              id="fp-public"
+              type="text"
+              value={fedaPublicKey}
+              onChange={(e) => setFedaPublicKey(e.target.value)}
+              placeholder="pk_live_..."
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="fp-secret" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
+              Clé secrète {settingsQ.data?.fedapay_secret_configured && <span className="normal-case text-faint">(déjà configurée : laisser vide pour la conserver)</span>}
+            </label>
+            <input
+              id="fp-secret"
+              type="password"
+              value={fedaSecretInput}
+              onChange={(e) => setFedaSecretInput(e.target.value)}
+              placeholder={settingsQ.data?.fedapay_secret_configured ? '••••••••••••••••' : 'sk_live_...'}
+              autoComplete="off"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
           </div>
         </div>
 
-        <div>
-          <label htmlFor="fp-public" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Clé publique</label>
-          <input
-            id="fp-public"
-            type="text"
-            value={publicKey}
-            onChange={(e) => setPublicKey(e.target.value)}
-            placeholder="pk_live_..."
-            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
-          />
-        </div>
+        <div className="flex flex-col gap-5 border-t border-hairline pt-6">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-faint">Stripe (carte bancaire)</p>
 
-        <div>
-          <label htmlFor="fp-secret" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
-            Clé secrète {settingsQ.data?.fedapay_secret_configured && <span className="normal-case text-faint">(déjà configurée — laisser vide pour la conserver)</span>}
-          </label>
-          <input
-            id="fp-secret"
-            type="password"
-            value={secretInput}
-            onChange={(e) => setSecretInput(e.target.value)}
-            placeholder={settingsQ.data?.fedapay_secret_configured ? '••••••••••••••••' : 'sk_live_...'}
-            autoComplete="off"
-            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
-          />
+          <div>
+            <label htmlFor="sp-public" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Clé publiable</label>
+            <input
+              id="sp-public"
+              type="text"
+              value={stripePublicKey}
+              onChange={(e) => setStripePublicKey(e.target.value)}
+              placeholder="pk_live_... ou pk_test_..."
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sp-secret" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
+              Clé secrète {settingsQ.data?.stripe_secret_configured && <span className="normal-case text-faint">(déjà configurée : laisser vide pour la conserver)</span>}
+            </label>
+            <input
+              id="sp-secret"
+              type="password"
+              value={stripeSecretInput}
+              onChange={(e) => setStripeSecretInput(e.target.value)}
+              placeholder={settingsQ.data?.stripe_secret_configured ? '••••••••••••••••' : 'sk_live_... ou sk_test_...'}
+              autoComplete="off"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sp-webhook" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
+              Secret webhook {settingsQ.data?.stripe_webhook_secret_configured && <span className="normal-case text-faint">(déjà configuré : laisser vide pour le conserver)</span>}
+            </label>
+            <input
+              id="sp-webhook"
+              type="password"
+              value={stripeWebhookInput}
+              onChange={(e) => setStripeWebhookInput(e.target.value)}
+              placeholder={settingsQ.data?.stripe_webhook_secret_configured ? '••••••••••••••••' : 'whsec_...'}
+              autoComplete="off"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={saveM.isPending}
-          className="self-start rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+          className="inline-flex w-fit items-center gap-2 self-start rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
         >
-          {saveM.isPending ? '…' : saved ? 'Enregistré ✓' : 'Enregistrer'}
+          {saveM.isPending ? '…' : saved ? (<><Check size={16} strokeWidth={2.5} /> Enregistré</>) : 'Enregistrer'}
         </button>
       </form>
     </section>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookSignature } from '@/server/services/payment/stripe.service';
+import { getStripeWebhookSecret } from '@/lib/settings/service';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -15,11 +16,8 @@ export async function POST(request: NextRequest) {
 
   let event;
   try {
-    event = verifyWebhookSignature(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET || ''
-    );
+    const webhookSecret = (await getStripeWebhookSecret()) || '';
+    event = await verifyWebhookSignature(body, signature, webhookSecret);
   } catch (error) {
     console.error('Webhook verification failed:', error);
     return NextResponse.json(

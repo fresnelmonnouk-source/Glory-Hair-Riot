@@ -26,3 +26,21 @@ export async function getFedaPayEnvironment(): Promise<'live' | 'sandbox'> {
   const { data } = await supabase.from('settings').select('value').eq('key', 'fedapay_environment').maybeSingle();
   return data?.value === 'sandbox' ? 'sandbox' : 'live';
 }
+
+export async function getStripeSecretKey(): Promise<string | null> {
+  const supabase = await createServerSupabaseClient(true);
+  const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_secret_key').maybeSingle();
+  return data?.value || process.env.STRIPE_SECRET_KEY || null;
+}
+
+export async function getStripePublishableKey(): Promise<string | null> {
+  const supabase = await createServerSupabaseClient(true);
+  const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_publishable_key').maybeSingle();
+  return data?.value || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
+}
+
+export async function getStripeWebhookSecret(): Promise<string | null> {
+  const supabase = await createServerSupabaseClient(true);
+  const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_webhook_secret').maybeSingle();
+  return data?.value || process.env.STRIPE_WEBHOOK_SECRET || null;
+}

@@ -1,18 +1,17 @@
 import Stripe from 'stripe';
+import { getStripeSecretKey } from '@/lib/settings/service';
 
 /**
- * Lazy client : Stripe throw "API key required" si on lui passe '' au
- * constructeur. On instancie au premier appel pour ne pas crasher le build
- * Vercel quand STRIPE_SECRET_KEY n'est pas défini.
+ * Clé secrète lue depuis la table `settings` (configurable depuis
+ * /admin/reglages, comme FedaPay) plutôt que figée au chargement du module
+ * — fallback sur STRIPE_SECRET_KEY si rien n'est configuré en admin. Le
+ * client n'est jamais mis en cache : la clé peut changer sans redéploiement.
+ * Stripe throw "API key required" si on lui passe '' au constructeur, d'où
+ * le placeholder pour ne pas crasher le build Vercel sans clé.
  */
-let _stripe: Stripe | null = null;
-function getStripe(): Stripe {
-  if (!_stripe) {
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_placeholder', {
-      apiVersion: '2023-10-16',
-    });
-  }
-  return _stripe;
+async function getStripe(): Promise<Stripe> {
+  const secretKey = (await getStripeSecretKey()) || 'sk_placeholder';
+  return new Stripe(secretKey, { apiVersion: '2023-10-16' });
 }
 
 export interface CreatePaymentIntentParams {
@@ -29,7 +28,8 @@ export async function createPaymentIntent({
   metadata,
 }: CreatePaymentIntentParams) {
   try {
-    const intent = await getStripe().paymentIntents.create({
+    const stripe = await getStripe();
+    const intent = await stripe.paymentIntents.create({
       amount,
       currency,
       customer: customerId,
@@ -51,7 +51,8 @@ export async function createPaymentIntent({
 
 export async function confirmPaymentIntent(intentId: string) {
   try {
-    const intent = await getStripe().paymentIntents.retrieve(intentId);
+    const stripe = await getStripe();
+    const intent = await stripe.paymentIntents.retrieve(intentId);
 
     return {
       status: intent.status, // 'succeeded', 'processing', 'requires_action', etc.
@@ -63,13 +64,14 @@ export async function confirmPaymentIntent(intentId: string) {
   }
 }
 
-export function verifyWebhookSignature(
+export async function verifyWebhookSignature(
   body: Buffer | string,
   signature: string,
   secret: string
-): Stripe.Event {
+): Promise<Stripe.Event> {
   try {
-    return getStripe().webhooks.constructEvent(body, signature, secret);
+    const stripe = await getStripe();
+    return stripe.webhooks.constructEvent(body, signature, secret);
   } catch (error) {
     console.error('Webhook signature verification failed:', error);
     throw new Error('Invalid webhook signature');
@@ -81,7 +83,8 @@ export async function refundPayment(
   amount?: number
 ) {
   try {
-    const refund = await getStripe().refunds.create({
+    const stripe = await getStripe();
+    const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
       amount,
     });
