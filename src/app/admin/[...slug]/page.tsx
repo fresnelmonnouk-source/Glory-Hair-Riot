@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+
 const TITLES: Record<string, { title: string; sub: string; icon: string }> = {
   commandes:  { title: 'Commandes',     sub: 'Gestion des commandes, retours, expéditions',     icon: '▤' },
   produits:   { title: 'Produits',      sub: 'CRUD perruques, variantes, photos, prix',          icon: '★' },
@@ -13,7 +14,8 @@ const TITLES: Record<string, { title: string; sub: string; icon: string }> = {
   reglages:   { title: 'Réglages',      sub: 'Paramètres système, intégrations, équipe',         icon: '⚙' },
 };
 
-export default function AdminCatchall({ params }: { params: { slug: string[] } }) {
+export default async function AdminCatchall(props: { params: Promise<{ slug: string[] }> }) {
+  const params = await props.params;
   const key = params.slug[0] ?? 'unknown';
   const meta = TITLES[key] ?? { title: key.charAt(0).toUpperCase() + key.slice(1), sub: 'Section admin', icon: '◇' };
 

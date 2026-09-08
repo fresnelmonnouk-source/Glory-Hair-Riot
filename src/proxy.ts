@@ -6,7 +6,7 @@ const PROTECTED_ROUTES = ['/compte'];
 const ADMIN_ROUTES = ['/admin'];
 const AUTH_ROUTES = ['/connexion', '/inscription', '/mot-de-passe-oublie'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   // ─── Dev preview bypass ───

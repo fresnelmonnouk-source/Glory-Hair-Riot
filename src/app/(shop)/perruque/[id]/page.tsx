@@ -3,15 +3,17 @@ import { notFound } from 'next/navigation';
 import { WIG_BY_ID, WIGS } from '@/lib/wigs-data';
 import { ProduitRiot } from '@/components/produit/ProduitRiot';
 
+
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export function generateStaticParams() {
   return WIGS.map((w) => ({ id: w.id }));
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const wig = WIG_BY_ID[params.id];
   if (!wig) {
     return { title: 'Perruque introuvable · Glory Hair RIOT' };
@@ -22,7 +24,8 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function ProduitPage({ params }: PageProps) {
+export default async function ProduitPage(props: PageProps) {
+  const params = await props.params;
   const wig = WIG_BY_ID[params.id];
   if (!wig) notFound();
   return <ProduitRiot wig={wig} />;

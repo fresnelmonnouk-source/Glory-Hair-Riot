@@ -253,7 +253,7 @@ function ChatZine({ messages, input, setInput, sending, onSend, onQuickReply, me
   sending: boolean;
   onSend: () => void;
   onQuickReply: (reply: string) => void;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div style={{

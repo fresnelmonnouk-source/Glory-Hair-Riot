@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Topbar } from '@/components/ui/Topbar';
 
+
 /**
  * Auth layout RIOT — port fidèle <section class="auth"> Riot.html (2756-2813).
  *
