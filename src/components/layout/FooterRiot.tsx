@@ -94,7 +94,7 @@ export function FooterRiot() {
               Perruques cheveux humains 100% Remy, tirées à la main dans notre atelier Paris 9.
             </p>
             {submitted ? (
-              <p className="mt-4 text-sm text-accent">Inscrit·e ! Merci — à très vite.</p>
+              <p className="mt-4 text-sm text-accent">Inscrit·e ! Merci, à très vite.</p>
             ) : (
               <form onSubmit={onSubmit} className="mt-4 flex max-w-[280px] border-b border-line">
                 <input

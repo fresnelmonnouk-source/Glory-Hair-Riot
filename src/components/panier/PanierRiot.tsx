@@ -27,7 +27,7 @@ function parseVariant(variantId: string | null): { size?: number; density?: numb
 function metaLine(item: CartItem): string {
   const variant = parseVariant(item.variant_id);
   const wig = WIG_BY_ID[item.wig_id];
-  const tone = wig?.tone ?? '—';
+  const tone = wig?.tone ?? 'n/a';
   const size = variant.size ?? wig?.length ?? '?';
   const density = variant.density ?? 180;
   return `${tone} · ${size}″ · ${density}%`;
@@ -45,7 +45,7 @@ export function PanierRiot() {
 
   function applyPromo() {
     if (!promo.trim()) return;
-    setPromoFeedback('Code invalide — campagne pas encore active.');
+    setPromoFeedback('Code invalide : campagne pas encore active.');
     setTimeout(() => setPromoFeedback(null), 3000);
   }
 

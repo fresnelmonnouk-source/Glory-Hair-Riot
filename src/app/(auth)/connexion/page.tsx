@@ -133,11 +133,8 @@ function ConnexionContent() {
         </div>
 
         <div className="flex gap-2">
-          <button type="button" disabled title="Bientôt disponible" className="flex-1 rounded-sm border border-line px-4 py-2.5 text-sm text-faint disabled:cursor-not-allowed">
+          <button type="button" disabled title="Bientôt disponible" className="w-full rounded-sm border border-line px-4 py-2.5 text-sm text-faint disabled:cursor-not-allowed">
             Google
-          </button>
-          <button type="button" disabled title="Bientôt disponible" className="flex-1 rounded-sm border border-line px-4 py-2.5 text-sm text-faint disabled:cursor-not-allowed">
-            Apple
           </button>
         </div>
 

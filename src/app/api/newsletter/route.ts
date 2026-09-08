@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   // 5. Email de confirmation (best-effort)
   void sendEmail({
     to: email,
-    subject: '★ Abonné à RIOT · Glory Hair',
+    subject: 'Abonné à RIOT · Glory Hair',
     template: 'email-newsletter-confirm.html',
     data: {
       Email: email,
@@ -100,6 +100,6 @@ export async function POST(request: Request) {
   // 6. Retour neutre (anti-énumération)
   return NextResponse.json({
     ok: true,
-    userMessage: '★ Inscrit·e ! Tu recevras l\'Issue 02 dès qu\'elle sort.',
+    userMessage: 'Inscrit·e ! Tu recevras l\'Issue 02 dès qu\'elle sort.',
   });
 }

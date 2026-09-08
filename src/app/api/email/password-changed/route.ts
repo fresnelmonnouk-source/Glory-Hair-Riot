@@ -20,7 +20,7 @@ export async function POST() {
 
   const result = await sendEmail({
     to: user.email ?? '',
-    subject: '★ Mot de passe modifié · Glory Hair RIOT',
+    subject: 'Mot de passe modifié · Glory Hair RIOT',
     template: 'email-password-changed.html',
     data: {
       Email: user.email,

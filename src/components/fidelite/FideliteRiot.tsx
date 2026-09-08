@@ -22,7 +22,7 @@ const REWARDS = [
   { nm: '+1 essai Premium par 100 pts', des: 'Solde actuel : 24 essais bonus disponibles', locked: false, cta: 'Activer' },
   { nm: 'Livraison express offerte', des: 'Sur votre prochaine commande dès 100€', locked: false, cta: 'Utiliser' },
   { nm: 'Accès aux drops VIP', des: 'Débloqué au tier VIP · 520 pts manquants', locked: true, cta: 'Verrouillé' },
-  { nm: 'Atelier Paris 9 — pose VIP offerte', des: 'Débloqué au tier VIP', locked: true, cta: 'Verrouillé' },
+  { nm: 'Atelier Paris 9 : pose VIP offerte', des: 'Débloqué au tier VIP', locked: true, cta: 'Verrouillé' },
 ];
 
 const EARN_WAYS = [

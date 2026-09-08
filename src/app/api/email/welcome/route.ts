@@ -49,7 +49,7 @@ export async function POST() {
   // Envoi
   const result = await sendEmail({
     to: profile?.email ?? user.email ?? '',
-    subject: 'T\'es dans le gang ★ Glory Hair RIOT',
+    subject: 'T\'es dans le gang · Glory Hair RIOT',
     template: 'email-welcome.html',
     data: {
       UserName: userName,

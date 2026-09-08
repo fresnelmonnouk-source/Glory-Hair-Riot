@@ -18,7 +18,7 @@ export default function MaintenancePage() {
         <h1 className="display mt-4 text-4xl text-ink md:text-5xl">On revient vite.</h1>
         <p className="mt-5 leading-relaxed text-muted">
           Le site est en pause technique le temps d&apos;une mise à jour. Nos équipes travaillent
-          dessus — repassez dans quelques instants.
+          dessus. Repassez dans quelques instants.
         </p>
 
         <div className="mt-8 rounded-sm border border-hairline bg-app px-5 py-4 text-sm leading-relaxed text-muted">

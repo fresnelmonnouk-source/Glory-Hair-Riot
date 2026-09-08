@@ -5,9 +5,15 @@
    même :focus-visible) — seules les VALEURS de couleur changent :
    fonds passés du vert forêt au bordeaux profond (demande explicite
    Fresnel 2026-09-08 : bordeaux = couleur DOMINANTE, pas un accent sur
-   fond resté vert). --on-accent passé à l'ivoire (le vert Sandy ne tient
-   pas le contraste sur un accent bordeaux, cf. calculs Vincent) —
-   seule autre déviation assumée vs Sandy.
+   fond resté vert).
+   Correction 2026-09-09 : --accent recalé sur la fiche colorimétrique
+   officielle Fresnel (#6D071A, HSL 348.8° 87.9% 22.7% — famille rouges,
+   pas violette). --accent-hi/--accent-deep repris du nuancier officiel
+   associé (Ombre 1 #C90D30 pour le survol, Ombre 4 #39040E pour les
+   dégradés sombres). --on-accent repassé au blanc pur #ffffff (12.39:1
+   mesuré sur --accent/--accent-hi, meilleur contraste que l'ivoire
+   précédent qui restait sous la barre AA sur le nouveau rouge plus
+   saturé).
    ══════════════════════════════════════════════════════════════════ */
 @import "tailwindcss";
 
@@ -22,9 +28,9 @@
   --surface-inset: #20101a;
 
   /* Accent — bordeaux (remplace l'or Sandy Stylish) */
-  --accent: #641828;
-  --accent-deep: #4A0F1E;
-  --accent-hi: #8C2A3F;
+  --accent: #6D071A;
+  --accent-deep: #39040E;
+  --accent-hi: #C90D30;
 
   /* Second accent — pêche */
   --peach: #DD9088;
@@ -36,14 +42,14 @@
   --text-faint: rgba(237, 231, 214, 0.62);
   --text-disabled: rgba(237, 231, 214, 0.4);
 
-  /* Sur fond accent — ivoire (déviation vs Sandy, cf. commentaire ci-dessus) */
-  --on-accent: #ede7d6;
+  /* Sur fond accent — blanc pur (12.39:1, cf. commentaire ci-dessus) */
+  --on-accent: #ffffff;
 
   /* Bordures */
   --border-hairline: rgba(237, 231, 214, 0.12);
   --border-card: rgba(237, 231, 214, 0.15);
   --border-input: rgba(237, 231, 214, 0.4);
-  --border-accent: rgba(100, 24, 40, 0.4);
+  --border-accent: rgba(109, 7, 26, 0.4);
 
   /* États sémantiques */
   --success: #9db69f;

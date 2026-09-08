@@ -101,7 +101,7 @@ export function ElodieRiot() {
             Élodie, votre styliste IA.
           </h1>
           <p className="mt-5 max-w-[440px] leading-relaxed text-muted">
-            Forme de visage, occasion, budget — décrivez ce que vous cherchez en français
+            Forme de visage, occasion, budget : décrivez ce que vous cherchez en français
             normal. Élodie analyse, recommande, et reste disponible 24h/24.
           </p>
 

@@ -2,6 +2,7 @@
    auth-shell.tsx + auth-card.tsx (primitives d'auth partagées). */
 
 import type { ReactNode } from 'react';
+import { Sparkle } from 'lucide-react';
 
 export const AUTH_INPUT =
   'w-full rounded-sm border border-[color:var(--border-input)] bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:border-[color:var(--accent)] focus:outline-none';
@@ -62,7 +63,7 @@ export function AuthShell({ eyebrow, title, lead, bullets, children }: {
           <ul className="mt-8 space-y-3">
             {bullets.map((b) => (
               <li key={b} className="flex gap-3 text-sm leading-relaxed text-muted">
-                <span aria-hidden className="mt-0.5 text-accent">✦</span>
+                <Sparkle aria-hidden size={13} className="mt-0.5 shrink-0 text-accent" />
                 <span>{b}</span>
               </li>
             ))}

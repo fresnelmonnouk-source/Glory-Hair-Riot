@@ -72,7 +72,7 @@ export default function AdminProduitsPage() {
                         <div className="font-display text-lg text-ink">{p.name}</div>
                         <div className="mt-0.5 text-xs text-faint">/{p.slug}</div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-muted">{p.category ?? '—'}</td>
+                      <td className="px-4 py-4 text-sm text-muted">{p.category ?? 'n/a'}</td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1 text-sm text-ink">
                           <input

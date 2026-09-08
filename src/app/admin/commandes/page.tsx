@@ -102,7 +102,7 @@ export default function AdminCommandesPage() {
                     <tr key={o.id} className="border-b border-hairline last:border-0">
                       <td className="px-6 py-5 font-display text-lg text-ink">#{o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-5">
-                        <div className="text-sm text-ink">{u?.full_name ?? '—'}</div>
+                        <div className="text-sm text-ink">{u?.full_name ?? 'n/a'}</div>
                         <div className="mt-0.5 text-xs text-faint">{u?.email ?? ''}</div>
                       </td>
                       <td className="px-4 py-5 text-sm text-faint">

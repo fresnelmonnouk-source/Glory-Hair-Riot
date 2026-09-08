@@ -310,11 +310,11 @@ function ProfilePanel({ email, fullName, newsletter, tier }: { email?: string | 
         <dl className="mt-5 space-y-5">
           <div>
             <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-faint">Nom</dt>
-            <dd className="mt-1 text-ink">{fullName || '—'}</dd>
+            <dd className="mt-1 text-ink">{fullName || 'n/a'}</dd>
           </div>
           <div>
             <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-faint">Email</dt>
-            <dd className="mt-1 text-ink">{email ?? '—'}</dd>
+            <dd className="mt-1 text-ink">{email ?? 'n/a'}</dd>
           </div>
           <div>
             <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-faint">Niveau Glory Club</dt>

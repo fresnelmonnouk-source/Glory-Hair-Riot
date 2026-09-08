@@ -17,7 +17,7 @@ export function AdvisorTeaser() {
             Élodie trouve votre perruque idéale.
           </h2>
           <p className="mt-5 max-w-[420px] leading-relaxed text-muted">
-            Décrivez ce que vous cherchez — texture, longueur, occasion — et Élodie vous
+            Décrivez ce que vous cherchez : texture, longueur, occasion, et Élodie vous
             recommande les pièces du catalogue qui correspondent vraiment.
           </p>
           <Link
@@ -35,7 +35,7 @@ export function AdvisorTeaser() {
               Je cherche une perruque bouclée pour l&apos;été
             </div>
             <div className="self-end rounded-full px-4 py-2 text-sm text-on-accent" style={{ background: 'var(--peach)' }}>
-              La Ginger devrait vous plaire — wavy, teinte gingembre, lace front HD.
+              La Ginger devrait vous plaire : wavy, teinte gingembre, lace front HD.
             </div>
             {preview && (
               <div className="mt-2 rounded-md border border-line bg-app p-4">

@@ -29,6 +29,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Check } from 'lucide-react';
 import { WIGS, type Wig } from '@/lib/wigs-data';
 import { ConsentModal } from './ConsentModal';
 
@@ -84,7 +85,7 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
     for (let i = 0; i < data.length; i += 4) sum += ((data[i] ?? 0) + (data[i+1] ?? 0) + (data[i+2] ?? 0)) / 3;
     const avg = sum / (SS * SS);
     if (avg < 28) return { ok: false, reason: `Photo trop sombre (luminosité ${avg.toFixed(0)}/255). Trouve plus de lumière.` };
-    if (avg > 240) return { ok: false, reason: 'Photo presque blanche — l\'IA aura du mal.' };
+    if (avg > 240) return { ok: false, reason: 'Photo presque blanche. L\'IA aura du mal.' };
     return { ok: true, width: w, height: h, brightness: Math.round(avg) };
   } finally {
     URL.revokeObjectURL(bUrl);
@@ -329,7 +330,7 @@ export function TryonFlow() {
 
       clearInterval(timer);
       setProgress(100);
-      setLoaderMsg('Terminé ✓');
+      setLoaderMsg('Terminé');
 
       const totalMs = Math.round(performance.now() - t0);
       log(`✓ Succès · ${(totalMs/1000).toFixed(1)}s`, 'success');
@@ -729,7 +730,7 @@ function ScreenWig({ selectedWig, setSelectedWig, quota }: { selectedWig: Wig; s
 
       {quota.count >= QUOTA_LIMIT_ANON && (
         <div className="mb-8 rounded-sm border border-[color:var(--danger)] bg-app px-5 py-3.5 text-sm text-[color:var(--danger)]">
-          Quota atteint · {quota.count}/{QUOTA_LIMIT_ANON} essai anonyme — créez un compte pour 2 essais Premium offerts.
+          Quota atteint · {quota.count}/{QUOTA_LIMIT_ANON} essai anonyme : créez un compte pour 2 essais Premium offerts.
         </div>
       )}
 
@@ -755,7 +756,9 @@ function ScreenWig({ selectedWig, setSelectedWig, quota }: { selectedWig: Wig; s
                   <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[10px] uppercase tracking-wide text-on-accent">{w.tag}</span>
                 )}
                 {isActive && (
-                  <span aria-hidden className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs text-on-accent">✓</span>
+                  <span aria-hidden className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-on-accent">
+                    <Check size={14} />
+                  </span>
                 )}
               </div>
               <h3 className="mt-3 font-display text-lg text-ink">{w.name}</h3>

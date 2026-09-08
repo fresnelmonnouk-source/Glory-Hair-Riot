@@ -8,6 +8,7 @@
    vocabulaire de la table. */
 
 import { useState } from 'react';
+import { Check, X } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { useSession } from '@/hooks/use-session';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -81,7 +82,7 @@ export default function AdminClientsPage() {
                   return (
                     <tr key={c.id} className="border-b border-hairline last:border-0">
                       <td className="px-6 py-5">
-                        <div className="font-display text-lg text-ink">{c.full_name ?? '—'}</div>
+                        <div className="font-display text-lg text-ink">{c.full_name ?? 'n/a'}</div>
                         <div className="mt-0.5 text-xs text-faint">{c.email}</div>
                       </td>
                       <td className="px-4 py-5 text-sm text-faint">
@@ -93,7 +94,9 @@ export default function AdminClientsPage() {
                           {c.tier}
                         </span>
                       </td>
-                      <td className="px-4 py-5 text-sm text-faint">{c.newsletter ? '✓' : '—'}</td>
+                      <td className="px-4 py-5 text-sm text-faint">
+                        {c.newsletter ? <Check size={14} className="text-success" aria-label="Inscrit" /> : <X size={14} className="text-faint" aria-label="Non inscrit" />}
+                      </td>
                       <td className="px-6 py-5 text-right">
                         <select
                           value={c.role}

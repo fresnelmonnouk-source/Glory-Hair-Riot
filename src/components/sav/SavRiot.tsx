@@ -15,7 +15,7 @@ const FAQ: FaqItem[] = [
     a: (
       <>
         Demandez à <b>Élodie</b>, notre styliste IA. Décrivez votre forme de visage, votre
-        style et votre budget — elle vous recommande la perruque idéale en quelques
+        style et votre budget : elle vous recommande la perruque idéale en quelques
         secondes. Vous pouvez aussi tester en direct avec l&apos;
         <Link href="/essayage" className="underline">essayage virtuel</Link>.
       </>
@@ -48,7 +48,7 @@ const FAQ: FaqItem[] = [
     q: 'Puis-je retourner une perruque ?',
     a: (
       <>
-        Oui — <b>30 jours</b> pour changer d&apos;avis, retour offert en France. La perruque
+        Oui, <b>30 jours</b> pour changer d&apos;avis, retour offert en France. La perruque
         doit être dans son emballage d&apos;origine, non portée, non lavée. Échange ou
         remboursement intégral.
       </>

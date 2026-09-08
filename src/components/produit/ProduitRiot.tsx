@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { Check, Heart, Star } from 'lucide-react';
 import { type Wig } from '@/lib/wigs-data';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
@@ -79,9 +80,14 @@ export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[]
 
           {wig.rating != null && wig.reviews != null && (
             <a href="#avis" className="mt-3 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink">
-              <span className="tracking-[0.1em] text-accent" aria-hidden>
-                {'★★★★★'.slice(0, Math.round(wig.rating))}
-                <span className="text-faint">{'☆☆☆☆☆'.slice(0, 5 - Math.round(wig.rating))}</span>
+              <span className="inline-flex items-center gap-0.5" aria-hidden>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={i < Math.round(wig.rating!) ? 'fill-[color:var(--accent)] text-accent' : 'text-faint'}
+                  />
+                ))}
               </span>
               <span className="tabular-nums">{wig.rating.toFixed(1)} · {wig.reviews} avis</span>
             </a>
@@ -174,7 +180,11 @@ export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[]
               onClick={handleAddToCart}
               className="rounded-[2px] bg-accent px-8 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
             >
-              {added ? 'Ajouté ✓' : 'Ajouter au sac'}
+              {added ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={16} /> Ajouté
+                </span>
+              ) : 'Ajouter au sac'}
             </button>
             <Link href="/essayage" className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
               Essayer en direct
@@ -188,7 +198,7 @@ export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[]
             className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink disabled:cursor-default disabled:hover:text-muted"
             aria-label="Ajouter aux favoris"
           >
-            <span aria-hidden>{favorited ? '♥' : '♡'}</span> {favorited ? 'Dans vos favoris' : 'Ajouter aux favoris'}
+            <Heart aria-hidden size={16} className={favorited ? 'fill-[color:var(--accent)] text-accent' : ''} /> {favorited ? 'Dans vos favoris' : 'Ajouter aux favoris'}
           </button>
 
           <dl className="mt-12 space-y-2 border-t border-hairline pt-6 text-sm">

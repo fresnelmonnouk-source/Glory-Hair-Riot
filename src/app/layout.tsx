@@ -36,11 +36,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Glory Hair — Perruques cheveux humains premium',
+  title: 'Glory Hair · Perruques cheveux humains premium',
   description: 'Perruques cheveux humains 100% Remy, essayage virtuel par IA. Atelier Paris 9.',
   keywords: ['perruques', 'extensions', 'cheveux humains', 'essayage virtuel', 'IA', 'beauté'],
   openGraph: {
-    title: 'Glory Hair — Perruques cheveux humains premium',
+    title: 'Glory Hair · Perruques cheveux humains premium',
     description: 'Perruques cheveux humains 100% Remy, essayage virtuel par IA. Atelier Paris 9.',
     type: 'website',
   },

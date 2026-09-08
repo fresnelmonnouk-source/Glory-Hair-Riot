@@ -35,13 +35,13 @@ export function TryonMarketing() {
       </h1>
       <p className="mx-auto mt-4 max-w-[560px] text-center leading-relaxed text-muted">
         IA générative photo-réaliste, en quelques secondes. Vous voyez votre vrai visage,
-        avec la vraie perruque — pas un filtre approximatif.
+        avec la vraie perruque, pas un filtre approximatif.
       </p>
 
       <div className="mt-12 grid gap-10 md:grid-cols-2 md:items-start md:gap-14">
         <div className="relative aspect-square overflow-hidden rounded-lg border border-hairline bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/ginger.jpg" alt="Essai virtuel — aperçu" className="h-full w-full object-cover opacity-70" />
+          <img src="/images/ginger.jpg" alt="Aperçu de l&apos;essai virtuel" className="h-full w-full object-cover opacity-70" />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-on-accent">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
@@ -93,7 +93,7 @@ export function TryonMarketing() {
           )}
 
           <p className="mt-5 text-xs leading-relaxed text-faint">
-            Limite par adresse IP et empreinte appareil — pour rester gratuit pour tout le
+            Limite par adresse IP et empreinte appareil : pour rester gratuit pour tout le
             monde, les essais en boucle sont bloqués. Contactez le SAV en cas de blocage
             légitime.
           </p>

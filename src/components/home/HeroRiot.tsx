@@ -16,7 +16,7 @@ export function HeroRiot() {
         </h1>
         <p className="mt-8 max-w-[440px] leading-relaxed text-muted">
           6 perruques en cheveux humains 100% Remy, et un essayage virtuel photo-réaliste
-          par IA — pas d&apos;overlay 3D approximatif.
+          par IA, sans overlay 3D approximatif.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-6">
           <Link

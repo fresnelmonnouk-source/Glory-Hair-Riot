@@ -54,10 +54,10 @@ export function AdminDashboard() {
       <h1 className="display text-4xl text-ink md:text-5xl">Tableau de bord</h1>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Chiffre d'affaires · 24h" value={k ? k.ca.value.toLocaleString('fr-FR') : '—'} suffix="€" {...formatDelta(k?.ca.delta ?? 0, '%')} />
-        <StatCard label="Commandes · 24h" value={k ? String(k.orders.value) : '—'} {...formatDelta(k?.orders.delta ?? 0)} />
-        <StatCard label="Essais virtuels · 24h" value={k ? String(k.tryon.value) : '—'} {...formatDelta(k?.tryon.delta ?? 0)} />
-        <StatCard label="Panier moyen" value={k ? k.avgBasket.value.toLocaleString('fr-FR') : '—'} suffix="€" {...formatDelta(k?.avgBasket.delta ?? 0, '€')} />
+        <StatCard label="Chiffre d'affaires · 24h" value={k ? k.ca.value.toLocaleString('fr-FR') : 'n/a'} suffix="€" {...formatDelta(k?.ca.delta ?? 0, '%')} />
+        <StatCard label="Commandes · 24h" value={k ? String(k.orders.value) : 'n/a'} {...formatDelta(k?.orders.delta ?? 0)} />
+        <StatCard label="Essais virtuels · 24h" value={k ? String(k.tryon.value) : 'n/a'} {...formatDelta(k?.tryon.delta ?? 0)} />
+        <StatCard label="Panier moyen" value={k ? k.avgBasket.value.toLocaleString('fr-FR') : 'n/a'} suffix="€" {...formatDelta(k?.avgBasket.delta ?? 0, '€')} />
       </div>
 
       <section className="mt-8 rounded-lg border border-hairline bg-surface p-6 md:p-8">
