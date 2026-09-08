@@ -1,26 +1,16 @@
-/**
- * FooterRiot — port fidèle de <footer class="foot-z"> dans Riot.html (lignes 3025-3082).
- *
- * Structure :
- * 1. Bandeau géant "GLORY HAIR!" (Anton 17vw)
- * 2. Mention "— by RHD Empire —" (Permanent Marker)
- * 3. Grille : Newsletter (1.5fr) + Boutique + Service + Maison (1fr chaque)
- * 4. Colophon : copyright + ISSUE N°01 + langues
- */
-
 'use client';
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 
-const COLS: { title: string; links: Array<{ href: string; label: string; star?: boolean }> }[] = [
+const COLS: { title: string; links: Array<{ href: string; label: string }> }[] = [
   {
     title: 'Boutique',
     links: [
-      { href: '/catalogue', label: 'Toutes les pièces', star: true },
+      { href: '/catalogue', label: 'Toutes les pièces' },
       { href: '/catalogue?filtre=nouveautes', label: 'Nouveautés' },
       { href: '/catalogue?filtre=best', label: 'Best-sellers' },
-      { href: '/catalogue?filtre=limitees', label: 'Limitées' },
+      { href: '/catalogue?filtre=limitees', label: 'Éditions limitées' },
       { href: '/sav/cartes-cadeau', label: 'Cartes cadeau' },
     ],
   },
@@ -42,12 +32,10 @@ const COLS: { title: string; links: Array<{ href: string; label: string; star?: 
       { href: '/magazine', label: 'Magazine' },
       { href: '/sav/presse', label: 'Presse' },
       { href: '/sav/contact', label: 'Contact' },
-      { href: '/admin', label: 'Admin (équipe)', star: true },
+      { href: '/admin', label: 'Admin (équipe)' },
     ],
   },
 ];
-
-const LANGUES = 'FR · EN · ES · IT';
 
 export function FooterRiot() {
   const [email, setEmail] = useState('');
@@ -82,220 +70,67 @@ export function FooterRiot() {
   }
 
   return (
-    <footer
-      className="container-pad"
-      style={{
-        background: '#0A0A0A',
-        color: '#F4ECD8',
-        padding: '64px 32px 24px',
-        position: 'relative',
-        overflow: 'hidden',
-        borderTop: '3px solid #D4FF3E',
-      }}
-    >
-      {/* Big GLORY HAIR! type */}
-      <div
-        style={{
-          fontFamily: 'var(--font-anton),Impact,sans-serif',
-          fontSize: 'clamp(64px,17vw,300px)',
-          lineHeight: 0.85,
-          textTransform: 'uppercase',
-          letterSpacing: '-0.02em',
-          whiteSpace: 'nowrap',
-          color: '#F4ECD8',
-        }}
-      >
-        GLORY{' '}
-        <span style={{
-          fontFamily: 'var(--font-yeseva-one),serif',
-          fontStyle: 'italic',
-          fontWeight: 400,
-          textTransform: 'none',
-          color: '#FF7A1A',
-        }}>
-          HAIR
-        </span>
-        <span style={{
-          background: '#FF7A1A',
-          color: '#0A0A0A',
-          padding: '0 0.05em',
-          display: 'inline-block',
-          transform: 'rotate(-1deg)',
-        }}>
-          !
-        </span>
-      </div>
+    <footer style={{ background: 'var(--bg-deepest)', color: 'var(--text-primary)' }}>
+      <div className="mx-auto max-w-[1180px] px-5 pb-8 pt-16">
+        <div className="grid grid-cols-1 gap-10 border-b pb-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]" style={{ borderColor: 'var(--border-hairline)' }}>
+          <div>
+            <span className="font-logo text-2xl italic" style={{ color: 'var(--text-primary)' }}>Glory Hair</span>
+            <p className="mt-4 max-w-[340px] text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              Perruques cheveux humains 100% Remy, tirées à la main dans notre atelier Paris 9.
+              Recevez nos nouveautés — un mail par mois, promis.
+            </p>
 
-      {/* by RHD Empire */}
-      <div
-        style={{
-          fontFamily: 'var(--font-permanent-marker),cursive',
-          fontSize: 'clamp(20px,2.4vw,32px)',
-          letterSpacing: '0.04em',
-          color: '#D4FF3E',
-          marginTop: 14,
-          transform: 'rotate(-1deg)',
-          display: 'inline-block',
-        }}
-      >
-        — by{' '}
-        <em style={{
-          fontFamily: 'var(--font-yeseva-one),serif',
-          fontStyle: 'italic',
-          color: '#FF7A1A',
-          fontSize: '1.15em',
-          letterSpacing: '0.02em',
-        }}>
-          RHD
-        </em>{' '}
-        Empire —
-      </div>
-
-      {/* Grid */}
-      <div
-        className="row-grid row-15-1-1-1"
-        style={{
-          gap: 40,
-          marginTop: 48,
-          paddingTop: 28,
-          borderTop: '3px dashed rgba(212,255,62,.3)',
-        }}
-      >
-        {/* Newsletter */}
-        <div>
-          <div
-            style={{
-              fontFamily: 'var(--font-special-elite),monospace',
-              fontSize: 16, lineHeight: 1.45, marginBottom: 14, maxWidth: 380,
-            }}
-          >
-            Recevez l&apos;
-            <b style={{
-              background: '#D4FF3E', color: '#0A0A0A',
-              padding: '0 4px', fontWeight: 400,
-            }}>
-              Issue 02
-            </b>
-            {' '}— Automne 2026, en avant-première.
-            <br />Un mail par mois. Promis.
+            {submitted ? (
+              <p className="mt-5 text-sm" style={{ color: 'var(--accent-hi)' }}>
+                Inscrit·e ! Merci — à très vite.
+              </p>
+            ) : (
+              <form onSubmit={onSubmit} className="mt-5 flex max-w-[380px] border" style={{ borderColor: 'var(--border-input)' }}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ton@adresse.email"
+                  required
+                  aria-label="Adresse email"
+                  className="flex-1 bg-transparent px-4 py-3 text-sm outline-none"
+                  style={{ color: 'var(--text-primary)' }}
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-3 text-xs font-medium tracking-wide uppercase"
+                  style={{ background: 'var(--accent)', color: 'var(--on-accent)', opacity: submitting ? 0.6 : 1 }}
+                >
+                  {submitting ? '…' : "S'inscrire"}
+                </button>
+              </form>
+            )}
+            {error && (
+              <p className="mt-2 text-xs" style={{ color: 'var(--danger)' }}>{error}</p>
+            )}
           </div>
 
-          {submitted ? (
-            <div
-              style={{
-                background: '#D4FF3E', color: '#0A0A0A',
-                padding: '14px 18px', border: '3px solid #0A0A0A',
-                fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 18,
-                transform: 'rotate(-1deg)', display: 'inline-block',
-              }}
-            >
-              ★ Inscrit·e ! Issue 02 arrive bientôt.
+          {COLS.map((col) => (
+            <div key={col.title}>
+              <h4 className="eyebrow mb-4" style={{ color: 'var(--text-faint)' }}>{col.title}</h4>
+              <ul className="flex flex-col gap-2.5 text-sm">
+                {col.links.map((link) => (
+                  <li key={link.href + link.label}>
+                    <Link href={link.href} style={{ color: 'var(--text-muted)' }} className="transition-colors hover:opacity-100">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          ) : (
-            <form
-              onSubmit={onSubmit}
-              style={{ display: 'flex', border: '3px solid #D4FF3E', maxWidth: 420 }}
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ton@adresse.email"
-                required
-                aria-label="Adresse email"
-                style={{
-                  flex: 1, background: 'transparent', border: 0,
-                  padding: '12px 16px', color: '#F4ECD8',
-                  fontFamily: 'var(--font-special-elite),monospace', fontSize: 14,
-                  outline: 'none',
-                }}
-              />
-              <button
-                type="submit"
-                disabled={submitting}
-                style={{
-                  background: '#D4FF3E', color: '#0A0A0A',
-                  padding: '12px 18px', border: 0,
-                  fontFamily: 'var(--font-rubik-mono-one),monospace',
-                  fontSize: 11, letterSpacing: '0.1em',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  opacity: submitting ? 0.5 : 1,
-                }}
-              >
-                {submitting ? '…' : 'S’INSCRIRE'}
-              </button>
-            </form>
-          )}
-          {error && (
-            <div style={{
-              marginTop: 10,
-              fontFamily: 'var(--font-special-elite),monospace',
-              fontSize: 12, color: '#FF4D8D',
-            }}>
-              ★ {error}
-            </div>
-          )}
+          ))}
         </div>
 
-        {/* 3 link columns */}
-        {COLS.map((col) => (
-          <div key={col.title}>
-            <h4
-              style={{
-                fontFamily: 'var(--font-permanent-marker),cursive',
-                color: '#D4FF3E', fontSize: 22, marginBottom: 14,
-                transform: 'rotate(-2deg)', display: 'inline-block',
-              }}
-            >
-              {col.title}
-            </h4>
-            <ul
-              style={{
-                listStyle: 'none', display: 'flex', flexDirection: 'column',
-                gap: 6, fontFamily: 'var(--font-special-elite),monospace',
-                fontSize: 14, margin: 0, padding: 0,
-              }}
-            >
-              {col.links.map((link) => (
-                <li key={link.href + link.label}>
-                  <Link
-                    href={link.href}
-                    style={{
-                      color: '#F4ECD8', textDecoration: 'none',
-                      transition: 'color .15s', display: 'inline-block',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FF7A1A'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#F4ECD8'; }}
-                  >
-                    {link.star && '★ '}{link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Colophon */}
-      <div
-        style={{
-          display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14,
-          marginTop: 36, paddingTop: 24,
-          borderTop: '3px dashed rgba(255,255,255,.2)',
-          fontFamily: 'var(--font-vt323),monospace',
-          fontSize: 'clamp(14px, 2vw, 18px)', color: 'rgba(255,255,255,.6)',
-          letterSpacing: '0.04em',
-        }}
-      >
-        <span>
-          ★{' '}
-          <em style={{ fontStyle: 'normal', color: '#D4FF3E' }}>GLORY HAIR</em>
-          {' '}· by{' '}
-          <em style={{ fontStyle: 'normal', color: '#D4FF3E' }}>RHD EMPIRE</em>
-          {' '}· PARIS · © {new Date().getFullYear()}
-        </span>
-        <span>RIOT N°01 · VOL.I · ÉTÉ 2026</span>
-        <span>{LANGUES}</span>
+        <div className="flex flex-wrap justify-between gap-3 pt-6 text-xs" style={{ color: 'var(--text-faint)' }}>
+          <span>Glory Hair · Paris · © {new Date().getFullYear()}</span>
+          <span>FR / EN</span>
+        </div>
       </div>
     </footer>
   );

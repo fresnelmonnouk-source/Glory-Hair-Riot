@@ -1,188 +1,48 @@
 import Link from 'next/link';
-import { CSSProperties } from 'react';
-
-const BTN: CSSProperties = {
-  fontFamily: 'var(--font-rubik-mono-one),sans-serif',
-  fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
-  border: '3px solid #0A0A0A', padding: '16px 26px',
-  display: 'inline-flex', alignItems: 'center', gap: 10,
-  textDecoration: 'none', cursor: 'pointer',
-};
 
 export function Manifeste() {
   return (
-    <section
-      className="container-pad"
-      style={{
-        padding: 'clamp(48px, 8vw, 80px) clamp(16px, 4vw, 32px)',
-        borderBottom: '3px solid #FF7A1A',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
-
-      {/* Ghost background text */}
-      <div aria-hidden style={{
-        position: 'absolute', top: 32, left: -40, right: -40,
-        fontFamily: 'var(--font-rubik-mono-one),monospace',
-        fontSize: 42, color: 'rgba(212,255,62,0.04)',
-        whiteSpace: 'nowrap', letterSpacing: '0.08em',
-        pointerEvents: 'none', userSelect: 'none',
-      }}>
-        GLORY GLORY GLORY GLORY GLORY GLORY GLORY
-      </div>
-
-      <div
-        className="row-grid row-1-15"
-        style={{ gap: 'clamp(32px, 5vw, 60px)', alignItems: 'center', position: 'relative' }}
-      >
-
-        {/* Left — visual collage (hide on mobile, trop dense) */}
-        <div className="hide-mobile" style={{ position: 'relative', height: 520 }}>
-
-          {/* mi-1: yellow quote card */}
-          <div style={{
-            position: 'absolute', top: 0, left: 20, width: 240,
-            background: '#F5E55E', color: '#0A0A0A',
-            padding: 18, transform: 'rotate(-6deg)',
-            boxShadow: '5px 5px 0 #0A0A0A',
-            fontFamily: 'var(--font-permanent-marker),cursive',
-            fontSize: 24, lineHeight: 1.1, zIndex: 3,
-          }}>
-            « Pas une perruque,{' '}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
-              une attitude.
-              <span aria-hidden style={{
-                position: 'absolute', left: '-2%', right: '-2%', top: '46%',
-                height: 4, background: '#FF7A1A', transform: 'rotate(-1deg)', display: 'block',
-              }} />
-            </span>
-            {' '}»
-            <span aria-hidden style={{ display: 'block', background: '#FF7A1A', height: 4, margin: '8px 0 12px', transform: 'rotate(-1deg)' }} />
-            <small style={{ fontFamily: 'var(--font-special-elite),monospace', fontSize: 11, letterSpacing: '0.06em', color: '#5e6a64', display: 'block' }}>
-              — Édito #01
-            </small>
-          </div>
-
-          {/* mi-2: polaroid */}
-          <div style={{
-            position: 'absolute', top: 120, right: 0, width: 300,
-            background: '#F4ECD8', padding: '14px 14px 50px',
-            transform: 'rotate(4deg)', boxShadow: '5px 5px 0 #FF7A1A', zIndex: 2,
-          }}>
-            <div style={{ background: '#1a1a1a', aspectRatio: '3/4', position: 'relative', overflow: 'hidden' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/ginger.jpg"
-                alt="Ginger — couverture N°01"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.08) saturate(1.05)' }}
-                loading="lazy"
-              />
-            </div>
-            <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14, fontFamily: 'var(--font-permanent-marker),cursive', color: '#0A0A0A', fontSize: 16, lineHeight: 1 }}>
-              Couv. N°01
-            </div>
-          </div>
-
-          {/* mi-3: lime IA card */}
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, width: 220,
-            background: '#D4FF3E', color: '#0A0A0A',
-            padding: 18, transform: 'rotate(-3deg)',
-            border: '3px dashed #0A0A0A',
-            fontFamily: 'var(--font-vt323),monospace', fontSize: 22, zIndex: 4,
-          }}>
-            IA · GEMINI<br />
-            + OPENAI BACKUP<br />
-            ~5s · PHOTO-RÉEL
-            <span style={{ display: 'block', fontSize: 28, marginTop: 4 }}>↗</span>
-          </div>
-
-          {/* Sticker */}
-          <div style={{
-            position: 'absolute', top: -15, right: '20%',
-            background: '#D4FF3E', color: '#0A0A0A',
-            padding: '8px 14px', borderRadius: 999,
-            fontFamily: 'var(--font-permanent-marker),cursive', fontSize: 12,
-            border: '2px solid #0A0A0A', transform: 'rotate(-18deg)',
-            boxShadow: '2px 3px 0 #0A0A0A', zIndex: 7,
-          }}>
-            ★ PUNK SINCE 2024
-          </div>
+    <section className="border-t" style={{ borderColor: 'var(--border-hairline)', background: 'var(--bg-canvas)' }}>
+      <div className="mx-auto grid max-w-[1180px] gap-12 px-5 py-20 md:grid-cols-2 md:items-center md:gap-16">
+        <div className="overflow-hidden rounded-sm" style={{ aspectRatio: '4/5', background: 'var(--surface)' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/ginger.jpg"
+            alt="Perruque Ginger — atelier Glory Hair"
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
         </div>
 
-        {/* Right — text */}
         <div>
-          <div style={{
-            display: 'inline-block',
-            fontFamily: 'var(--font-special-elite),monospace',
-            fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase',
-            background: '#D4FF3E', color: '#0A0A0A',
-            padding: '8px 12px', transform: 'rotate(-2deg)', marginBottom: 20,
-          }}>
-            ★ Édito #01 — la maison
-          </div>
+          <p className="eyebrow mb-6">Édito — la maison</p>
 
-          <h2 style={{
-            fontFamily: 'var(--font-anton),Impact,sans-serif',
-            fontSize: 'clamp(40px, 8vw, 120px)',
-            lineHeight: 0.85, textTransform: 'uppercase',
-            color: '#F4ECD8', marginBottom: 32,
-          }}>
-            Une{' '}
-            <span style={{
-              fontFamily: 'var(--font-permanent-marker),cursive',
-              color: '#D4FF3E', textTransform: 'none',
-              fontSize: '0.7em', display: 'inline-block',
-              transform: 'rotate(-2deg)',
-            }}>
-              couronne
-            </span>
-            <br />
-            <span style={{
-              background: '#FF7A1A',
-              color: '#0A0A0A',
-              padding: '0 0.08em',
-              display: 'inline-block',
-              transform: 'rotate(-1deg)',
-            }}>
-              pour chaque
-            </span>
-            <br />
-            <em style={{
-              fontFamily: 'var(--font-yeseva-one),serif',
-              fontStyle: 'italic', fontWeight: 400,
-              textTransform: 'none', letterSpacing: '-0.02em',
-              color: '#D4FF3E',
-            }}>
-              visage.
-            </em>
+          <h2 className="display text-[clamp(32px,5vw,52px)]" style={{ color: 'var(--text-primary)' }}>
+            Une couronne <em style={{ color: 'var(--accent)' }}>pour chaque visage.</em>
           </h2>
 
-          <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: 'rgba(244,236,216,.8)', fontSize: 16, lineHeight: 1.6, maxWidth: 520, marginBottom: 20 }}>
-            Glory Hair{' '}
-            <em style={{ fontFamily: 'var(--font-yeseva-one),serif', fontStyle: 'italic', color: '#FF7A1A' }}>by RHD Empire</em>,
-            c&apos;est{' '}
-            <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>6 perruques</span>{' '}
-            tirées brin par brin dans notre atelier Paris 9. Pas de stock anonyme, pas de fibres synthétiques. Cheveux humains Remy, calottes respirantes, lace front HD.
+          <p className="mt-6 max-w-[480px] text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            Glory Hair, c&apos;est 6 perruques tirées brin par brin dans notre atelier Paris 9.
+            Pas de stock anonyme, pas de fibres synthétiques — cheveux humains Remy, calottes
+            respirantes, lace front HD.
           </p>
 
-          <p style={{ fontFamily: 'var(--font-special-elite),monospace', color: 'rgba(244,236,216,.8)', fontSize: 16, lineHeight: 1.6, maxWidth: 520, marginBottom: 32 }}>
-            Et un essayage virtuel qui marche pour de vrai :{' '}
-            <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>IA générative image-to-image</span> (Gemini + OpenAI en backup), rendu photo-réaliste en{' '}
-            <span style={{ background: '#F5E55E', color: '#0A0A0A', padding: '0 4px' }}>~5 secondes</span>.{' '}
-            <b style={{ background: '#D4FF3E', color: '#0A0A0A', padding: '0 4px' }}>1 essai offert</b>{' '}
-            sans création de compte, ou{' '}
-            <b style={{ background: '#FF7A1A', color: '#0A0A0A', padding: '0 4px' }}>+2 essais</b>{' '}
-            à l&apos;inscription (3 au total). Vous testez avant d&apos;acheter — la moindre des choses.
+          <p className="mt-4 max-w-[480px] text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            Et un essayage virtuel qui marche pour de vrai : IA générative image-to-image (Gemini,
+            OpenAI en secours), rendu photo-réaliste en ~5 secondes. 1 essai offert sans création
+            de compte, +2 à l&apos;inscription. Vous testez avant d&apos;acheter — la moindre des choses.
           </p>
 
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            <Link href="/catalogue" style={{ ...BTN, background: '#D4FF3E', color: '#0A0A0A', boxShadow: '6px 6px 0 #FF7A1A' }}>
-              → Voir le catalogue
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link
+              href="/catalogue"
+              className="rounded-sm px-6 py-3 text-sm font-medium"
+              style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+            >
+              Voir le catalogue
             </Link>
-            <Link href="/magazine" style={{ ...BTN, background: 'transparent', color: '#F4ECD8', borderColor: '#F4ECD8' }}>
-              Lire le mag
+            <Link href="/magazine" className="text-sm underline underline-offset-4" style={{ color: 'var(--text-primary)' }}>
+              Lire le magazine
             </Link>
           </div>
         </div>

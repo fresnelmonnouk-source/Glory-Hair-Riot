@@ -1,83 +1,32 @@
 import type { Metadata, Viewport } from 'next';
-import {
-  Anton,
-  Permanent_Marker,
-  Special_Elite,
-  Yeseva_One,
-  VT323,
-  Rubik_Mono_One,
-  Caveat,
-  Archivo_Black,
-} from 'next/font/google';
+import { Cormorant_Garamond, Work_Sans, Playfair_Display } from 'next/font/google';
 import { TRPCProvider } from '@/lib/trpc/provider';
 import '@/styles/riot.css';
 
-
-const anton = Anton({
-  weight: '400',
+const cormorant = Cormorant_Garamond({
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
   subsets: ['latin'],
-  variable: '--font-anton',
+  variable: '--font-display',
   display: 'swap',
 });
 
-const permanentMarker = Permanent_Marker({
-  weight: '400',
+const workSans = Work_Sans({
+  weight: ['300', '400', '500', '600'],
   subsets: ['latin'],
-  variable: '--font-permanent-marker',
+  variable: '--font-sans',
   display: 'swap',
 });
 
-const specialElite = Special_Elite({
-  weight: '400',
+const playfair = Playfair_Display({
+  weight: ['600', '700'],
+  style: ['italic'],
   subsets: ['latin'],
-  variable: '--font-special-elite',
+  variable: '--font-logo',
   display: 'swap',
 });
 
-const yesevaOne = Yeseva_One({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-yeseva-one',
-  display: 'swap',
-});
-
-const vt323 = VT323({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-vt323',
-  display: 'swap',
-});
-
-const rubikMonoOne = Rubik_Mono_One({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-rubik-mono-one',
-  display: 'swap',
-});
-
-const caveat = Caveat({
-  subsets: ['latin'],
-  variable: '--font-caveat',
-  display: 'swap',
-});
-
-const archivoBlack = Archivo_Black({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-archivo-black',
-  display: 'swap',
-});
-
-const fontVars = [
-  anton.variable,
-  permanentMarker.variable,
-  specialElite.variable,
-  yesevaOne.variable,
-  vt323.variable,
-  rubikMonoOne.variable,
-  caveat.variable,
-  archivoBlack.variable,
-].join(' ');
+const fontVars = [cormorant.variable, workSans.variable, playfair.variable].join(' ');
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -87,12 +36,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Glory Hair RIOT — Issue N°01',
-  description: 'Perruques cheveux humains premium — Édition RIOT',
-  keywords: ['perruques', 'extensions', 'cheveux humains', 'essayage virtuel', 'IA', 'beauté', 'RIOT'],
+  title: 'Glory Hair — Perruques cheveux humains premium',
+  description: 'Perruques cheveux humains 100% Remy, essayage virtuel par IA. Atelier Paris 9.',
+  keywords: ['perruques', 'extensions', 'cheveux humains', 'essayage virtuel', 'IA', 'beauté'],
   openGraph: {
-    title: 'Glory Hair RIOT — Issue N°01',
-    description: 'Perruques cheveux humains premium — Édition RIOT',
+    title: 'Glory Hair — Perruques cheveux humains premium',
+    description: 'Perruques cheveux humains 100% Remy, essayage virtuel par IA. Atelier Paris 9.',
     type: 'website',
   },
 };

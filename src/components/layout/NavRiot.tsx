@@ -2,19 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, Star, X } from 'lucide-react';
+import { Heart, Menu, ShoppingBag, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
 
-const NAV_LINKS: ReadonlyArray<readonly [string, string, string]> = [
-  ['/',          'Accueil',  '01'],
-  ['/catalogue', 'Catalogue', '02'],
-  ['/essayage',  'Essayage',  '03'],
-  ['/elodie',    'Élodie',    '04'],
-  ['/magazine',  'Magazine',  '05'],
-  ['/sav',       'SAV',       '06'],
+const NAV_LINKS: ReadonlyArray<readonly [string, string]> = [
+  ['/', 'Accueil'],
+  ['/catalogue', 'Catalogue'],
+  ['/essayage', 'Essayage'],
+  ['/elodie', 'Conseil Élodie'],
+  ['/magazine', 'Magazine'],
+  ['/sav', 'Aide'],
 ];
 
 /** Match exact pour "/" ; match préfixe pour les autres (gère /essayage/live). */
@@ -33,234 +33,149 @@ export function NavRiot() {
     staleTime: 30_000,
   });
 
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Fermer la sheet au changement de route
-  useEffect(() => { setSheetOpen(false); }, [pathname]);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  // Lock body scroll quand sheet ouvert
   useEffect(() => {
-    if (!sheetOpen) return;
+    if (!menuOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
-  }, [sheetOpen]);
+  }, [menuOpen]);
 
-  // Fermer sur Escape
   useEffect(() => {
-    if (!sheetOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSheetOpen(false); };
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [sheetOpen]);
+  }, [menuOpen]);
 
   return (
-    <>
+    <header
+      className="sticky z-90 border-b border-hairline bg-bg-app/90 backdrop-blur"
+      style={{ borderColor: 'var(--border-hairline)', top: 'var(--topbar-h)' }}
+    >
       <nav
         aria-label="Navigation principale"
-        className="nav-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 1fr auto',
-          alignItems: 'center',
-          padding: '14px 20px',
-          borderBottom: '2px solid #D4FF3E',
-          background: '#0E1B14',
-          position: 'sticky',
-          top: 'var(--topbar-h)',
-          zIndex: 90,
-          gap: 12,
-        }}
+        className="mx-auto flex max-w-[1180px] items-center justify-between gap-6 px-5 py-4"
       >
-        {/* Logo */}
-        <Link
-          href="/"
-          style={{
-            fontFamily: 'var(--font-permanent-marker), cursive',
-            fontSize: 'clamp(26px, 5vw, 42px)',
-            lineHeight: 1,
-            color: '#F4ECD8',
-            transform: 'rotate(-3deg)',
-            display: 'inline-flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            textDecoration: 'none',
-          }}
-        >
-          <span>
-            Glory{' '}
-            <span
-              style={{
-                color: '#FF7A1A',
-                background: '#D4FF3E',
-                padding: '0 6px',
-                display: 'inline-block',
-                transform: 'rotate(2deg)',
-              }}
-            >
-              Hair!
-            </span>
-          </span>
-          <span
-            className="hide-sm"
-            style={{
-              fontFamily: 'var(--font-special-elite), monospace',
-              fontSize: 10,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: '#D4FF3E',
-              transform: 'rotate(1deg)',
-              display: 'block',
-              marginTop: 2,
-            }}
-          >
-            by{' '}
-            <em
-              style={{
-                fontFamily: 'var(--font-yeseva-one), serif',
-                fontStyle: 'italic',
-                color: '#FF7A1A',
-              }}
-            >
-              RHD
-            </em>{' '}
-            Empire
-          </span>
+        <Link href="/" className="font-logo text-2xl italic text-ivory no-underline">
+          Glory Hair
         </Link>
 
-        {/* Nav links — desktop only */}
-        <div
-          className="nav-links-desktop"
-          style={{ display: 'flex', gap: 22, justifyContent: 'center' }}
-        >
+        <div className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map(([href, label]) => (
             <Link
               key={href}
               href={href}
-              className={isActive(href, pathname) ? 'nav-link active' : 'nav-link'}
+              className="text-sm transition-colors"
+              style={{
+                color: isActive(href, pathname) ? 'var(--accent-hi)' : 'var(--text-muted)',
+              }}
             >
               {label}
             </Link>
           ))}
         </div>
 
-        {/* Right pills — desktop only */}
-        <div
-          className="nav-actions-desktop"
-          style={{ display: 'flex', gap: 8, alignItems: 'center' }}
-        >
-          <button type="button" className="nav-pill">FR / EN</button>
+        <div className="hidden items-center gap-4 md:flex">
+          <button
+            type="button"
+            className="text-xs tracking-wide"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            FR / EN
+          </button>
           {loading ? (
-            <span className="nav-pill" style={{ opacity: 0.4 }}>…</span>
+            <span className="text-sm" style={{ color: 'var(--text-faint)' }}>…</span>
           ) : user ? (
-            <Link href="/compte" className="nav-pill" title={user.email ?? undefined}>
-              {prenom ? `★ ${prenom}` : 'Compte'}
+            <Link href="/compte" className="text-sm" title={user.email ?? undefined} style={{ color: 'var(--text-primary)' }}>
+              {prenom ?? 'Mon compte'}
             </Link>
           ) : (
-            <Link href="/connexion" className="nav-pill">Connexion</Link>
+            <Link href="/connexion" className="text-sm" style={{ color: 'var(--text-primary)' }}>
+              Connexion
+            </Link>
           )}
           <Link
             href="/compte?tab=souhaits"
-            className="nav-pill"
-            aria-label="Souhaits"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            aria-label="Favoris"
+            className="inline-flex items-center gap-1 text-sm"
+            style={{ color: 'var(--text-primary)' }}
           >
-            <Heart size={14} strokeWidth={2.5} />
+            <Heart size={16} strokeWidth={1.75} />
             {user ? (wishlistCount.data ?? 0) : 0}
           </Link>
-          <Link href="/panier" className="nav-pill hot">
-            Panier · {cartCount}
+          <Link
+            href="/panier"
+            aria-label="Panier"
+            className="inline-flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium"
+            style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+          >
+            <ShoppingBag size={15} strokeWidth={1.75} />
+            {cartCount}
           </Link>
         </div>
 
-        {/* Placeholder col 3 mobile (vide — le FAB est en fixed) */}
-        <div className="hide-desktop" aria-hidden style={{ width: 1 }} />
+        <button
+          type="button"
+          aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+          aria-expanded={menuOpen}
+          className="inline-flex items-center justify-center md:hidden"
+          style={{ color: 'var(--text-primary)' }}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </nav>
 
-      {/* FAB mobile — caché sur tryon live qui a son propre footer fixe */}
-      {!pathname.startsWith('/essayage/live') && (
-      <button
-        type="button"
-        className={sheetOpen ? 'nav-fab open' : 'nav-fab'}
-        aria-label={sheetOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-        aria-expanded={sheetOpen}
-        onClick={() => setSheetOpen((v) => !v)}
-      >
-        {sheetOpen ? (
-          <X size={26} strokeWidth={2.8} />
-        ) : (
-          <>
-            <Star className="nav-fab-star" size={22} strokeWidth={2.5} fill="#FF7A1A" />
-            <span className="nav-fab-label">Menu</span>
-          </>
-        )}
-        {!sheetOpen && cartCount > 0 && (
-          <span className="nav-fab-badge" aria-label={`${cartCount} article${cartCount > 1 ? 's' : ''} dans le panier`}>
-            {cartCount}
-          </span>
-        )}
-      </button>
-      )}
-
-      {/* Sheet mobile */}
-      {sheetOpen && (
-        <>
-          <div
-            className="nav-sheet-backdrop"
-            role="button"
-            tabIndex={-1}
-            aria-label="Fermer le menu"
-            onClick={() => setSheetOpen(false)}
-          />
-          <aside className="nav-sheet" aria-label="Menu de navigation">
-            <div className="nav-sheet-head">
-              <h2>
-                Menu<br />
-                <em>RIOT.</em>
-              </h2>
-              <span className="nav-sheet-stamp">★ Issue N°01</span>
-            </div>
-
-            {NAV_LINKS.map(([href, label, num]) => {
-              const active = isActive(href, pathname);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={active ? 'nav-sheet-link active' : 'nav-sheet-link'}
-                >
-                  <span className="num">{num}</span>
-                  <span>{label}</span>
-                </Link>
-              );
-            })}
-
-            <div className="nav-sheet-actions">
-              {loading ? (
-                <span className="nav-pill full" style={{ opacity: 0.4 }}>…</span>
-              ) : user ? (
-                <Link href="/compte" className="nav-pill" title={user.email ?? undefined}>
-                  {prenom ? `★ ${prenom}` : 'Mon compte'}
-                </Link>
-              ) : (
-                <Link href="/connexion" className="nav-pill">Connexion</Link>
-              )}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-100 flex flex-col md:hidden"
+          style={{ background: 'var(--bg-deepest)', top: 'calc(var(--topbar-h) + 64px)' }}
+        >
+          <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-6 py-8">
+            {NAV_LINKS.map(([href, label]) => (
               <Link
-                href="/compte?tab=souhaits"
-                className="nav-pill"
-                aria-label="Souhaits"
+                key={href}
+                href={href}
+                className="display border-b py-4 text-2xl"
+                style={{
+                  borderColor: 'var(--border-hairline)',
+                  color: isActive(href, pathname) ? 'var(--accent-hi)' : 'var(--text-primary)',
+                }}
               >
-                <Heart size={14} strokeWidth={2.5} />
-                <span>{user ? (wishlistCount.data ?? 0) : 0}</span>
+                {label}
               </Link>
-              <Link href="/panier" className="nav-pill hot full">
-                ★ Panier · {cartCount}
+            ))}
+          </div>
+          <div className="flex flex-col gap-3 border-t px-6 py-6" style={{ borderColor: 'var(--border-hairline)' }}>
+            {loading ? null : user ? (
+              <Link href="/compte" className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                {prenom ?? 'Mon compte'}
               </Link>
-              <button type="button" className="nav-pill full">FR / EN</button>
-            </div>
-          </aside>
-        </>
+            ) : (
+              <Link href="/connexion" className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Connexion
+              </Link>
+            )}
+            <Link href="/compte?tab=souhaits" className="text-sm" style={{ color: 'var(--text-primary)' }}>
+              Favoris · {user ? (wishlistCount.data ?? 0) : 0}
+            </Link>
+            <Link
+              href="/panier"
+              className="rounded-sm px-4 py-3 text-center text-sm font-medium"
+              style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+            >
+              Voir le panier · {cartCount}
+            </Link>
+            <button type="button" className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              FR / EN
+            </button>
+          </div>
+        </div>
       )}
-    </>
+    </header>
   );
 }
