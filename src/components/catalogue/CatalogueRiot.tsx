@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { WIGS, type Wig } from '@/lib/wigs-data';
+import { type Wig } from '@/lib/wigs-data';
 import { ProductCard } from '@/components/product-card';
 
 /* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/[category]/page.tsx
@@ -24,16 +24,16 @@ const FILTERS: ReadonlyArray<{ id: FilterId; label: string; match: (w: Wig) => b
   { id: 'budget', label: 'Sous 300€', match: (w) => w.price < 300 },
 ] as const;
 
-export function CatalogueRiot() {
+export function CatalogueRiot({ wigs }: { wigs: Wig[] }) {
   const [activeId, setActiveId] = useState<FilterId>('all');
 
   const { filtered, counts } = useMemo(() => {
     const counts: Record<FilterId, number> = Object.fromEntries(
-      FILTERS.map((f) => [f.id, WIGS.filter(f.match).length]),
+      FILTERS.map((f) => [f.id, wigs.filter(f.match).length]),
     ) as Record<FilterId, number>;
     const active = FILTERS.find((f) => f.id === activeId)!;
-    return { filtered: WIGS.filter(active.match), counts };
-  }, [activeId]);
+    return { filtered: wigs.filter(active.match), counts };
+  }, [activeId, wigs]);
 
   const count = filtered.length <= 1 ? `${filtered.length} pièce` : `${filtered.length} pièces`;
 

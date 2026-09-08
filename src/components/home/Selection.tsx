@@ -1,12 +1,15 @@
 import Link from 'next/link';
-import { WIGS } from '@/lib/wigs-data';
+import { getWigs } from '@/lib/wigs/service';
 import { ProductCard } from '@/components/product-card';
 
 /* Port structurel 1:1 de la section "LA SÉLECTION" de sandy-stylish
-   home page.tsx (titre + lien "voir tout", grille 4 col ProductCard). */
+   home page.tsx (titre + lien "voir tout", grille 4 col ProductCard).
+   Catalogue réel depuis Supabase (migration 006) au lieu du fichier
+   statique — mêmes 4 premiers produits par display_order. */
 
-export function Selection() {
-  const featured = WIGS.slice(0, 4);
+export async function Selection() {
+  const wigs = await getWigs();
+  const featured = wigs.slice(0, 4);
   if (featured.length === 0) return null;
 
   return (

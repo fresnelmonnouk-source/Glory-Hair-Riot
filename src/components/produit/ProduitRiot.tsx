@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { WIGS, type Wig } from '@/lib/wigs-data';
+import { type Wig } from '@/lib/wigs-data';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
@@ -24,7 +24,7 @@ const DENSITIES = [
   { value: 200, label: '200%' },
 ] as const;
 
-export function ProduitRiot({ wig }: { wig: Wig }) {
+export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
   const router = useRouter();
   const { user } = useSession();
   const [selectedColor, setSelectedColor] = useState(0);
@@ -36,7 +36,7 @@ export function ProduitRiot({ wig }: { wig: Wig }) {
   const addItem = useCartStore((s) => s.addItem);
   const nameOnly = wig.name.replace(/\s*\d+"$/, '').trim();
 
-  const similar = useMemo(() => WIGS.filter((w) => w.id !== wig.id).slice(0, 4), [wig.id]);
+  const similar = useMemo(() => similarPool.filter((w) => w.id !== wig.id).slice(0, 4), [similarPool, wig.id]);
 
   const addFavoriteM = trpc.wishlist.addBySlug.useMutation({
     onSuccess: () => setFavorited(true),
