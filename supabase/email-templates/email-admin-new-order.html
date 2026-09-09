@@ -5,25 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>[ADMIN] Nouvelle commande · Glory Hair</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=VT323&family=Special+Elite&family=Permanent+Marker&display=swap');
-  body { margin: 0; padding: 0; font-family: 'Special Elite', monospace; background: #0E1B14; color: #F4ECD8; }
-  .container { max-width: 600px; margin: 0 auto; }
-  .header { background: #0A0A0A; border-bottom: 3px solid #D4FF3E; padding: 20px; text-align: center; }
-  .content { padding: 32px 20px; }
-  .order-table { width: 100%; background: #142a1f; border: 2px solid #D4FF3E; border-collapse: collapse; margin: 20px 0; }
-  .order-table th { font-family: 'Rubik Mono One', sans-serif; font-size: 11px; background: #0A0A0A; color: #D4FF3E; padding: 10px; text-align: left; }
-  .order-table td { padding: 12px 10px; border-bottom: 1px solid rgba(212, 255, 62, 0.2); font-size: 13px; }
-  .btn { display: inline-block; font-family: 'Rubik Mono One', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; background: #D4FF3E; color: #0A0A0A; padding: 12px 24px; text-decoration: none; border: 2px solid #0A0A0A; margin: 16px 4px; }
-  p { font-size: 14px; line-height: 1.6; margin: 12px 0; }
+  @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap');
+  body { margin: 0; padding: 0; background: #1c0f15; color: #ede7d6; font-family: 'Work Sans', system-ui, sans-serif; }
+  .container { max-width: 600px; margin: 0 auto; background: #1c0f15; }
+  .header { background: #150c10; padding: 20px 24px; text-align: center; border-bottom: 1px solid rgba(237, 231, 214, 0.12); }
+  .header h2 { font-family: 'Work Sans', system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #ede7d6; margin: 0; }
+  .content { padding: 28px 24px; }
+  p { font-size: 14px; line-height: 1.6; margin: 0 0 12px; }
+  .order-table { width: 100%; background: #2a1720; border: 1px solid rgba(237, 231, 214, 0.12); border-collapse: collapse; margin: 16px 0; }
+  .order-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: #150c10; color: rgba(237, 231, 214, 0.6); padding: 10px; text-align: left; }
+  .order-table td { padding: 12px 10px; border-top: 1px solid rgba(237, 231, 214, 0.12); font-size: 13px; }
+  .status-pill { background: #6D071A; color: #ffffff; padding: 4px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 2px; }
+  .muted { color: rgba(237, 231, 214, 0.6); font-size: 12px; }
+  .btn { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: #6D071A; color: #ffffff; padding: 12px 22px; text-decoration: none; border-radius: 2px; margin: 16px 6px 0 0; }
+  .btn-outline { background: transparent; color: #ede7d6; border: 1px solid rgba(237, 231, 214, 0.4); }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h2 style="font-family: 'Rubik Mono One', sans-serif; font-size: 24px; color: #D4FF3E; margin: 0;">[ADMIN] NOUVELLE COMMANDE</h2>
+    <h2>Nouvelle commande</h2>
   </div>
   <div class="content">
-    <p><strong>Commande #{{ .OrderNumber }}</strong><br>{{ .OrderDate }}</p>
+    <p><strong>Commande #{{ .OrderNumber }}</strong><br><span class="muted">{{ .OrderDate }}</span></p>
     <table class="order-table">
       <tr>
         <th>Client</th>
@@ -32,16 +36,16 @@
         <th>Statut</th>
       </tr>
       <tr>
-        <td>{{ .CustomerName }}<br><span style="font-size: 12px; color: #5e6a64;">{{ .CustomerEmail }}</span></td>
-        <td style="font-family: 'Rubik Mono One', sans-serif; font-size: 16px; color: #D4FF3E;">{{ .Total }}€</td>
+        <td>{{ .CustomerName }}<br><span class="muted">{{ .CustomerEmail }}</span></td>
+        <td>{{ .Total }} €</td>
         <td>{{ .PaymentMethod }}</td>
-        <td><span style="background: #5cc864; color: #0A0A0A; padding: 4px 8px; font-family: 'Rubik Mono One', sans-serif; font-size: 10px;">PAYÉE</span></td>
+        <td><span class="status-pill">Payée</span></td>
       </tr>
     </table>
-    <p style="font-size: 13px; color: #5e6a64; margin: 20px 0;">Produits ({{ .ItemCount }}) : {{ .ItemsList }}</p>
-    <div style="margin: 24px 0;">
-      <a href="{{ .OrderURL }}" class="btn">Voir commande</a>
-      <a href="{{ .OrderURL }}/pack" class="btn" style="background: #FF7A1A;">Préparer colis</a>
+    <p class="muted">Produits ({{ .ItemCount }}) : {{ .ItemsList }}</p>
+    <div>
+      <a href="{{ .OrderURL }}" class="btn">Voir la commande</a>
+      <a href="{{ .OrderURL }}/pack" class="btn btn-outline">Préparer le colis</a>
     </div>
   </div>
 </div>

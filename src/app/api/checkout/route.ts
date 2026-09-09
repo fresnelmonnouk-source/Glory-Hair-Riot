@@ -210,7 +210,7 @@ export async function POST(request: Request) {
       // Email client
       await sendEmail({
         to: body.address.email,
-        subject: `Commande confirmée #${ref} · Glory Hair RIOT`,
+        subject: `Commande confirmée #${ref} · Glory Hair`,
         template: 'email-order-confirmed.html',
         data: {
           UserName: body.address.prenom,

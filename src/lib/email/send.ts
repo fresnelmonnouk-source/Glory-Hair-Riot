@@ -9,8 +9,8 @@
  *
  * Configuration :
  * - process.env.RESEND_API_KEY (obligatoire)
- * - process.env.EMAIL_FROM (optionnel, défaut : Glory Hair RIOT <onboarding@resend.dev>)
- * - process.env.EMAIL_ADMIN_TO (optionnel, défaut : hello@maison-glory.fr)
+ * - process.env.EMAIL_FROM (optionnel, défaut : Glory Hair <onboarding@resend.dev>)
+ * - process.env.EMAIL_ADMIN_TO (optionnel, défaut : hello@gloryhair.fr)
  *
  * Note prod : pour utiliser un from custom (ex: hello@gloryhair.fr), il faut
  * vérifier le domaine dans Resend Dashboard → Domains (SPF/DKIM/DMARC).
@@ -22,8 +22,8 @@ import path from 'node:path';
 
 const TEMPLATES_DIR = path.join(process.cwd(), 'supabase', 'email-templates');
 
-const FROM_DEFAULT = process.env.EMAIL_FROM || 'Glory Hair RIOT <onboarding@resend.dev>';
-const ADMIN_TO    = process.env.EMAIL_ADMIN_TO || 'hello@maison-glory.fr';
+const FROM_DEFAULT = process.env.EMAIL_FROM || 'Glory Hair <onboarding@resend.dev>';
+const ADMIN_TO    = process.env.EMAIL_ADMIN_TO || 'hello@gloryhair.fr';
 
 let resendClient: Resend | null = null;
 function getResend(): Resend | null {
@@ -73,7 +73,7 @@ export interface SendEmailResult {
 }
 
 /**
- * Envoie un email à partir d'un template Glory Hair RIOT.
+ * Envoie un email à partir d'un template Glory Hair.
  * Silencieux en dev si RESEND_API_KEY absente (log warn, retourne skipped).
  */
 export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult> {
@@ -125,22 +125,22 @@ export function renderOrderItemsHTML(items: Array<{
 }>): string {
   const rows = items.map(i => `
     <tr>
-      <td>
-        <div class="product-name" style="font-family: 'Permanent Marker', cursive; font-size: 16px; color: #FF7A1A;">${escapeHtml(i.name)}</div>
-        ${i.variant ? `<div class="product-variant" style="font-size: 13px; color: #5e6a64; margin-top: 4px;">${escapeHtml(i.variant)}</div>` : ''}
+      <td style="padding: 16px 12px; border-bottom: 1px solid rgba(237, 231, 214, 0.12);">
+        <div class="product-name" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 17px; color: #ede7d6;">${escapeHtml(i.name)}</div>
+        ${i.variant ? `<div class="product-variant" style="font-size: 13px; color: rgba(237, 231, 214, 0.6); margin-top: 4px;">${escapeHtml(i.variant)}</div>` : ''}
       </td>
-      <td style="text-align: center;">${i.quantity}</td>
-      <td style="text-align: right;">${(i.price_cents / 100).toFixed(2).replace('.', ',')} €</td>
+      <td style="text-align: center; padding: 16px 12px; border-bottom: 1px solid rgba(237, 231, 214, 0.12);">${i.quantity}</td>
+      <td style="text-align: right; padding: 16px 12px; border-bottom: 1px solid rgba(237, 231, 214, 0.12);">${(i.price_cents / 100).toFixed(2).replace('.', ',')} €</td>
     </tr>
   `).join('');
 
   return `
-    <table class="order-table" style="width: 100%; background: #142a1f; border: 3px solid #D4FF3E; margin: 24px 0; border-collapse: collapse;">
+    <table class="order-table" style="width: 100%; background: #2a1720; border: 1px solid rgba(237, 231, 214, 0.12); margin: 12px 0 24px; border-collapse: collapse;">
       <thead>
         <tr>
-          <th style="font-family: 'Rubik Mono One', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; background: #0A0A0A; color: #D4FF3E; padding: 12px; text-align: left; border-bottom: 2px solid #D4FF3E;">Produit</th>
-          <th style="font-family: 'Rubik Mono One', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; background: #0A0A0A; color: #D4FF3E; padding: 12px; text-align: center; border-bottom: 2px solid #D4FF3E;">Qté</th>
-          <th style="font-family: 'Rubik Mono One', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; background: #0A0A0A; color: #D4FF3E; padding: 12px; text-align: right; border-bottom: 2px solid #D4FF3E;">Prix</th>
+          <th style="font-family: 'Work Sans', system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: #150c10; color: rgba(237, 231, 214, 0.6); padding: 12px; text-align: left;">Produit</th>
+          <th style="font-family: 'Work Sans', system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: #150c10; color: rgba(237, 231, 214, 0.6); padding: 12px; text-align: center;">Qté</th>
+          <th style="font-family: 'Work Sans', system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: #150c10; color: rgba(237, 231, 214, 0.6); padding: 12px; text-align: right;">Prix</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>

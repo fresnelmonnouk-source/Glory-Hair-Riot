@@ -1,4 +1,4 @@
-# Glory Hair RIOT — Email templates
+# Glory Hair — Email templates
 
 Collection de templates HTML pour les emails Supabase Auth (collés en Dashboard)
 et Resend (envoyés depuis le code via `src/lib/email/send.ts`).
@@ -50,8 +50,8 @@ et Resend (envoyés depuis le code via `src/lib/email/send.ts`).
 
 Dashboard Supabase → **Authentication → Email Templates** :
 
-- **Confirm signup** → Subject : `Confirme ton compte · Glory Hair RIOT` + paste `email-confirm-signup.html`
-- **Reset Password** → Subject : `Reset ton mot de passe · Glory Hair RIOT` + paste `email-password-reset.html`
+- **Confirm signup** → Subject : `Confirmez votre compte · Glory Hair` + paste `email-confirm-signup.html`
+- **Reset Password** → Subject : `Réinitialisez votre mot de passe · Glory Hair` + paste `email-password-reset.html`
 - **Change Email** → paste `email-email-change.html` (optionnel pour MVP)
 - **Magic Link** → paste `email-magic-link.html` (optionnel pour MVP)
 
@@ -59,12 +59,12 @@ Dashboard Supabase → **Authentication → Email Templates** :
 
 Le code envoie via Resend SDK. Pré-requis :
 
-1. **Vérifier le domaine** dans Resend Dashboard → Domains → Add `maison-glory.fr` (ou `gloryhair.fr`). Ajoute les enregistrements SPF/DKIM dans le DNS du domaine.
+1. **Vérifier le domaine** dans Resend Dashboard → Domains → Add `gloryhair.fr`. Ajoute les enregistrements SPF/DKIM dans le DNS du domaine.
 2. Une fois vérifié, mets dans `.env.local` :
 
 ```
-EMAIL_FROM=Glory Hair RIOT <hello@maison-glory.fr>
-EMAIL_ADMIN_TO=hello@maison-glory.fr
+EMAIL_FROM=Glory Hair <hello@gloryhair.fr>
+EMAIL_ADMIN_TO=hello@gloryhair.fr
 ```
 
 Sans ces variables, les emails partent depuis `onboarding@resend.dev` (OK pour dev, pas pour prod).

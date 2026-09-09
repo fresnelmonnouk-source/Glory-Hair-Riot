@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   // 5. Email de confirmation (best-effort)
   void sendEmail({
     to: email,
-    subject: 'Abonné à RIOT · Glory Hair',
+    subject: 'Inscription confirmée · Glory Hair',
     template: 'email-newsletter-confirm.html',
     data: {
       Email: email,
