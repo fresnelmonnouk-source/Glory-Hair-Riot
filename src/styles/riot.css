@@ -18,14 +18,19 @@
 @import "tailwindcss";
 
 :root {
-  /* Fonds — bordeaux profond */
-  --bg-deepest: #150c10;
-  --bg-body: #1c0f15;
-  --bg-canvas: #1a1015;
-  --bg-app: #2a1720;
-  --surface: #1f1319;
-  --surface-alt: #201219;
-  --surface-inset: #20101a;
+  /* Fonds — bordeaux profond, teinte alignée sur --accent (H349, cf. commentaire
+     de correction ci-dessous). Les valeurs précédentes (H~330, S~25-30%) étaient
+     trop désaturées : à cette luminosité très sombre, un hue proche mais peu
+     saturé se perçoit comme un gris-prune violet plutôt que du bordeaux — repéré
+     par Fresnel sur le rendu réel, corrigé ici en relevant la saturation
+     (~50-55%) tout en gardant la même hiérarchie de luminosité. */
+  --bg-deepest: #1a070b;
+  --bg-body: #210a0e;
+  --bg-canvas: #200a0e;
+  --bg-app: #311016;
+  --surface: #250c11;
+  --surface-alt: #260c11;
+  --surface-inset: #250b10;
 
   /* Accent — bordeaux (remplace l'or Sandy Stylish) */
   --accent: #6D071A;
