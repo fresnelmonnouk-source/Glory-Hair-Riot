@@ -32,8 +32,16 @@
   --surface-alt: #260c11;
   --surface-inset: #250b10;
 
-  /* Accent — bordeaux (remplace l'or Sandy Stylish) */
-  --accent: #6D071A;
+  /* Accent — bordeaux (remplace l'or Sandy Stylish). #6D071A est la référence
+     colorimétrique exacte de Fresnel, mais un grand aplat avec du texte blanc
+     dessus (bouton) se perçoit plus clair que la même teinte sur un petit trait
+     de texte (ex. le eyebrow "SUGGESTION") — effet de contraste simultané,
+     vérifié au pixel : les deux valent #6D071A à l'identique, ce n'est pas un
+     bug de couleur. Sur retour de Fresnel, --accent légèrement assombri
+     (mélange ~15% vers --accent-deep) pour compenser cette perception sur les
+     boutons ; la référence exacte reste disponible via --accent-deep/nuancier
+     si besoin ailleurs. */
+  --accent: #650718;
   --accent-deep: #39040E;
   --accent-hi: #C90D30;
 
@@ -54,7 +62,7 @@
   --border-hairline: rgba(237, 231, 214, 0.12);
   --border-card: rgba(237, 231, 214, 0.15);
   --border-input: rgba(237, 231, 214, 0.4);
-  --border-accent: rgba(109, 7, 26, 0.4);
+  --border-accent: rgba(101, 7, 24, 0.4);
 
   /* États sémantiques */
   --success: #9db69f;
