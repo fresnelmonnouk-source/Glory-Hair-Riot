@@ -1,0 +1,20 @@
+# Config as code — synchronise les templates email Supabase Auth vers le
+# projet hébergé via `supabase config push`, pour éviter le copier-coller
+# manuel dans Dashboard → Authentication → Email Templates.
+#
+# Volontairement MINIMAL : seules les clés déclarées ici sont poussées
+# (`config push` laisse inchangé tout ce qui n'est pas déclaré) — pas de
+# site_url / additional_redirect_urls / SMTP ici, pour ne jamais risquer
+# d'écraser un réglage prod existant avec une valeur de scaffold local.
+#
+# Référence : https://supabase.com/docs/guides/local-development/cli/config
+
+project_id = "glory-hair-riot"
+
+[auth.email.template.recovery]
+subject = "Réinitialisez votre mot de passe · Glory Hair"
+content_path = "./supabase/email-templates/email-password-reset.html"
+
+[auth.email.template.confirmation]
+subject = "Confirmez votre compte · Glory Hair"
+content_path = "./supabase/email-templates/email-confirm-signup.html"

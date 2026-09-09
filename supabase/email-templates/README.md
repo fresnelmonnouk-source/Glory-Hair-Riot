@@ -46,14 +46,22 @@ et Resend (envoyés depuis le code via `src/lib/email/send.ts`).
 
 ## Étapes manuelles côté Fresnel
 
-### 1. Templates Supabase Auth (5 min)
+### 1. Templates Supabase Auth (5 min, ou automatisé via CLI)
 
-Dashboard Supabase → **Authentication → Email Templates** :
+**Option A — copier-coller manuel.** Dashboard Supabase → **Authentication → Email Templates** :
 
 - **Confirm signup** → Subject : `Confirmez votre compte · Glory Hair` + paste `email-confirm-signup.html`
 - **Reset Password** → Subject : `Réinitialisez votre mot de passe · Glory Hair` + paste `email-password-reset.html`
 - **Change Email** → paste `email-email-change.html` (optionnel pour MVP)
 - **Magic Link** → paste `email-magic-link.html` (optionnel pour MVP)
+
+**Option B — CLI (`supabase/config.toml` à la racine du dossier `supabase/`).** Les 2 templates ci-dessus (confirm signup, reset password) sont déjà déclarés en config-as-code. Une fois authentifié (`supabase login`, ou `SUPABASE_ACCESS_TOKEN` en variable d'env — génère un token dans Dashboard Supabase → Account → Access Tokens) et le projet lié (`supabase link --project-ref jwocxexwsomwidqmouqc`), lance :
+
+```
+supabase config push
+```
+
+Cela pousse UNIQUEMENT les clés déclarées dans `config.toml` (les 2 templates ci-dessus) — aucun autre réglage du projet n'est touché. Reproductible à chaque future modification des templates, plus besoin de copier-coller.
 
 ### 2. Resend setup (10 min)
 
