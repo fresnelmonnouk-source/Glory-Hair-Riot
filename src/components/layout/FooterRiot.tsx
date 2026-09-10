@@ -40,7 +40,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: 'Commandes', href: '/compte' },
       { label: 'Favoris', href: '/compte?tab=souhaits' },
-      { label: 'Admin', href: '/admin' },
     ],
   },
 ];
