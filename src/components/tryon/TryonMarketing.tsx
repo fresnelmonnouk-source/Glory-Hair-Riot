@@ -3,12 +3,22 @@
 /* Page marketing /essayage — réhabillage dans le langage Sandy Stylish
    (aucun équivalent chez Sandy, qui n'a pas d'essayage virtuel : structure
    du "Conseiller" AdvisorTeaser reprise comme référence la plus proche —
-   2 colonnes, carte rounded-lg border-hairline bg-app/bg-surface). Logique
-   et données (quota, CTA dynamique) strictement inchangées. */
+   2 colonnes, carte rounded-lg border-hairline bg-app/bg-surface).
+
+   Quota affiché ici = solde RÉEL de la personne qui regarde la page (pas un
+   texte marketing générique) :
+   - connecté  → trpc.tryon.quota (table tryon_quotas, même source de vérité
+     que /api/tryon et que TryonFlow.tsx)
+   - anonyme   → dernière décision réelle du serveur mémorisée localement
+     (src/lib/quota.ts) ; jamais un compteur qui s'incrémente tout seul.
+   Le bloc "Créez votre compte, gagnez +2 essais" plus bas reste un texte
+   d'incitation générique (offre, pas un solde constaté) — non touché. */
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { readQuota, getLiveCtaHref, getLiveCtaLabel, QUOTA_LIMIT_ANON, QUOTA_LIMIT_LOGGED, type QuotaState } from '@/lib/quota';
+import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
+import { ANON_TRIAL_LIMIT, readLastKnownAnonQuota, getLiveCtaHref, getLiveCtaLabel, type LastKnownAnonQuota } from '@/lib/quota';
 
 function Pip({ used }: { used: boolean }) {
   return (
@@ -21,11 +31,37 @@ function Pip({ used }: { used: boolean }) {
 }
 
 export function TryonMarketing() {
-  const isLoggedIn = false;
-  const mode = isLoggedIn ? 'logged' : 'anon';
-  const limit = mode === 'logged' ? QUOTA_LIMIT_LOGGED : QUOTA_LIMIT_ANON;
-  const [quota, setQuota] = useState<QuotaState>({ count: 0, limit, remaining: limit, resetAt: null, mode });
-  useEffect(() => { setQuota(readQuota(mode)); }, [mode]);
+  const { user, loading: sessionLoading } = useSession();
+  const isLoggedIn = Boolean(user);
+
+  const quotaQuery = trpc.tryon.quota.useQuery(undefined, { enabled: isLoggedIn });
+
+  const [anonLastKnown, setAnonLastKnown] = useState<LastKnownAnonQuota | null>(null);
+  useEffect(() => {
+    if (isLoggedIn) return;
+    // setState() encapsulé dans un callback (plutôt qu'appelé de façon
+    // synchrone au premier niveau de l'effet, interdit par le React
+    // Compiler) — cf. le cas explicitement autorisé par la règle : "calling
+    // setState in a callback function when external state changes".
+    // queueMicrotask garde exactement le même timing perçu (avant le
+    // prochain paint) sans dépendre d'un vrai événement asynchrone externe.
+    queueMicrotask(() => {
+      setAnonLastKnown(readLastKnownAnonQuota());
+    });
+  }, [isLoggedIn]);
+
+  const loading = sessionLoading || (isLoggedIn && quotaQuery.isLoading);
+
+  // Jamais de nombre inventé : pour l'anonyme, "blocked" ne devient true que
+  // si le serveur l'a réellement dit (via une tentative faite dans TryonFlow).
+  const limit = isLoggedIn ? (quotaQuery.data?.granted ?? 5) : ANON_TRIAL_LIMIT;
+  const used = isLoggedIn ? (quotaQuery.data?.used ?? 0) : (anonLastKnown?.usedUp ? ANON_TRIAL_LIMIT : 0);
+  const remaining = Math.max(0, limit - used);
+  const blocked = isLoggedIn ? remaining <= 0 : anonLastKnown?.usedUp === true;
+
+  const helperText = isLoggedIn
+    ? `${limit} essais Premium · re-créditables avec vos points Glory Club`
+    : `${ANON_TRIAL_LIMIT} essai offert par appareil · sans création de compte`;
 
   return (
     <section className="mx-auto max-w-[1180px] px-6 py-16 md:py-20">
@@ -61,23 +97,21 @@ export function TryonMarketing() {
 
           <div className="mt-5 flex items-center gap-4 rounded-sm border border-hairline bg-surface px-4 py-3.5">
             <div className="flex shrink-0 gap-1.5">
-              {Array.from({ length: quota.limit }).map((_, i) => <Pip key={i} used={i < quota.count} />)}
+              {Array.from({ length: limit }).map((_, i) => <Pip key={i} used={i < used} />)}
             </div>
             <div className="text-sm">
               <p className="text-ink">
-                {quota.remaining > 0
-                  ? `${quota.remaining} essai${quota.remaining > 1 ? 's' : ''} restant${quota.remaining > 1 ? 's' : ''}`
-                  : 'Quota épuisé'}
+                {loading
+                  ? 'Vérification de votre solde…'
+                  : remaining > 0
+                    ? `${remaining} essai${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`
+                    : 'Quota épuisé'}
               </p>
-              <p className="mt-0.5 text-xs text-faint">
-                {mode === 'anon'
-                  ? `${limit} essais offerts par appareil · sans création de compte`
-                  : `${limit} essais Premium · re-créditables avec vos points Glory Club`}
-              </p>
+              <p className="mt-0.5 text-xs text-faint">{helperText}</p>
             </div>
           </div>
 
-          {mode === 'anon' && (
+          {!isLoggedIn && (
             <div className="mt-5 rounded-sm border border-[color:var(--border-accent)] bg-surface p-5">
               <p className="text-sm text-ink">
                 Créez votre compte, gagnez <span className="text-accent">+2 essais</span> en plus
@@ -99,10 +133,10 @@ export function TryonMarketing() {
           </p>
 
           <Link
-            href={getLiveCtaHref(quota)}
+            href={getLiveCtaHref(blocked)}
             className="mt-6 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
           >
-            {getLiveCtaLabel(quota)}
+            {getLiveCtaLabel(blocked)}
           </Link>
         </div>
       </div>

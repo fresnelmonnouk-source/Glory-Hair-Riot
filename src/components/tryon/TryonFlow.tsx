@@ -13,9 +13,16 @@
  *   - Tout appel IA passe par /api/tryon
  *   - ConsentModal RGPD avant tout envoi
  *
- * Quotas (systeme.md §9.4) :
- *   - 2 essais anon / device / 24h (localStorage, temporaire avant table Supabase)
- *   - À terme : table tryon_quotas + adminProcedure backend
+ * Quotas (systeme.md §9.4) — le SERVEUR est la seule source de vérité :
+ *   - Connecté : table tryon_quotas, exposée en lecture via trpc.tryon.quota
+ *     (voir src/server/trpc/routers/tryon.ts) et mise à jour par /api/tryon
+ *     après chaque essai réussi (champ `quota` de la réponse, réutilisé ici
+ *     immédiatement + invalidation tRPC pour rester cohérent ailleurs).
+ *   - Anonyme : rate-limit IP côté serveur (1 essai / appareil / 30 jours,
+ *     src/lib/rate-limit.ts). Le serveur ne peut pas être interrogé à l'avance
+ *     pour un anonyme — on mémorise seulement la DERNIÈRE décision réelle du
+ *     serveur (src/lib/quota.ts, `lastKnownAnonQuota`), jamais un compteur
+ *     local qui s'incrémenterait de façon indépendante.
  *
  * Réhabillage visuel dans le langage Sandy Stylish (aucun équivalent chez
  * Sandy — flow caméra + IA propre à GloryHairRiot) : cartes rounded-lg
@@ -28,9 +35,12 @@
  */
 
 import Link from 'next/link';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import { Check } from 'lucide-react';
 import { WIGS, type Wig } from '@/lib/wigs-data';
+import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
+import { ANON_TRIAL_LIMIT, readLastKnownAnonQuota, writeLastKnownAnonQuota, type LastKnownAnonQuota } from '@/lib/quota';
 import { ConsentModal } from './ConsentModal';
 
 // ─── Helpers (port du sandbox tryon-live-providers.jsx) ──
@@ -92,12 +102,6 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
   }
 }
 
-// ─── Quotas localStorage (provisoire — Phase 5 → backend) ─
-
-const QUOTA_KEY = 'gh-tryon-quota';
-const QUOTA_LIMIT_ANON = 1;
-const QUOTA_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
-
 /**
  * Watermark "★ GLORY HAIR · ISSUE N°01" baked sur l'image résultat via Canvas.
  * Visible + persisté dans le download. Si le browser ne supporte pas, fallback
@@ -148,26 +152,6 @@ async function applyWatermark(dataUrl: string): Promise<string> {
   return canvas.toDataURL('image/png');
 }
 
-interface QuotaState { count: number; firstAt: number }
-
-function readQuota(): QuotaState {
-  if (typeof window === 'undefined') return { count: 0, firstAt: Date.now() };
-  try {
-    const raw = localStorage.getItem(QUOTA_KEY);
-    if (!raw) return { count: 0, firstAt: Date.now() };
-    const s = JSON.parse(raw) as QuotaState;
-    if (Date.now() - s.firstAt > QUOTA_WINDOW_MS) return { count: 0, firstAt: Date.now() };
-    return s;
-  } catch { return { count: 0, firstAt: Date.now() }; }
-}
-
-function bumpQuota(): QuotaState {
-  const s = readQuota();
-  const next: QuotaState = { count: s.count + 1, firstAt: s.firstAt };
-  try { localStorage.setItem(QUOTA_KEY, JSON.stringify(next)); } catch { /* noop */ }
-  return next;
-}
-
 // ─── Données UI ───────────────────────────────────────
 
 const STEPS = [
@@ -179,13 +163,16 @@ const STEPS = [
 
 // ─── Flag debug : invisible par défaut. Activer via ?debug=1 dans l'URL. ───────
 
+const debugSubscribeNoop = () => () => {};
+const readDebugFlag = () => new URLSearchParams(window.location.search).get('debug') === '1';
+const readDebugFlagServer = () => false;
+
 function useDebugEnabled(): boolean {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setEnabled(new URLSearchParams(window.location.search).get('debug') === '1');
-  }, []);
-  return enabled;
+  // useSyncExternalStore plutôt que useState+useEffect : lit `window.location`
+  // (client-only) sans appeler setState() de façon synchrone dans un effet
+  // (interdit par le React Compiler) tout en restant SSR-safe (false au
+  // premier rendu serveur, comme avant).
+  return useSyncExternalStore(debugSubscribeNoop, readDebugFlag, readDebugFlagServer);
 }
 
 // ─── Composant principal ──────────────────────────────
@@ -197,6 +184,11 @@ interface LogEntry { t: string; msg: string; level: LogLevel }
 export function TryonFlow() {
   /* État ----------------------------------------- */
   const debugEnabled = useDebugEnabled();
+  const { user } = useSession();
+  const isLoggedIn = Boolean(user);
+  const utils = trpc.useUtils();
+  // Source de vérité connecté : table tryon_quotas via trpc.tryon.quota.
+  const quotaQuery = trpc.tryon.quota.useQuery(undefined, { enabled: isLoggedIn });
   const [step, setStep] = useState<0|1|2|3>(0);
   const [consentOpen, setConsentOpen] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -220,7 +212,9 @@ export function TryonFlow() {
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [debugOpen, setDebugOpen] = useState(false);
-  const [quota, setQuota] = useState<QuotaState>({ count: 0, firstAt: Date.now() });
+  // Source de vérité anonyme : dernière décision RÉELLE du serveur (jamais un
+  // compteur qui s'incrémente tout seul — voir src/lib/quota.ts).
+  const [lastKnownAnonQuota, setLastKnownAnonQuota] = useState<LastKnownAnonQuota | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -232,10 +226,25 @@ export function TryonFlow() {
   }, []);
 
   /* personBlob → personUrl + validation --------- */
+  // Reset immédiat quand la photo est retirée : ajustement pendant le
+  // rendu (plutôt que setState() dans un effet, interdit par le React
+  // Compiler) — cf. https://react.dev/learn/you-might-not-need-an-effect
+  const [prevPersonBlob, setPrevPersonBlob] = useState(personBlob);
+  if (personBlob !== prevPersonBlob) {
+    setPrevPersonBlob(personBlob);
+    if (!personBlob) {
+      setPersonUrl(null);
+      setValidation(null);
+    }
+  }
+
   useEffect(() => {
-    if (!personBlob) { setPersonUrl(null); setValidation(null); return; }
+    if (!personBlob) return;
     const url = URL.createObjectURL(personBlob);
-    setPersonUrl(url);
+    // setState encapsulé dans un callback (comme pour lastKnownAnonQuota
+    // ci-dessus) plutôt qu'appelé de façon synchrone au premier niveau de
+    // l'effet.
+    queueMicrotask(() => setPersonUrl(url));
     validateSelfieBlob(personBlob).then(v => {
       setValidation(v);
       if (v.ok) log(`✓ Photo valide · ${v.width}×${v.height} · lum ${v.brightness}/255`, 'success');
@@ -244,14 +253,32 @@ export function TryonFlow() {
     return () => URL.revokeObjectURL(url);
   }, [personBlob, log]);
 
-  /* Charge quota au montage --------------------- */
-  useEffect(() => { setQuota(readQuota()); }, []);
+  /* Charge la dernière décision anonyme connue au montage (n'a de sens que
+     tant qu'on n'est pas connecté — le connecté a sa propre query tRPC).
+     setState encapsulé dans un callback (règle react-hooks/set-state-in-effect
+     — cf. TryonMarketing.tsx pour le même pattern) plutôt qu'appelé de façon
+     synchrone au premier niveau de l'effet. */
+  useEffect(() => {
+    if (isLoggedIn) return;
+    queueMicrotask(() => {
+      setLastKnownAnonQuota(readLastKnownAnonQuota());
+    });
+  }, [isLoggedIn]);
+
+  /* Quota bloqué ? Connecté : used>=granted (serveur). Anonyme : dernière
+     décision serveur connue = "déjà utilisé". Tant qu'on ne sait pas encore
+     (première visite anonyme, ou query connecté en cours de chargement), on
+     ne bloque PAS préventivement — le serveur tranchera à l'appel réel et le
+     message d'erreur (déjà géré) restera honnête dans tous les cas. */
+  const quotaBlocked = isLoggedIn
+    ? Boolean(quotaQuery.data && quotaQuery.data.used >= quotaQuery.data.granted)
+    : lastKnownAnonQuota?.usedUp === true;
 
   /* Validation par étape ------------------------ */
   const canNextFromStep = (s: number): boolean => {
     if (s === 0) return true;
     if (s === 1) return Boolean(personBlob && validation?.ok);
-    if (s === 2) return Boolean(selectedWig) && quota.count < QUOTA_LIMIT_ANON;
+    if (s === 2) return Boolean(selectedWig) && !quotaBlocked;
     return false;
   };
 
@@ -264,8 +291,12 @@ export function TryonFlow() {
       return;
     }
 
-    if (quota.count >= QUOTA_LIMIT_ANON) {
-      setError(`Quota atteint (${QUOTA_LIMIT_ANON}/${QUOTA_LIMIT_ANON} essai anonyme). Crée un compte pour +2 essais Premium.`);
+    if (quotaBlocked) {
+      setError(
+        isLoggedIn
+          ? `Tu as utilisé tes ${quotaQuery.data?.granted ?? 5} essais Premium offerts. Recharge avec tes points Glory Club (100 pts = 1 essai) ou achète un essai à 4,99€.`
+          : `Tu as utilisé ton essai gratuit par appareil. Crée un compte pour gagner 2 essais Premium en plus.`,
+      );
       setStatus('error');
       return;
     }
@@ -321,6 +352,18 @@ export function TryonFlow() {
       if (!r.ok) {
         const friendly = json?.userMessage || 'L\'essai n\'a pas pu être généré pour le moment. Réessaie dans un instant.';
         // pas de throw — on n'expose jamais le message brut au catch
+
+        // Le serveur vient de trancher réellement le quota : on mémorise SA
+        // décision (jamais une supposition locale).
+        if (!isLoggedIn && json?.error === 'RATE_LIMITED') {
+          const next: LastKnownAnonQuota = { usedUp: true, retryAfterMs: json?.retryAfterMs, checkedAt: Date.now() };
+          writeLastKnownAnonQuota(next);
+          setLastKnownAnonQuota(next);
+        }
+        if (isLoggedIn && json?.error === 'QUOTA_EXCEEDED' && json?.quota) {
+          utils.tryon.quota.setData(undefined, json.quota);
+        }
+
         clearInterval(timer);
         log(`✗ Génération impossible (HTTP ${r.status})`, 'error');
         setError(friendly);
@@ -347,7 +390,20 @@ export function TryonFlow() {
       setLastLatencyMs(json.latencyMs ?? totalMs);
       setTotalCostCents(c => c + (json.costCents || 0));
       setSessionCount(n => n + 1);
-      setQuota(bumpQuota());
+
+      // Le serveur vient de bumper le quota RÉEL et le renvoie dans la
+      // réponse — on l'utilise directement (pas de nouvel aller-retour), puis
+      // on invalide la query tRPC pour rester cohérent si l'utilisateur
+      // navigue ailleurs (ex. /essayage) puis revient.
+      if (isLoggedIn && json.quota) {
+        utils.tryon.quota.setData(undefined, json.quota);
+        void utils.tryon.quota.invalidate();
+      } else if (!isLoggedIn) {
+        // Anonyme : un succès consomme l'unique essai (1 / appareil / 30 jours).
+        const next: LastKnownAnonQuota = { usedUp: true, checkedAt: Date.now() };
+        writeLastKnownAnonQuota(next);
+        setLastKnownAnonQuota(next);
+      }
 
       setTimeout(() => setStatus('done'), 250);
     } catch (e) {
@@ -365,7 +421,7 @@ export function TryonFlow() {
     } finally {
       abortRef.current = null;
     }
-  }, [personBlob, selectedWig, consentGiven, quota.count, log]);
+  }, [personBlob, selectedWig, consentGiven, quotaBlocked, isLoggedIn, quotaQuery.data, utils, log]);
 
   /* Navigation ---------------------------------- */
   const goNext = () => {
@@ -410,10 +466,18 @@ export function TryonFlow() {
 
   const canNext = step === 3 ? (status === 'done' || status === 'error') : canNextFromStep(step);
 
+  /* Affichage quota (dérivé, jamais un compteur local indépendant) -------- */
+  const quotaPillLabel = isLoggedIn
+    ? (quotaQuery.data ? `${quotaQuery.data.used}/${quotaQuery.data.granted}` : '…')
+    : (lastKnownAnonQuota?.usedUp ? `${ANON_TRIAL_LIMIT}/${ANON_TRIAL_LIMIT}` : `0/${ANON_TRIAL_LIMIT}`);
+  const quotaBannerMessage = isLoggedIn
+    ? `Quota atteint · ${quotaQuery.data?.used ?? 0}/${quotaQuery.data?.granted ?? 5} essais Premium : recharge avec tes points Glory Club (100 pts = 1 essai) ou achète un essai à 4,99€.`
+    : `Quota atteint · essai gratuit déjà utilisé sur cet appareil : crée un compte pour 2 essais Premium offerts.`;
+
   /* Render --------------------------------------- */
   return (
     <div className="flex min-h-[calc(100vh-200px)] flex-col pb-24">
-      <Stepper step={step} sessionCount={sessionCount} totalCostCents={totalCostCents} quota={quota} />
+      <Stepper step={step} sessionCount={sessionCount} totalCostCents={totalCostCents} quotaLabel={quotaPillLabel} quotaHot={quotaBlocked} />
 
       <main className="relative flex flex-1 justify-center px-4 py-10 md:px-8 md:py-14">
         {step === 0 && <ScreenIntro onStart={() => setStep(1)} />}
@@ -424,7 +488,7 @@ export function TryonFlow() {
           validation={validation}
           log={log}
         />}
-        {step === 2 && <ScreenWig selectedWig={selectedWig} setSelectedWig={setSelectedWig} quota={quota} />}
+        {step === 2 && <ScreenWig selectedWig={selectedWig} setSelectedWig={setSelectedWig} quotaBlocked={quotaBlocked} quotaBannerMessage={quotaBannerMessage} />}
         {step === 3 && <ScreenResult
           status={status}
           resultUrl={resultUrl}
@@ -465,7 +529,7 @@ export function TryonFlow() {
 
 // ─── Sous-composants ──────────────────────────────────
 
-function Stepper({ step, sessionCount, totalCostCents, quota }: { step: number; sessionCount: number; totalCostCents: number; quota: QuotaState }) {
+function Stepper({ step, sessionCount, totalCostCents, quotaLabel, quotaHot }: { step: number; sessionCount: number; totalCostCents: number; quotaLabel: string; quotaHot: boolean }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline bg-surface px-4 py-4 md:px-8">
       <div className="flex flex-wrap items-center gap-2">
@@ -487,7 +551,7 @@ function Stepper({ step, sessionCount, totalCostCents, quota }: { step: number; 
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <Pill label="quota" value={`${quota.count}/${QUOTA_LIMIT_ANON}`} hot={quota.count >= QUOTA_LIMIT_ANON} />
+        <Pill label="quota" value={quotaLabel} hot={quotaHot} />
         <Pill label="essais" value={String(sessionCount)} />
         <Pill label="coût" value={`${(totalCostCents / 100).toFixed(2)}€`} />
       </div>
@@ -581,7 +645,13 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => { if (personBlob && mode !== 'preview') setMode('preview'); }, [personBlob, mode]);
+  // Force le mode preview dès qu'une photo est disponible. Ajustement
+  // pendant le rendu (idempotent : le if empêche toute boucle) plutôt que
+  // setState() dans un effet, interdit par le React Compiler — cf.
+  // https://react.dev/learn/you-might-not-need-an-effect
+  if (personBlob && mode !== 'preview') {
+    setMode('preview');
+  }
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
 
   const stopCamera = useCallback(() => {
@@ -723,14 +793,14 @@ function TipCard({ title, items }: { title: string; items: string[] }) {
 
 // ─── SCREEN 02 : WIG ────────────────────────────
 
-function ScreenWig({ selectedWig, setSelectedWig, quota }: { selectedWig: Wig; setSelectedWig: (w: Wig) => void; quota: QuotaState }) {
+function ScreenWig({ selectedWig, setSelectedWig, quotaBlocked, quotaBannerMessage }: { selectedWig: Wig; setSelectedWig: (w: Wig) => void; quotaBlocked: boolean; quotaBannerMessage: string }) {
   return (
     <div className="w-full max-w-[1180px]">
       <ScreenHead eyebrow="Étape 02" title="Votre perruque" subtitle={`${WIGS.length} modèles disponibles`} />
 
-      {quota.count >= QUOTA_LIMIT_ANON && (
+      {quotaBlocked && (
         <div className="mb-8 rounded-sm border border-[color:var(--danger)] bg-app px-5 py-3.5 text-sm text-[color:var(--danger)]">
-          Quota atteint · {quota.count}/{QUOTA_LIMIT_ANON} essai anonyme : créez un compte pour 2 essais Premium offerts.
+          {quotaBannerMessage}
         </div>
       )}
 
@@ -953,7 +1023,7 @@ function DebugDrawer({ open, logs }: { open: boolean; logs: LogEntry[] }) {
       <div className="border-b border-hairline px-5 py-2.5 text-xs text-faint">Logs · {logs.length}</div>
       <div ref={ref} className="min-h-[120px] flex-1 overflow-y-auto px-5 py-3.5 font-mono text-xs leading-relaxed">
         {logs.length === 0 ? (
-          <div className="py-8 text-center text-faint">// aucun log</div>
+          <div className="py-8 text-center text-faint">{'// aucun log'}</div>
         ) : logs.map((l, i) => {
           const color = l.level === 'error' ? 'var(--danger)' : l.level === 'warn' ? 'var(--warning)' : l.level === 'success' ? 'var(--success)' : 'var(--text-primary)';
           return (

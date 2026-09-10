@@ -1,94 +1,76 @@
 /**
- * Quota Essai Live — logique partagée entre /essayage (marketing) et /essayage/live (app).
+ * Quota Essai Live — anonyme uniquement.
  *
- * Spec : Glory Hair systeme.md §3.4
- * - Visiteur anonyme : 2 essais Premium gratuits par appareil (24h sliding window)
- * - Visiteur connecté : 5 essais Premium gratuits au total (re-créditables via Glory Club)
+ * Le solde réel :
+ * - Utilisateur connecté → table Supabase `tryon_quotas`, exposée via
+ *   trpc.tryon.quota (voir src/server/trpc/routers/tryon.ts). Ne PAS dupliquer
+ *   ce calcul ici — lire l'API tRPC directement dans les composants
+ *   (TryonFlow.tsx, TryonMarketing.tsx).
+ * - Visiteur anonyme → rate-limit IP côté serveur (src/lib/rate-limit.ts +
+ *   /api/tryon/route.ts, checkLimit). Le serveur ne peut PAS être interrogé à
+ *   l'avance pour connaître un « solde » anonyme (ce n'est pas une valeur
+ *   consultable, juste une décision prise au moment de l'appel). Ce module se
+ *   contente donc de mémoriser la DERNIÈRE DÉCISION réelle du serveur (succès
+ *   ou 429 RATE_LIMITED) pour ne jamais afficher un compteur qui s'incrémente
+ *   de façon indépendante et pourrait mentir à l'utilisateur.
  *
- * Stockage actuel (provisoire) : localStorage côté client.
- * Phase 5 : migration vers table Supabase `tryon_quotas` pour les comptes.
+ * Historique : avant refonte, ce fichier ET TryonFlow.tsx maintenaient chacun
+ * leur propre compteur localStorage sous la MÊME clé 'gh-tryon-quota',
+ * totalement déconnecté de la décision serveur → pouvait diverger (autre
+ * appareil, cache vidé, plusieurs onglets, essai compté serveur mais raté
+ * client avant écriture locale...). Remplacé par ce mécanisme "dernière
+ * valeur connue", écrit uniquement en réaction à une vraie réponse serveur.
  */
 
-export const QUOTA_LIMIT_ANON = 1;
-export const QUOTA_LIMIT_LOGGED = 2;
-export const QUOTA_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
+export const ANON_TRIAL_LIMIT = 1; // doit rester cohérent avec checkLimit(`tryon:${ip}`, 1, ...) dans /api/tryon/route.ts
 
-const STORAGE_KEY_ANON = 'gh-tryon-quota';
-const STORAGE_KEY_LOGGED = 'gh-tryon-quota-logged'; // remplacé par DB Phase 5
+const STORAGE_KEY_ANON_LAST_KNOWN = 'gh-tryon-anon-last-known';
 
-export type QuotaMode = 'anon' | 'logged';
-
-export interface QuotaState {
-  count: number;     // essais consommés
-  limit: number;     // total autorisé
-  remaining: number; // limit - count
-  resetAt: number | null; // timestamp ms (anon uniquement)
-  mode: QuotaMode;
+export interface LastKnownAnonQuota {
+  usedUp: boolean;
+  retryAfterMs?: number;
+  checkedAt: number;
 }
 
-/** Lit le quota courant. SSR-safe (retourne fresh quota côté serveur). */
-export function readQuota(mode: QuotaMode = 'anon'): QuotaState {
-  const limit = mode === 'logged' ? QUOTA_LIMIT_LOGGED : QUOTA_LIMIT_ANON;
-  if (typeof window === 'undefined') {
-    return { count: 0, limit, remaining: limit, resetAt: null, mode };
-  }
-  const key = mode === 'logged' ? STORAGE_KEY_LOGGED : STORAGE_KEY_ANON;
+/**
+ * Lit la dernière décision RÉELLE du serveur pour un visiteur anonyme sur cet
+ * appareil. `null` = jamais consulté sur cet appareil — ce n'est PAS une
+ * preuve qu'il reste un essai (l'IP peut déjà être bloquée sur un autre
+ * appareil), juste "on ne sait pas encore, il faudra tenter l'appel". SSR-safe.
+ */
+export function readLastKnownAnonQuota(): LastKnownAnonQuota | null {
+  if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return { count: 0, limit, remaining: limit, resetAt: null, mode };
-    const parsed = JSON.parse(raw) as { count?: number; resetAt?: number };
-    const now = Date.now();
-    // Window expiration (anon uniquement)
-    if (mode === 'anon' && parsed.resetAt && now > parsed.resetAt) {
-      window.localStorage.removeItem(key);
-      return { count: 0, limit, remaining: limit, resetAt: null, mode };
-    }
-    const count = Math.max(0, Math.min(parsed.count ?? 0, limit));
+    const raw = window.localStorage.getItem(STORAGE_KEY_ANON_LAST_KNOWN);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<LastKnownAnonQuota>;
+    if (typeof parsed.usedUp !== 'boolean') return null;
     return {
-      count,
-      limit,
-      remaining: Math.max(0, limit - count),
-      resetAt: parsed.resetAt ?? null,
-      mode,
+      usedUp: parsed.usedUp,
+      retryAfterMs: typeof parsed.retryAfterMs === 'number' ? parsed.retryAfterMs : undefined,
+      checkedAt: typeof parsed.checkedAt === 'number' ? parsed.checkedAt : Date.now(),
     };
   } catch {
-    return { count: 0, limit, remaining: limit, resetAt: null, mode };
+    return null;
   }
 }
 
-/** Incrémente le compteur après un essai consommé. Retourne le nouveau state. */
-export function bumpQuota(mode: QuotaMode = 'anon'): QuotaState {
-  const current = readQuota(mode);
-  const newCount = Math.min(current.count + 1, current.limit);
-  const resetAt = mode === 'anon' ? (current.resetAt ?? Date.now() + QUOTA_WINDOW_MS) : null;
-  if (typeof window !== 'undefined') {
-    const key = mode === 'logged' ? STORAGE_KEY_LOGGED : STORAGE_KEY_ANON;
-    window.localStorage.setItem(key, JSON.stringify({ count: newCount, resetAt }));
-  }
-  return {
-    count: newCount,
-    limit: current.limit,
-    remaining: Math.max(0, current.limit - newCount),
-    resetAt,
-    mode,
-  };
-}
-
-/** Reset manuel (utile pour tests ou bouton "regénérer mon quota"). */
-export function resetQuota(mode: QuotaMode = 'anon'): void {
+/** Mémorise la dernière décision RÉELLE du serveur — à appeler juste après une réponse /api/tryon (succès ou 429 RATE_LIMITED), jamais de façon spéculative. */
+export function writeLastKnownAnonQuota(state: LastKnownAnonQuota): void {
   if (typeof window === 'undefined') return;
-  const key = mode === 'logged' ? STORAGE_KEY_LOGGED : STORAGE_KEY_ANON;
-  window.localStorage.removeItem(key);
+  try {
+    window.localStorage.setItem(STORAGE_KEY_ANON_LAST_KNOWN, JSON.stringify(state));
+  } catch {
+    /* noop */
+  }
 }
 
-/** Détermine la URL de destination CTA selon état (quota + connecté). */
-export function getLiveCtaHref(state: QuotaState): string {
-  if (state.remaining > 0) return '/essayage/live?mode=free';
-  return '/essayage/live?mode=paid&price=499';
+/** Destination du CTA marketing selon l'état de quota connu (bloqué = dernier essai gratuit déjà consommé/refusé par le serveur). */
+export function getLiveCtaHref(blocked: boolean): string {
+  return blocked ? '/essayage/live?mode=paid&price=499' : '/essayage/live?mode=free';
 }
 
-/** Label CTA selon état. */
-export function getLiveCtaLabel(state: QuotaState): string {
-  if (state.remaining > 0) return '▶ Lancer mon essai gratuit';
-  return '▶ Lancer un essai · 4,99 €';
+/** Label du CTA marketing selon l'état de quota connu. */
+export function getLiveCtaLabel(blocked: boolean): string {
+  return blocked ? '▶ Lancer un essai · 4,99 €' : '▶ Lancer mon essai gratuit';
 }
