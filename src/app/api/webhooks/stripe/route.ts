@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { verifyWebhookSignature } from '@/server/services/payment/stripe.service';
 import { getStripeWebhookSecret } from '@/lib/settings/service';
+import { sendOrderConfirmedAfterPayment } from '@/lib/email/order-confirmation';
+import { restoreOrderStock } from '@/lib/loyalty/award-points';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -56,17 +58,23 @@ export async function POST(request: NextRequest) {
       });
 
       // Update order status
-      const { error: orderError } = await supabase
+      const { data: updatedOrder, error: orderError } = await supabase
         .from('orders')
         .update({
           payment_status: 'succeeded',
           status: 'paid',
           stripe_payment_intent_id: paymentIntent.id,
         })
-        .eq('stripe_payment_intent_id', paymentIntent.id);
+        .eq('stripe_payment_intent_id', paymentIntent.id)
+        .select('id')
+        .maybeSingle();
 
       if (orderError) {
         console.error('Error updating order:', orderError);
+      } else if (updatedOrder) {
+        // Paiement réellement confirmé : c'est ICI (jamais à la création)
+        // que les points fidélité sont crédités et l'email "confirmée" part.
+        await sendOrderConfirmedAfterPayment(supabase, updatedOrder.id);
       }
 
       return NextResponse.json({ received: true });
@@ -94,16 +102,23 @@ export async function POST(request: NextRequest) {
       });
 
       // Update order status
-      const { error: orderError } = await supabase
+      const { data: failedOrder, error: orderError } = await supabase
         .from('orders')
         .update({
           payment_status: 'failed',
           status: 'cancelled',
         })
-        .eq('stripe_payment_intent_id', paymentIntent.id);
+        .eq('stripe_payment_intent_id', paymentIntent.id)
+        .select('id')
+        .maybeSingle();
 
       if (orderError) {
         console.error('Error updating order:', orderError);
+      } else if (failedOrder) {
+        // Le stock avait été décrémenté ATOMIQUEMENT à la création
+        // (place_order) — un paiement qui échoue après coup doit le
+        // restaurer, sinon il est perdu définitivement.
+        await restoreOrderStock(supabase, failedOrder.id);
       }
 
       return NextResponse.json({ received: true });

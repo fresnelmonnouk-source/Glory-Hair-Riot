@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookSignature } from '@/server/services/payment/fedapay.service';
+import { sendOrderConfirmedAfterPayment } from '@/lib/email/order-confirmation';
+import { restoreOrderStock } from '@/lib/loyalty/award-points';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -54,51 +56,46 @@ export async function POST(request: NextRequest) {
 
     // Handle transaction approved
     if (payload.event === 'transaction.approved') {
-      const { error: orderError } = await supabase
+      const { data: updatedOrder, error: orderError } = await supabase
         .from('orders')
         .update({
           payment_status: 'succeeded',
           status: 'paid',
           fedapay_transaction_id: object.id,
         })
-        .eq('fedapay_transaction_id', object.id);
+        .eq('fedapay_transaction_id', object.id)
+        .select('id')
+        .maybeSingle();
 
       if (orderError) {
         console.error('Error updating order:', orderError);
+      } else if (updatedOrder) {
+        // Paiement réellement confirmé : c'est ICI (jamais à la création)
+        // que les points fidélité sont crédités et l'email "confirmée" part.
+        await sendOrderConfirmedAfterPayment(supabase, updatedOrder.id);
       }
 
       return NextResponse.json({ received: true });
     }
 
-    // Handle transaction declined
-    if (payload.event === 'transaction.declined') {
-      const { error: orderError } = await supabase
+    // Handle transaction declined / expired
+    if (payload.event === 'transaction.declined' || payload.event === 'transaction.expired') {
+      const { data: failedOrder, error: orderError } = await supabase
         .from('orders')
         .update({
           payment_status: 'failed',
           status: 'cancelled',
         })
-        .eq('fedapay_transaction_id', object.id);
+        .eq('fedapay_transaction_id', object.id)
+        .select('id')
+        .maybeSingle();
 
       if (orderError) {
         console.error('Error updating order:', orderError);
-      }
-
-      return NextResponse.json({ received: true });
-    }
-
-    // Handle transaction expired
-    if (payload.event === 'transaction.expired') {
-      const { error: orderError } = await supabase
-        .from('orders')
-        .update({
-          payment_status: 'failed',
-          status: 'cancelled',
-        })
-        .eq('fedapay_transaction_id', object.id);
-
-      if (orderError) {
-        console.error('Error updating order:', orderError);
+      } else if (failedOrder) {
+        // Le stock avait été décrémenté ATOMIQUEMENT à la création
+        // (place_order) — un paiement refusé/expiré doit le restaurer.
+        await restoreOrderStock(supabase, failedOrder.id);
       }
 
       return NextResponse.json({ received: true });

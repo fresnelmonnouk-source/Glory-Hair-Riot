@@ -5,8 +5,8 @@
    sticky avec récap+CTA). Livraison (standard/express/atelier, spécifique
    GloryHairRiot) ajoutée comme un groupe de plus, stylée avec les mêmes cartes
    radio que le choix de paiement de Sandy. Paiement Stripe/FedaPay = choix
-   existant GloryHairRiot ; le MVP disclaimer (paiement pas encore branché) est
-   conservé, mais seulement pour ces deux options — "Paiement à la livraison"
+   existant GloryHairRiot ; redirection réelle vers Stripe Checkout / FedaPay
+   (migration 012, plus de mock) — "Paiement à la livraison"
    (demande Fresnel) n'a rien à mocker, c'est son comportement réel. Checkout
    invité supporté (comme Sandy Stylish) : pas de garde de connexion ici, le
    formulaire prérempli email/nom si une session existe, reste éditable sinon. */
@@ -147,6 +147,12 @@ export function CheckoutRiot() {
         setSubmitting(false);
         return;
       }
+      if (json.redirectUrl) {
+        // Stripe Checkout / FedaPay — redirection hébergée vers le paiement
+        // réel. Le retour se fait sur /merci (succès) ou /checkout (annulé).
+        window.location.href = json.redirectUrl;
+        return;
+      }
       router.push(`/merci?ref=${json.ref}`);
     } catch {
       setError('Connexion impossible. Vérifiez votre réseau.');
@@ -238,8 +244,8 @@ export function CheckoutRiot() {
 
           {payment !== 'cod' && (
             <div className="mt-4 rounded-sm border border-hairline bg-surface px-4 py-3.5 text-xs leading-relaxed text-muted">
-              Mode démo : le paiement en ligne n&apos;est pas encore branché. La commande est
-              créée sans transaction réelle.
+              Vous serez redirigé·e vers une page de paiement sécurisée pour finaliser votre
+              transaction.
             </div>
           )}
         </div>

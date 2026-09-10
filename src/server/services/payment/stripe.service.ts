@@ -49,6 +49,61 @@ export async function createPaymentIntent({
   }
 }
 
+export interface CreateCheckoutSessionParams {
+  amountCents: number;
+  currency: string; // 'eur'
+  orderId: string;
+  orderRef: string;
+  successUrl: string;
+  cancelUrl: string;
+  customerEmail?: string;
+}
+
+/* Stripe Checkout hébergé (redirection) plutôt que Stripe Elements embarqué —
+   décision Niveau B validée par Fresnel (2026-09-10) : Stripe gère la saisie
+   carte/3DS/conformité, cohérent avec la redirection déjà utilisée côté
+   FedaPay. En mode 'payment', Stripe crée immédiatement un PaymentIntent
+   sous-jacent (session.payment_intent, disponible dès la création, pas
+   seulement après paiement) — stocké côté appelant dans
+   orders.stripe_payment_intent_id pour que le webhook existant
+   (payment_intent.succeeded, déjà correct) fonctionne sans aucune
+   modification. */
+export async function createCheckoutSession({
+  amountCents,
+  currency,
+  orderId,
+  orderRef,
+  successUrl,
+  cancelUrl,
+  customerEmail,
+}: CreateCheckoutSessionParams) {
+  const stripe = await getStripe();
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    line_items: [
+      {
+        price_data: {
+          currency,
+          unit_amount: amountCents,
+          product_data: { name: `Commande #${orderRef} · Glory Hair` },
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    customer_email: customerEmail,
+    metadata: { orderId },
+  });
+
+  const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
+  if (!session.url || !paymentIntentId) {
+    throw new Error('Stripe Checkout Session incomplète (url/payment_intent manquant)');
+  }
+
+  return { sessionUrl: session.url, paymentIntentId };
+}
+
 export async function confirmPaymentIntent(intentId: string) {
   try {
     const stripe = await getStripe();
