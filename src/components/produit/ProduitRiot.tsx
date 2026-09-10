@@ -10,6 +10,7 @@ import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
 import { ProductCard } from '@/components/product-card';
 import { ProductGallery } from './ProductGallery';
+import { AvisSection } from './AvisSection';
 
 /* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/produit/[slug]/page.tsx
    (retour catalogue, grid 2 col galerie+infos, lien avis, dl attributs, section
@@ -221,6 +222,8 @@ export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[]
           </dl>
         </div>
       </div>
+
+      <AvisSection slug={wig.id} />
 
       {similar.length > 0 && (
         <div className="mt-16 border-t border-hairline pt-12">

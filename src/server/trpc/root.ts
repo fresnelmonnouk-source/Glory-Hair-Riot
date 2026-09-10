@@ -8,6 +8,8 @@ import { ordersRouter } from './routers/orders';
 import { adminRouter } from './routers/admin';
 import { wishlistRouter } from './routers/wishlist';
 import { tryonRouter } from './routers/tryon';
+import { reviewsRouter } from './routers/reviews';
+import { discountsRouter } from './routers/discounts';
 
 export const appRouter = router({
   auth: authRouter,
@@ -19,6 +21,8 @@ export const appRouter = router({
   admin: adminRouter,
   wishlist: wishlistRouter,
   tryon: tryonRouter,
+  reviews: reviewsRouter,
+  discounts: discountsRouter,
 });
 
 export type AppRouter = typeof appRouter;
