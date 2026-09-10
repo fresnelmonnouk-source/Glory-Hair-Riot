@@ -54,7 +54,7 @@ function formatValue(discountType: string, discountValue: number): string {
 }
 
 function formatDate(iso: string | null): string {
-  if (!iso) return '—';
+  if (!iso) return 'n/a';
   return new Date(iso).toLocaleDateString('fr-FR');
 }
 
@@ -245,7 +245,7 @@ export default function AdminPromosPage() {
                 {listQ.isLoading ? (
                   <tr><td colSpan={6} className="px-6 py-10 text-center text-muted">Chargement…</td></tr>
                 ) : items.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-10 text-center text-muted">Aucun code promo. Crée le premier ci-dessus.</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-10 text-center text-muted">Aucun code promo. Créez le premier ci-dessus.</td></tr>
                 ) : (
                   items.map((d) => {
                     const exhausted = d.max_uses != null && d.current_uses >= d.max_uses;

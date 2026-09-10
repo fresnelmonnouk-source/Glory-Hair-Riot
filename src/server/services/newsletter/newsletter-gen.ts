@@ -311,7 +311,7 @@ export async function sendNewsletterToActiveSubscribers(
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const from = process.env.EMAIL_FROM || 'Glory Hair RIOT <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM || 'Glory Hair <onboarding@resend.dev>';
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
 
   const BATCH_SIZE = 100; // limite Resend Batch API
@@ -344,7 +344,7 @@ function appendUnsubscribeFooter(html: string, email: string, appUrl: string): s
   const footer = `
     <hr style="margin:32px 0;border:none;border-top:1px solid #e6ddd4;" />
     <p style="font-family:sans-serif;font-size:12px;color:#8a8078;text-align:center;line-height:1.6;">
-      Tu reçois cet email car tu es inscrit·e à la newsletter Glory Hair RIOT.<br />
+      Vous recevez cet email car vous êtes inscrit·e à la newsletter Glory Hair.<br />
       <a href="${unsubscribeUrl}" style="color:#7a1f2b;">Se désabonner</a>
     </p>`;
   return `${html}${footer}`;

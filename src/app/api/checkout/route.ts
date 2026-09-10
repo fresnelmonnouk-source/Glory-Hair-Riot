@@ -84,7 +84,7 @@ export async function POST(request: Request) {
 
   if (wigsErr || !wigs) {
     return NextResponse.json(
-      { error: 'WIGS_LOOKUP', userMessage: 'Catalogue introuvable. Réessaie.' },
+      { error: 'WIGS_LOOKUP', userMessage: 'Catalogue introuvable. Réessayez.' },
       { status: 500 },
     );
   }
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       }
       console.error('[checkout] discount validation error:', err);
       return NextResponse.json(
-        { error: 'DISCOUNT_CHECK_FAILED', userMessage: 'Impossible de vérifier le code promo. Réessaie.' },
+        { error: 'DISCOUNT_CHECK_FAILED', userMessage: 'Impossible de vérifier le code promo. Réessayez.' },
         { status: 500 },
       );
     }
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
   if (orderErr || !order) {
     console.error('[checkout] order insert error:', orderErr);
     return NextResponse.json(
-      { error: 'ORDER_CREATE', userMessage: 'Impossible de créer ta commande. Réessaie.' },
+      { error: 'ORDER_CREATE', userMessage: 'Impossible de créer votre commande. Réessayez.' },
       { status: 500 },
     );
   }
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
     // L'order existe mais sans items → rollback manuel
     await admin.from('orders').delete().eq('id', order.id);
     return NextResponse.json(
-      { error: 'ORDER_ITEMS', userMessage: 'Impossible d\'enregistrer les articles. Réessaie.' },
+      { error: 'ORDER_ITEMS', userMessage: 'Impossible d\'enregistrer les articles. Réessayez.' },
       { status: 500 },
     );
   }

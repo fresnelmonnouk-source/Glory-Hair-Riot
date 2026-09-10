@@ -142,7 +142,7 @@ export default function AdminNewsletterPage() {
                           </button>
                         )}
                         {nl.status === 'failed' && (
-                          <span className="text-sm text-faint">Réessaie via un nouveau brouillon</span>
+                          <span className="text-sm text-faint">Réessayez via un nouveau brouillon</span>
                         )}
                       </div>
                     </td>

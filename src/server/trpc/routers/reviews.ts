@@ -121,7 +121,7 @@ export const reviewsRouter = router({
       slug: z.string(),
       rating: z.number().int().min(1).max(5),
       title: z.string().max(120).optional(),
-      body: z.string().min(10, 'Ton avis doit faire au moins 10 caractères.').max(4000),
+      body: z.string().min(10, 'Votre avis doit faire au moins 10 caractères.').max(4000),
     }))
     .mutation(async ({ ctx, input }) => {
       const wigId = await resolveWigId(ctx.supabase, input.slug);
@@ -136,7 +136,7 @@ export const reviewsRouter = router({
       if (existingError) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Impossible de vérifier tes avis existants. Réessaie.',
+          message: 'Impossible de vérifier vos avis existants. Réessayez.',
         });
       }
       if (existing) {

@@ -32,13 +32,13 @@ export function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps)
       >
         <p className="eyebrow">RGPD</p>
         <h2 id="consent-title" className="display mt-2 text-2xl text-ink md:text-3xl">
-          On envoie ta photo à une IA.
+          On envoie votre photo à une IA.
         </h2>
 
         <p className="mt-4 leading-relaxed text-muted">
-          Pour générer le rendu photo-réaliste, ta photo et la perruque choisie sont
+          Pour générer le rendu photo-réaliste, votre photo et la perruque choisie sont
           transmises à <b className="text-ink">Google Gemini</b> (ou <b className="text-ink">OpenAI</b> en
-          backup automatique). Tu valides ça, ou tu passes ton chemin.
+          backup automatique). Vous validez, ou vous passez votre chemin.
         </p>
 
         <div className="mt-5 rounded-sm border border-hairline bg-app p-4 text-sm leading-relaxed">
@@ -51,15 +51,15 @@ export function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps)
 
           <p className="mt-4 font-display text-base text-ink">Ce qu&apos;on ne fait pas</p>
           <ul className="mt-2 list-none space-y-1 p-0 text-muted">
-            <li>→ Ta photo ne sert pas à entraîner les IA (T&amp;C provider)</li>
-            <li>→ Pas de stockage long terme sans ton accord</li>
+            <li>→ Votre photo ne sert pas à entraîner les IA (T&amp;C provider)</li>
+            <li>→ Pas de stockage long terme sans votre accord</li>
             <li>→ Pas de revente, pas de partage</li>
           </ul>
         </div>
 
         <p className="mt-4 text-xs text-faint">
-          Droit à l&apos;oubli : tu peux demander la suppression à tout moment depuis ton
-          compte (ou par email contact@glory-hair.com).
+          Droit à l&apos;oubli : vous pouvez demander la suppression à tout moment depuis
+          votre compte (ou par email hello@gloryhair.fr).
         </p>
 
         <div className="mt-6 flex gap-3">

@@ -51,7 +51,7 @@ function ConnexionContent() {
       router.push(redirect);
       router.refresh();
     } catch {
-      setError('Service indisponible. Réessaie dans un instant.');
+      setError('Service indisponible. Réessayez dans un instant.');
       setLoading(false);
     }
   }
@@ -81,7 +81,7 @@ function ConnexionContent() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="ton@email.com"
+            placeholder="votre@email.com"
             autoComplete="email"
             className={AUTH_INPUT}
           />

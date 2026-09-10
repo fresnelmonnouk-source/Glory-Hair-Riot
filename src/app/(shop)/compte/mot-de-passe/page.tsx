@@ -62,7 +62,7 @@ export default function ChangePasswordPage() {
       setSubmitting(false);
       setTimeout(() => router.replace('/compte'), 2500);
     } catch {
-      setError('Service indisponible. Réessaie dans un instant.');
+      setError('Service indisponible. Réessayez dans un instant.');
       setSubmitting(false);
     }
   }

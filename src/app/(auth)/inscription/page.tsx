@@ -44,7 +44,7 @@ export default function InscriptionPage() {
       if (authError) {
         setError(
           authError.message === 'User already registered'
-            ? 'Cet email est déjà utilisé. Connecte-toi à la place.'
+            ? 'Cet email est déjà utilisé. Connectez-vous à la place.'
             : authError.message
         );
         setLoading(false);
@@ -54,7 +54,7 @@ export default function InscriptionPage() {
       setSuccess(true);
       setLoading(false);
     } catch {
-      setError('Service indisponible. Réessaie dans un instant.');
+      setError('Service indisponible. Réessayez dans un instant.');
       setLoading(false);
     }
   }
@@ -111,7 +111,7 @@ export default function InscriptionPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ton@email.com"
+              placeholder="votre@email.com"
               autoComplete="email"
               className={AUTH_INPUT}
             />

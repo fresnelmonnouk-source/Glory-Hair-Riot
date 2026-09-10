@@ -85,7 +85,7 @@ export default function AdminClientDetailPage() {
           </select>
         </div>
       </div>
-      {isSelf && <p className="mt-3 text-xs text-faint">Tu ne peux pas modifier ton propre rôle.</p>}
+      {isSelf && <p className="mt-3 text-xs text-faint">Vous ne pouvez pas modifier votre propre rôle.</p>}
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="flex flex-col gap-6 lg:col-span-2">

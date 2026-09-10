@@ -4,7 +4,7 @@ import { CompteRiot } from '@/components/compte/CompteRiot';
 
 
 export const metadata: Metadata = {
-  title: 'Mon compte · Glory Hair RIOT',
+  title: 'Mon compte · Glory Hair',
   description: 'Tes commandes, essayages, souhaits, points Glory Club. Espace personnel Issue N°01.',
 };
 

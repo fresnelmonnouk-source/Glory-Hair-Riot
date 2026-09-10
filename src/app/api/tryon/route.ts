@@ -348,7 +348,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: 'RATE_LIMITED',
-          userMessage: `Tu as utilisé ton essai gratuit par appareil (réessaie dans ${wait}). Crée un compte pour gagner 2 essais Premium en plus.`,
+          userMessage: `Vous avez utilisé votre essai gratuit par appareil (réessayez dans ${wait}). Créez un compte pour gagner 2 essais Premium en plus.`,
           retryAfterMs: limit.resetMs,
         },
         {
@@ -371,7 +371,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: 'QUOTA_EXCEEDED',
-          userMessage: `Tu as utilisé tes ${quotaRow.granted} essais Premium offerts. Recharge avec tes points Glory Club (100 pts = 1 essai) ou achète un essai à 4,99€.`,
+          userMessage: `Vous avez utilisé vos ${quotaRow.granted} essais Premium offerts. Rechargez avec vos points Glory Club (100 pts = 1 essai) ou achetez un essai à 4,99€.`,
           quota: { used: quotaRow.used_count, granted: quotaRow.granted },
         },
         { status: 402 }, // Payment Required
@@ -395,7 +395,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: 'NO_PROVIDER_CONFIGURED',
-        userMessage: 'Le service d\'essai virtuel est temporairement indisponible. Réessaie dans quelques instants.',
+        userMessage: 'Le service d\'essai virtuel est temporairement indisponible. Réessayez dans quelques instants.',
       },
       { status: 503 },
     );
@@ -418,13 +418,13 @@ export async function POST(request: Request) {
   const FACE_MATCH_MIN_CONFIDENCE = 60;
 
   function userMessageFor(kinds: ErrKind[]): string {
-    if (kinds.includes('safety')) return 'Cette photo n\'a pas pu être traitée. Essaie avec une autre photo (visage bien visible, fond neutre).';
-    if (kinds.length > 0 && kinds.every(k => k === 'identity_mismatch')) return 'Le rendu n\'a pas respecté fidèlement ton visage. Réessaie avec une photo de face, nette et bien éclairée.';
-    if (kinds.every(k => k === 'quota')) return 'Le service est très demandé en ce moment. Réessaie dans quelques minutes.';
+    if (kinds.includes('safety')) return 'Cette photo n\'a pas pu être traitée. Essayez avec une autre photo (visage bien visible, fond neutre).';
+    if (kinds.length > 0 && kinds.every(k => k === 'identity_mismatch')) return 'Le rendu n\'a pas respecté fidèlement votre visage. Réessayez avec une photo de face, nette et bien éclairée.';
+    if (kinds.every(k => k === 'quota')) return 'Le service est très demandé en ce moment. Réessayez dans quelques minutes.';
     if (kinds.every(k => k === 'auth')) return 'Le service d\'essai virtuel est en maintenance. L\'équipe a été prévenue.';
-    if (kinds.every(k => k === 'timeout' || k === 'network')) return 'La connexion au service a échoué. Vérifie ta connexion et réessaie.';
-    if (kinds.includes('identity_mismatch')) return 'Le rendu n\'a pas respecté fidèlement ton visage. Réessaie avec une photo de face, nette et bien éclairée.';
-    return 'L\'essai n\'a pas pu être généré pour le moment. Réessaie dans un instant.';
+    if (kinds.every(k => k === 'timeout' || k === 'network')) return 'La connexion au service a échoué. Vérifiez votre connexion et réessayez.';
+    if (kinds.includes('identity_mismatch')) return 'Le rendu n\'a pas respecté fidèlement votre visage. Réessayez avec une photo de face, nette et bien éclairée.';
+    return 'L\'essai n\'a pas pu être généré pour le moment. Réessayez dans un instant.';
   }
 
   const attempts: Array<{ provider: string; ok: boolean; latencyMs?: number; error?: string; kind?: ErrKind }> = [];

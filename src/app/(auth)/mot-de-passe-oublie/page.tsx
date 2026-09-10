@@ -35,7 +35,7 @@ export default function MotDePasseOubliePage() {
       setSent(true);
       setLoading(false);
     } catch {
-      setError('Service indisponible. Réessaie dans un instant.');
+      setError('Service indisponible. Réessayez dans un instant.');
       setLoading(false);
     }
   }
@@ -71,7 +71,7 @@ export default function MotDePasseOubliePage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="ton@email.com"
+            placeholder="votre@email.com"
             autoComplete="email"
             className={AUTH_INPUT}
           />
@@ -89,7 +89,7 @@ export default function MotDePasseOubliePage() {
       </form>
 
       <Link href="/connexion" className="mt-6 block text-center text-sm text-muted transition-colors hover:text-accent">
-        Tu te souviens finalement ? Connexion
+        Vous vous souvenez finalement ? Connexion
       </Link>
     </AuthCard>
   );

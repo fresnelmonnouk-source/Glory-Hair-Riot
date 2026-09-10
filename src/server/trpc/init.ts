@@ -55,7 +55,7 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   if (error) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
-      message: 'Impossible de vérifier le rôle. Réessaie.',
+      message: 'Impossible de vérifier le rôle. Réessayez.',
       cause: error,
     });
   }

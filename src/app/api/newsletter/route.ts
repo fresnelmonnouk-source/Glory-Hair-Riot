@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const limit = checkLimit(`newsletter:${ip}`, 5, 3600_000);
   if (!limit.allowed) {
     return NextResponse.json(
-      { error: 'RATE_LIMITED', userMessage: 'Trop de tentatives. Réessaie dans une heure.' },
+      { error: 'RATE_LIMITED', userMessage: 'Trop de tentatives. Réessayez dans une heure.' },
       { status: 429 },
     );
   }
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     console.error('[newsletter] DB error:', dbError.message);
     // On ne révèle pas l'erreur DB à l'user
     return NextResponse.json(
-      { error: 'STORAGE_ERROR', userMessage: 'Service temporairement indisponible. Réessaie dans un instant.' },
+      { error: 'STORAGE_ERROR', userMessage: 'Service temporairement indisponible. Réessayez dans un instant.' },
       { status: 500 },
     );
   }
@@ -100,6 +100,6 @@ export async function POST(request: Request) {
   // 6. Retour neutre (anti-énumération)
   return NextResponse.json({
     ok: true,
-    userMessage: 'Inscrit·e ! Tu recevras l\'Issue 02 dès qu\'elle sort.',
+    userMessage: 'Inscrit·e ! Vous recevrez l\'Issue 02 dès qu\'elle sort.',
   });
 }

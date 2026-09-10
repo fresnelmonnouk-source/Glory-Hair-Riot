@@ -3,7 +3,7 @@ import { FideliteRiot } from '@/components/fidelite/FideliteRiot';
 
 
 export const metadata: Metadata = {
-  title: 'Glory Club · Programme de fidélité · Glory Hair RIOT',
+  title: 'Glory Club · Programme de fidélité · Glory Hair',
   description: 'Cumule des points à chaque commande, débloque des avantages : essais Premium offerts, livraison express, accès VIP atelier Paris 9.',
 };
 

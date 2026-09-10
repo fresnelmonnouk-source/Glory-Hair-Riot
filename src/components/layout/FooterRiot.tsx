@@ -69,13 +69,13 @@ export function FooterRiot() {
       });
       const json = await r.json();
       if (!r.ok) {
-        setError(json.userMessage ?? 'Erreur. Réessaie.');
+        setError(json.userMessage ?? 'Erreur. Réessayez.');
         setSubmitting(false);
         return;
       }
       setSubmitted(true);
     } catch {
-      setError('Connexion impossible. Vérifie ton réseau.');
+      setError('Connexion impossible. Vérifiez votre réseau.');
     } finally {
       setSubmitting(false);
     }
@@ -100,7 +100,7 @@ export function FooterRiot() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ton@adresse.email"
+                  placeholder="votre@adresse.email"
                   required
                   aria-label="Adresse email"
                   className="flex-1 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-faint"

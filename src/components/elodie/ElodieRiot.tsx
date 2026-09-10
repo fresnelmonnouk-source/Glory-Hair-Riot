@@ -88,9 +88,9 @@ export function ElodieRiot() {
       if (code === 'PRECONDITION_FAILED') {
         friendly = `Élodie n'est pas configurée correctement côté serveur (${tErr.message ?? 'clé manquante'}).`;
       } else if (code === 'TOO_MANY_REQUESTS') {
-        friendly = 'Trop de monde discute avec moi en ce moment. Réessaie dans une minute.';
+        friendly = 'Trop de monde discute avec moi en ce moment. Réessayez dans une minute.';
       } else if (code === 'TIMEOUT') {
-        friendly = "J'ai mis trop de temps à réfléchir. Réessaie avec une question plus simple.";
+        friendly = "J'ai mis trop de temps à réfléchir. Réessayez avec une question plus simple.";
       } else if (code === 'INTERNAL_SERVER_ERROR') {
         friendly = `Erreur Élodie : ${tErr.message ?? 'inconnue'}`;
       } else {

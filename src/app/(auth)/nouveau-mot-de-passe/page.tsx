@@ -95,7 +95,7 @@ export default function NouveauMotDePassePage() {
       setStatus('success');
       setTimeout(() => router.replace('/connexion'), 2500);
     } catch {
-      setError('Service indisponible. Réessaie dans un instant.');
+      setError('Service indisponible. Réessayez dans un instant.');
       setStatus('ready');
     }
   }

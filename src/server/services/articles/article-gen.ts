@@ -130,7 +130,7 @@ export async function generateArticleText(subject: string, tag?: string): Promis
       throw new ArticleGenError('INVALID_KEY', `Clé DeepSeek invalide ou révoquée (HTTP ${status}).`, status);
     }
     if (status === 429) {
-      throw new ArticleGenError('RATE_LIMIT', 'Limite de requêtes DeepSeek atteinte. Réessaie dans une minute.', status);
+      throw new ArticleGenError('RATE_LIMIT', 'Limite de requêtes DeepSeek atteinte. Réessayez dans une minute.', status);
     }
     if (e?.code === 'ETIMEDOUT' || /timeout/i.test(msg)) {
       throw new ArticleGenError('TIMEOUT', 'DeepSeek a mis trop de temps à répondre.', status);

@@ -17,10 +17,10 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
   const wig = await getWigBySlug(params.id);
   if (!wig) {
-    return { title: 'Perruque introuvable · Glory Hair RIOT' };
+    return { title: 'Perruque introuvable · Glory Hair' };
   }
   return {
-    title: `${wig.name} · Glory Hair RIOT`,
+    title: `${wig.name} · Glory Hair`,
     description: `${wig.cat} ${wig.style} teinte ${wig.tone}. Cheveux humains Remy 100%, lace front HD. ${wig.price}€ · Issue N°01.`,
   };
 }

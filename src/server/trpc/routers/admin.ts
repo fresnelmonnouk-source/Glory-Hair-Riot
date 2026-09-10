@@ -486,7 +486,7 @@ export const adminRouter = router({
       if (input.userId === ctx.user.id && input.role !== 'admin') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Tu ne peux pas te retirer le rôle admin toi-même. Demande à un autre admin.',
+          message: 'Vous ne pouvez pas vous retirer le rôle admin vous-même. Demandez à un autre admin.',
         });
       }
       const { error } = await ctx.supabase

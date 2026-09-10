@@ -17,9 +17,9 @@ import { trpc } from '@/lib/trpc/client';
 const PAGE_SIZE = 10;
 
 const STATUS_MESSAGE: Record<string, string> = {
-  pending: 'Ton avis est en attente de modération — il sera visible ici une fois validé.',
-  published: 'Ton avis est publié, merci !',
-  rejected: "Ton avis n'a pas été retenu par notre équipe.",
+  pending: 'Votre avis est en attente de modération : il sera visible ici une fois validé.',
+  published: 'Votre avis est publié, merci !',
+  rejected: "Votre avis n'a pas été retenu par notre équipe.",
 };
 
 function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
@@ -72,7 +72,7 @@ export function AvisSection({ slug }: { slug: string }) {
           {listQ.isLoading ? (
             <p className="text-sm text-faint">Chargement des avis…</p>
           ) : items.length === 0 ? (
-            <p className="text-sm text-muted">Aucun avis publié pour l&apos;instant. Sois le premier·ère à donner ton avis.</p>
+            <p className="text-sm text-muted">Aucun avis publié pour l&apos;instant. Soyez le premier·ère à donner votre avis.</p>
           ) : (
             <ul className="space-y-6">
               {items.map((r) => {
@@ -116,7 +116,7 @@ export function AvisSection({ slug }: { slug: string }) {
 
           {!user ? (
             <>
-              <p className="mt-3 text-sm leading-relaxed text-muted">Connecte-toi pour laisser un avis sur ce produit.</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">Connectez-vous pour laisser un avis sur ce produit.</p>
               <Link
                 href={`/connexion?redirect=/perruque/${slug}%23avis`}
                 className="mt-5 inline-flex rounded-sm border border-input px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]"
@@ -166,7 +166,7 @@ export function AvisSection({ slug }: { slug: string }) {
 
               <div>
                 <label htmlFor="avis-body" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                  Ton avis
+                  Votre avis
                 </label>
                 <textarea
                   id="avis-body"
@@ -183,7 +183,7 @@ export function AvisSection({ slug }: { slug: string }) {
               </div>
 
               {createM.error && <p className="text-sm text-[color:var(--danger)]">{createM.error.message}</p>}
-              {createM.isSuccess && <p className="text-sm text-success">Merci ! Ton avis est en attente de modération.</p>}
+              {createM.isSuccess && <p className="text-sm text-success">Merci ! Votre avis est en attente de modération.</p>}
 
               <button
                 type="submit"

@@ -143,13 +143,13 @@ export function CheckoutRiot() {
           // pour laisser l'utilisateur réessayer sans état incohérent.
           clearDiscount();
         }
-        setError(json.userMessage ?? 'Erreur. Réessaie.');
+        setError(json.userMessage ?? 'Erreur. Réessayez.');
         setSubmitting(false);
         return;
       }
       router.push(`/merci?ref=${json.ref}`);
     } catch {
-      setError('Connexion impossible. Vérifie ton réseau.');
+      setError('Connexion impossible. Vérifiez votre réseau.');
       setSubmitting(false);
     }
   }
@@ -172,7 +172,7 @@ export function CheckoutRiot() {
           <div className="mt-4">
             <input
               type="email" required value={address.email} onChange={(e) => set('email', e.target.value)}
-              aria-label="Email" placeholder="ton@adresse.email" className={INPUT_CLASS} autoComplete="email"
+              aria-label="Email" placeholder="votre@adresse.email" className={INPUT_CLASS} autoComplete="email"
             />
           </div>
 

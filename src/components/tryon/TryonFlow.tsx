@@ -84,7 +84,7 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
     await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(new Error('load')); img.src = bUrl; });
     const { naturalWidth: w, naturalHeight: h } = img;
     if (w < 400 || h < 400) return { ok: false, reason: `Photo trop petite (${w}×${h}). Minimum 400×400.` };
-    if (Math.max(w, h) / Math.min(w, h) > 3) return { ok: false, reason: 'Format trop déséquilibré, prends une photo en portrait.' };
+    if (Math.max(w, h) / Math.min(w, h) > 3) return { ok: false, reason: 'Format trop déséquilibré, prenez une photo en portrait.' };
     const canvas = document.createElement('canvas');
     const SS = 64;
     canvas.width = SS; canvas.height = SS;
@@ -94,7 +94,7 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
     let sum = 0;
     for (let i = 0; i < data.length; i += 4) sum += ((data[i] ?? 0) + (data[i+1] ?? 0) + (data[i+2] ?? 0)) / 3;
     const avg = sum / (SS * SS);
-    if (avg < 28) return { ok: false, reason: `Photo trop sombre (luminosité ${avg.toFixed(0)}/255). Trouve plus de lumière.` };
+    if (avg < 28) return { ok: false, reason: `Photo trop sombre (luminosité ${avg.toFixed(0)}/255). Trouvez plus de lumière.` };
     if (avg > 240) return { ok: false, reason: 'Photo presque blanche. L\'IA aura du mal.' };
     return { ok: true, width: w, height: h, brightness: Math.round(avg) };
   } finally {
@@ -146,7 +146,7 @@ async function applyWatermark(dataUrl: string): Promise<string> {
   ctx.fillStyle = '#9C3049';
   ctx.font = `${Math.round(fontPx * 0.5)}px "Courier New", monospace`;
   ctx.textAlign = 'right';
-  ctx.fillText('gloryhair.fr', canvas.width - 12, canvas.height - 8);
+  ctx.fillText('glory-hair-riot.vercel.app', canvas.width - 12, canvas.height - 8);
 
   // 5. Export en PNG (qualité fixe + watermark visible)
   return canvas.toDataURL('image/png');
@@ -156,8 +156,8 @@ async function applyWatermark(dataUrl: string): Promise<string> {
 
 const STEPS = [
   { id: 0, num: '00', label: 'Début' },
-  { id: 1, num: '01', label: 'Ta tronche' },
-  { id: 2, num: '02', label: 'Ta perruque' },
+  { id: 1, num: '01', label: 'Votre photo' },
+  { id: 2, num: '02', label: 'Votre perruque' },
   { id: 3, num: '03', label: 'Le résultat' },
 ] as const;
 
@@ -294,8 +294,8 @@ export function TryonFlow() {
     if (quotaBlocked) {
       setError(
         isLoggedIn
-          ? `Tu as utilisé tes ${quotaQuery.data?.granted ?? 5} essais Premium offerts. Recharge avec tes points Glory Club (100 pts = 1 essai) ou achète un essai à 4,99€.`
-          : `Tu as utilisé ton essai gratuit par appareil. Crée un compte pour gagner 2 essais Premium en plus.`,
+          ? `Vous avez utilisé vos ${quotaQuery.data?.granted ?? 5} essais Premium offerts. Rechargez avec vos points Glory Club (100 pts = 1 essai) ou achetez un essai à 4,99€.`
+          : `Vous avez utilisé votre essai gratuit par appareil. Créez un compte pour gagner 2 essais Premium en plus.`,
       );
       setStatus('error');
       return;
@@ -350,7 +350,7 @@ export function TryonFlow() {
       }
 
       if (!r.ok) {
-        const friendly = json?.userMessage || 'L\'essai n\'a pas pu être généré pour le moment. Réessaie dans un instant.';
+        const friendly = json?.userMessage || 'L\'essai n\'a pas pu être généré pour le moment. Réessayez dans un instant.';
         // pas de throw — on n'expose jamais le message brut au catch
 
         // Le serveur vient de trancher réellement le quota : on mémorise SA
@@ -416,7 +416,7 @@ export function TryonFlow() {
       }
       // Erreurs réseau / fetch / JSON parse — message technique uniquement dans le log
       log(`✗ ${err.message}`, 'error');
-      setError('La connexion au service a échoué. Vérifie ta connexion et réessaie.');
+      setError('La connexion au service a échoué. Vérifiez votre connexion et réessayez.');
       setStatus('error');
     } finally {
       abortRef.current = null;
@@ -471,8 +471,8 @@ export function TryonFlow() {
     ? (quotaQuery.data ? `${quotaQuery.data.used}/${quotaQuery.data.granted}` : '…')
     : (lastKnownAnonQuota?.usedUp ? `${ANON_TRIAL_LIMIT}/${ANON_TRIAL_LIMIT}` : `0/${ANON_TRIAL_LIMIT}`);
   const quotaBannerMessage = isLoggedIn
-    ? `Quota atteint · ${quotaQuery.data?.used ?? 0}/${quotaQuery.data?.granted ?? 5} essais Premium : recharge avec tes points Glory Club (100 pts = 1 essai) ou achète un essai à 4,99€.`
-    : `Quota atteint · essai gratuit déjà utilisé sur cet appareil : crée un compte pour 2 essais Premium offerts.`;
+    ? `Quota atteint · ${quotaQuery.data?.used ?? 0}/${quotaQuery.data?.granted ?? 5} essais Premium : rechargez avec vos points Glory Club (100 pts = 1 essai) ou achetez un essai à 4,99€.`
+    : `Quota atteint · essai gratuit déjà utilisé sur cet appareil : créez un compte pour 2 essais Premium offerts.`;
 
   /* Render --------------------------------------- */
   return (
@@ -696,7 +696,7 @@ function ScreenPhoto({ personBlob, personUrl, setPerson, validation, log }: {
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
-    if (!f.type.startsWith('image/')) { alert('Choisis une image.'); return; }
+    if (!f.type.startsWith('image/')) { alert('Choisissez une image.'); return; }
     setPerson(f);
     setMode('preview');
     log(`🖼️ Upload · ${f.name} · ${(f.size/1024).toFixed(0)} KB`);

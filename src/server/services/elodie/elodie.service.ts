@@ -77,7 +77,7 @@ export async function getElodieResponse(
 
     const content =
       response.choices[0]?.message?.content ||
-      'Je suis désolée, j\'ai eu un problème. Peux-tu reformuler ?';
+      'Je suis désolée, j\'ai eu un problème. Pouvez-vous reformuler ?';
 
     return {
       content,
@@ -95,7 +95,7 @@ export async function getElodieResponse(
       throw new ElodieError('INVALID_KEY', `Clé DeepSeek invalide ou révoquée (HTTP ${status}).`, status);
     }
     if (status === 429) {
-      throw new ElodieError('RATE_LIMIT', 'Limite de requêtes DeepSeek atteinte. Réessaie dans une minute.', status);
+      throw new ElodieError('RATE_LIMIT', 'Limite de requêtes DeepSeek atteinte. Réessayez dans une minute.', status);
     }
     if (e?.code === 'ETIMEDOUT' || /timeout/i.test(msg)) {
       throw new ElodieError('TIMEOUT', 'DeepSeek a mis trop de temps à répondre.', status);

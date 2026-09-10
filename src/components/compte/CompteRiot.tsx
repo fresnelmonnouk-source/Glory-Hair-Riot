@@ -65,7 +65,7 @@ export function CompteRiot() {
   if (loading) {
     return (
       <section className="mx-auto max-w-[1040px] px-6 py-16">
-        <p className="text-sm text-faint">Chargement de ton compte…</p>
+        <p className="text-sm text-faint">Chargement de votre compte…</p>
       </section>
     );
   }
@@ -121,7 +121,7 @@ export function CompteRiot() {
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm" onClick={() => setConfirmOpen(false)}>
           <div className="w-full max-w-[420px] rounded-lg border border-hairline bg-surface p-7 md:p-8" onClick={(e) => e.stopPropagation()}>
             <h2 className="display mt-1 text-2xl text-ink">Se déconnecter ?</h2>
-            <p className="mt-3 leading-relaxed text-muted">Tu devras te reconnecter pour accéder à ton compte.</p>
+            <p className="mt-3 leading-relaxed text-muted">Vous devrez vous reconnecter pour accéder à votre compte.</p>
             <div className="mt-7 flex justify-end gap-3">
               <button type="button" onClick={() => setConfirmOpen(false)} className="rounded-sm border border-line px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
                 Annuler
@@ -169,7 +169,7 @@ function OrdersPanel() {
   if (isLoading) return <p className="py-10 text-center text-sm text-faint">Chargement des commandes…</p>;
   if (error) return <p className="py-10 text-center text-sm text-danger">{error.message}</p>;
   if (!data || data.orders.length === 0) {
-    return <EmptyCard title="Aucune commande" body="Tes commandes apparaîtront ici." linkHref="/catalogue" linkLabel="Voir le catalogue" />;
+    return <EmptyCard title="Aucune commande" body="Vos commandes apparaîtront ici." linkHref="/catalogue" linkLabel="Voir le catalogue" />;
   }
 
   return (
@@ -201,7 +201,7 @@ function EssaisPanel() {
   if (isLoading) return <p className="py-10 text-center text-sm text-faint">Chargement des essais…</p>;
   if (error) return <p className="py-10 text-center text-sm text-danger">{error.message}</p>;
   if (!data || data.length === 0) {
-    return <EmptyCard title="Aucun essai" body="Tes essais virtuels apparaîtront ici." linkHref="/essayage" linkLabel="Essayer une perruque" />;
+    return <EmptyCard title="Aucun essai" body="Vos essais virtuels apparaîtront ici." linkHref="/essayage" linkLabel="Essayer une perruque" />;
   }
 
   return (
@@ -238,7 +238,7 @@ function WishlistPanel() {
   if (isLoading) return <p className="py-10 text-center text-sm text-faint">Chargement des favoris…</p>;
   if (error) return <p className="py-10 text-center text-sm text-danger">{error.message}</p>;
   if (!data || data.length === 0) {
-    return <EmptyCard title="Aucun favori" body="Ajoute des perruques à tes favoris depuis le catalogue." linkHref="/catalogue" linkLabel="Voir le catalogue" />;
+    return <EmptyCard title="Aucun favori" body="Ajoutez des perruques à vos favoris depuis le catalogue." linkHref="/catalogue" linkLabel="Voir le catalogue" />;
   }
 
   const wigs = data
@@ -331,7 +331,7 @@ function ProfilePanel({ email, fullName, newsletter, tier }: { email?: string | 
 
       <div className="rounded-lg border border-hairline bg-app p-6">
         <p className="eyebrow">Sécurité</p>
-        <p className="mt-4 leading-relaxed text-muted">Modifie ton mot de passe à tout moment. Tu resteras connecté·e après le changement.</p>
+        <p className="mt-4 leading-relaxed text-muted">Modifiez votre mot de passe à tout moment. Vous resterez connecté·e après le changement.</p>
         <Link href="/compte/mot-de-passe" className="mt-5 inline-flex rounded-sm border border-input px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
           Changer mon mot de passe
         </Link>

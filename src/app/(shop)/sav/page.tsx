@@ -3,7 +3,7 @@ import { SavRiot } from '@/components/sav/SavRiot';
 
 
 export const metadata: Metadata = {
-  title: 'Aide & SAV · Glory Hair RIOT',
+  title: 'Aide & SAV · Glory Hair',
   description: 'FAQ, suivi de commande, contact, atelier Paris 9. On répond en 12h.',
 };
 
