@@ -159,7 +159,7 @@ FORMAT DE SORTIE — réponds UNIQUEMENT avec un objet JSON valide, rien d'autre
 - "html_body" : HTML simple et propre, pensé pour un client mail (styles inline basiques si besoin, PAS de <script>, PAS de feuille de style externe, PAS de sélecteurs CSS avancés). Structure suggérée : une accroche courte, puis 3 à 5 éléments (perruques et/ou articles fournis) présentés avec leur nom + description courte + prix réel s'il est fourni, puis un appel à l'action vers le catalogue. Ton élégant, phrases courtes, pas de superlatifs excessifs.`;
 
 function buildUserPrompt(wigs: WigMaterial[], articles: ArticleMaterial[]): string {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gloryhairriot.com';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://glory-hair-riot.vercel.app';
   return `Voici les données RÉELLES à utiliser pour la newsletter de cette semaine. N'utilise aucune autre information que celle-ci (voir règles anti-hallucination).
 
 PERRUQUES EN AVANT (catalogue actif) :
