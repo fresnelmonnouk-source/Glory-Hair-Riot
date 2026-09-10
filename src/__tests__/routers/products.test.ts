@@ -39,10 +39,18 @@ describe('productsRouter', () => {
     it('filtre par catégorie quand fournie', async () => {
       const ctx = createMockContext();
       const eqMock = jest.fn().mockReturnThis();
+      // range() doit rester chaînable (le routeur appelle .eq('category', ...)
+      // APRÈS .range(...) quand un filtre catégorie est fourni — comme le vrai
+      // client Supabase, dont chaque méthode de filtre renvoie un query builder
+      // lazy/thenable, pas une valeur déjà résolue). D'où range: mockReturnThis()
+      // + un .then() explicite sur la chaîne plutôt que range: mockResolvedValue(...)
+      // qui casserait tout chaînage ultérieur.
       const mockChain = {
         eq: eqMock,
         order: jest.fn().mockReturnThis(),
-        range: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+        range: jest.fn().mockReturnThis(),
+        then: (resolve: (value: { data: unknown[]; error: null; count: number }) => void) =>
+          resolve({ data: [], error: null, count: 0 }),
       };
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         select: jest.fn().mockReturnValue(mockChain),

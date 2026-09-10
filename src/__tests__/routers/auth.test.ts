@@ -12,7 +12,7 @@ describe('authRouter', () => {
 
     it('retourne le user quand authentifié', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const caller = authRouter.createCaller(ctx);
       const result = await caller.getSession();
       expect(result.user?.id).toBe(user.id);
@@ -29,7 +29,7 @@ describe('authRouter', () => {
 
     it('appelle supabase.auth.signOut si authentifié', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       (ctx.supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
 
       const caller = authRouter.createCaller(ctx);
@@ -50,7 +50,7 @@ describe('authRouter', () => {
 
     it('retourne le profil de base si authentifié', async () => {
       const user = createMockUser({ id: 'abc-123', email: 'user@test.fr' });
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const caller = authRouter.createCaller(ctx);
       const result = await caller.getProfile();
 

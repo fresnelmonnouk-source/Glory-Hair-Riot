@@ -118,7 +118,7 @@ export const elodieRouter = router({
       if (messagesError) throw new Error(messagesError.message);
 
       // Get AI response from Deepseek v4
-      const conversationMessages = (messages || []).map((m: any) => ({
+      const conversationMessages = (messages || []).map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       }));

@@ -7,6 +7,7 @@
    recommandée, auto-scroll) est strictement inchangée. */
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { WIGS, type Wig } from '@/lib/wigs-data';
@@ -25,6 +26,15 @@ const SUGGESTED_PROMPTS = [
 ];
 
 const QUICK_REPLIES = ['Voir la fiche', 'Autres options', "Lancer l'essai"];
+
+/* Génération d'id hors du corps du composant : un `Date.now()` appelé
+   directement dans le rendu ou dans une closure du composant est jugé
+   impur par le React Compiler, même quand l'appel réel n'a lieu que dans
+   un handler d'événement (sendMessage). Extraire la fonction du scope du
+   composant lève l'ambiguïté sans changer le format d'id généré. */
+function makeMessageId(prefix: string): string {
+  return `${prefix}-${Date.now()}`;
+}
 
 function findRecommendedWig(text: string): Wig | undefined {
   const lower = text.toLowerCase();
@@ -45,6 +55,7 @@ export function ElodieRiot() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const chatMutation = trpc.elodie.chat.useMutation();
 
@@ -54,7 +65,7 @@ export function ElodieRiot() {
 
   async function sendMessage(text: string) {
     if (!text.trim() || sending) return;
-    const userMsg: Message = { id: 'u-' + Date.now(), role: 'user', content: text.trim() };
+    const userMsg: Message = { id: makeMessageId('u'), role: 'user', content: text.trim() };
     setMessages((m) => [...m, userMsg]);
     setInput('');
     setSending(true);
@@ -62,7 +73,7 @@ export function ElodieRiot() {
     try {
       const result = await chatMutation.mutateAsync({ message: text.trim() });
       const botMsg: Message = {
-        id: 'b-' + Date.now(),
+        id: makeMessageId('b'),
         role: 'assistant',
         content: result.content,
         recommended: findRecommendedWig(result.content),
@@ -86,7 +97,7 @@ export function ElodieRiot() {
         friendly = `Désolée, je n'arrive pas à te répondre. ${errMsg.slice(0, 200)}`;
       }
 
-      setMessages((m) => [...m, { id: 'err-' + Date.now(), role: 'assistant', content: friendly }]);
+      setMessages((m) => [...m, { id: makeMessageId('err'), role: 'assistant', content: friendly }]);
     } finally {
       setSending(false);
     }
@@ -138,7 +149,7 @@ export function ElodieRiot() {
           <div className="flex-1 space-y-3 overflow-y-auto pt-4">
             {messages.map((m) => (
               <MessageBubble key={m.id} message={m} onQuickReply={(reply) => {
-                if (reply === "Lancer l'essai") { window.location.href = '/essayage'; return; }
+                if (reply === "Lancer l'essai") { router.push('/essayage'); return; }
                 sendMessage(reply);
               }} />
             ))}
@@ -176,6 +187,7 @@ export function ElodieRiot() {
 
 function MessageBubble({ message, onQuickReply }: { message: Message; onQuickReply: (reply: string) => void }) {
   const isUser = message.role === 'user';
+  const router = useRouter();
 
   return (
     <div className={`flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}>
@@ -209,7 +221,7 @@ function MessageBubble({ message, onQuickReply }: { message: Message; onQuickRep
               key={qr}
               type="button"
               onClick={() => {
-                if (qr === 'Voir la fiche') { window.location.href = `/perruque/${message.recommended!.id}`; return; }
+                if (qr === 'Voir la fiche') { router.push(`/perruque/${message.recommended!.id}`); return; }
                 onQuickReply(qr);
               }}
               className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition-colors hover:border-[color:var(--border-accent)] hover:text-ink"

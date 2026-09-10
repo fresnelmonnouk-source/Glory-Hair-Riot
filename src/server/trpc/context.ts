@@ -6,7 +6,10 @@ import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
  * Context is passed to all tRPC procedures
  * Contains authenticated user and database client
  */
-export async function createTRPCContext(_opts?: FetchCreateContextFnOptions) {
+export async function createTRPCContext(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _opts?: FetchCreateContextFnOptions
+) {
   const supabase = await createServerSupabaseClient();
 
   const {

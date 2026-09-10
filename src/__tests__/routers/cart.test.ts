@@ -3,9 +3,9 @@ import { createMockContext, createMockUser } from '../helpers/mock-supabase';
 import { TRPCError } from '@trpc/server';
 
 const MOCK_CART_ITEM = {
-  id: 'cart-item-uuid-1',
+  id: 'b1111111-1111-4111-8111-111111111111',
   user_id: 'user-test-uuid-1234',
-  wig_id: 'wig-uuid-1',
+  wig_id: 'b2222222-2222-4222-8222-222222222222',
   variant_id: null,
   quantity: 2,
   price_at_added: 28900,
@@ -24,21 +24,21 @@ describe('cartRouter', () => {
       const ctx = createMockContext({ user: null });
       const caller = cartRouter.createCaller(ctx);
       await expect(
-        caller.addItem({ wig_id: 'wig-uuid-1', quantity: 1, price_at_added: 28900 })
+        caller.addItem({ wig_id: 'b2222222-2222-4222-8222-222222222222', quantity: 1, price_at_added: 28900 })
       ).rejects.toThrow(TRPCError);
     });
 
     it('refuse removeItem() si non authentifié', async () => {
       const ctx = createMockContext({ user: null });
       const caller = cartRouter.createCaller(ctx);
-      await expect(caller.removeItem({ id: 'cart-item-uuid-1' })).rejects.toThrow(TRPCError);
+      await expect(caller.removeItem({ id: 'b1111111-1111-4111-8111-111111111111' })).rejects.toThrow(TRPCError);
     });
   });
 
   describe('list', () => {
     it('retourne les articles du panier de l\'utilisateur', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -51,12 +51,12 @@ describe('cartRouter', () => {
       const caller = cartRouter.createCaller(ctx);
       const result = await caller.list();
       expect(result).toHaveLength(1);
-      expect(result[0]!.wig_id).toBe('wig-uuid-1');
+      expect(result[0]!.wig_id).toBe('b2222222-2222-4222-8222-222222222222');
     });
 
     it('lève une erreur Supabase', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -74,7 +74,7 @@ describe('cartRouter', () => {
   describe('addItem', () => {
     it('ajoute un article au panier', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         insert: jest.fn().mockReturnValue({
@@ -86,7 +86,7 @@ describe('cartRouter', () => {
 
       const caller = cartRouter.createCaller(ctx);
       const result = await caller.addItem({
-        wig_id: 'wig-uuid-1',
+        wig_id: 'b2222222-2222-4222-8222-222222222222',
         quantity: 2,
         price_at_added: 28900,
       });
@@ -96,10 +96,10 @@ describe('cartRouter', () => {
 
     it('rejette une quantité de 0', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const caller = cartRouter.createCaller(ctx);
       await expect(
-        caller.addItem({ wig_id: 'wig-uuid-1', quantity: 0, price_at_added: 28900 })
+        caller.addItem({ wig_id: 'b2222222-2222-4222-8222-222222222222', quantity: 0, price_at_added: 28900 })
       ).rejects.toThrow();
     });
   });
@@ -107,7 +107,7 @@ describe('cartRouter', () => {
   describe('updateQuantity', () => {
     it('met à jour la quantité d\'un article', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const updated = { ...MOCK_CART_ITEM, quantity: 5 };
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
@@ -123,7 +123,7 @@ describe('cartRouter', () => {
       });
 
       const caller = cartRouter.createCaller(ctx);
-      const result = await caller.updateQuantity({ id: 'cart-item-uuid-1', quantity: 5 });
+      const result = await caller.updateQuantity({ id: 'b1111111-1111-4111-8111-111111111111', quantity: 5 });
       expect(result?.quantity).toBe(5);
     });
   });
@@ -131,7 +131,7 @@ describe('cartRouter', () => {
   describe('removeItem', () => {
     it('supprime un article du panier', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         delete: jest.fn().mockReturnValue({
@@ -142,7 +142,7 @@ describe('cartRouter', () => {
       });
 
       const caller = cartRouter.createCaller(ctx);
-      const result = await caller.removeItem({ id: 'cart-item-uuid-1' });
+      const result = await caller.removeItem({ id: 'b1111111-1111-4111-8111-111111111111' });
       expect(result.success).toBe(true);
     });
   });
@@ -150,7 +150,7 @@ describe('cartRouter', () => {
   describe('clear', () => {
     it('vide le panier entier', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         delete: jest.fn().mockReturnValue({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, X, Hand } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 
@@ -27,28 +27,49 @@ export function ElodieWidget() {
     { enabled: !!conversationId }
   );
 
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // react-query recrée l'objet `startConversationMutation` à chaque render
+  // (isPending/isSuccess...) : le lire via une ref à jour permet de fermer
+  // l'effet ci-dessous sur `isOpen`/`conversationId` sans le re-déclencher
+  // à chaque re-render pendant l'appel en cours (ce qui rappellerait
+  // startConversation plusieurs fois avant la résolution de la promesse).
+  const startConversationMutationRef = useRef(startConversationMutation);
+  useEffect(() => {
+    startConversationMutationRef.current = startConversationMutation;
+  });
+
   // Initialize conversation on open
   useEffect(() => {
     if (isOpen && !conversationId) {
-      startConversationMutation.mutate(undefined, {
+      startConversationMutationRef.current.mutate(undefined, {
         onSuccess: (conv) => {
           setConversationId(conv.id);
         },
       });
     }
-  }, [isOpen]);
+  }, [isOpen, conversationId]);
 
-  // Update messages when fetched
-  useEffect(() => {
+  // Recopie les messages serveur dans l'état local dès qu'une nouvelle
+  // réponse de requête arrive — dérivé pendant le rendu (pas dans un
+  // effet) puisqu'il s'agit d'ajuster un state à partir d'un autre state
+  // qui vient de changer, cf. https://react.dev/learn/you-might-not-need-an-effect
+  const [prevFetchedMessages, setPrevFetchedMessages] = useState(fetchedMessages);
+  if (fetchedMessages !== prevFetchedMessages) {
+    setPrevFetchedMessages(fetchedMessages);
     if (fetchedMessages) {
       setMessages(fetchedMessages);
+    }
+  }
+
+  // Scroll (effet de bord DOM réel) quand de nouveaux messages arrivent
+  useEffect(() => {
+    if (fetchedMessages) {
       scrollToBottom();
     }
-  }, [fetchedMessages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [fetchedMessages, scrollToBottom]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

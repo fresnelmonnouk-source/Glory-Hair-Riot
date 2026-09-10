@@ -35,7 +35,15 @@ export function NavRiot() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  // Ferme le menu mobile au changement de route. Ajustement pendant le
+  // rendu (plutôt que setState() dans un effet, interdit par le React
+  // Compiler) : cf. https://react.dev/learn/you-might-not-need-an-effect
+  // #adjusting-some-state-when-a-prop-changes
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMenuOpen(false);
+  }
 
   useEffect(() => {
     if (!menuOpen) return;

@@ -15,7 +15,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => { setDrawerOpen(false); }, [pathname]);
+  // Ferme le drawer mobile au changement de route. Ajustement pendant le
+  // rendu (plutôt que setState() dans un effet, interdit par le React
+  // Compiler) : cf. https://react.dev/learn/you-might-not-need-an-effect
+  // #adjusting-some-state-when-a-prop-changes
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setDrawerOpen(false);
+  }
 
   useEffect(() => {
     if (!drawerOpen) return;

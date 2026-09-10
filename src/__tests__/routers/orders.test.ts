@@ -3,7 +3,7 @@ import { createMockContext, createMockUser } from '../helpers/mock-supabase';
 import { TRPCError } from '@trpc/server';
 
 const MOCK_ORDER = {
-  id: 'order-uuid-1',
+  id: 'a1111111-1111-4111-8111-111111111111',
   user_id: 'user-test-uuid-1234',
   status: 'paid' as const,
   subtotal_cents: 28900,
@@ -34,20 +34,20 @@ describe('ordersRouter', () => {
     it('refuse getById() si non authentifié', async () => {
       const ctx = createMockContext({ user: null });
       const caller = ordersRouter.createCaller(ctx);
-      await expect(caller.getById({ orderId: 'order-uuid-1' })).rejects.toThrow(TRPCError);
+      await expect(caller.getById({ orderId: 'a1111111-1111-4111-8111-111111111111' })).rejects.toThrow(TRPCError);
     });
 
     it('refuse cancel() si non authentifié', async () => {
       const ctx = createMockContext({ user: null });
       const caller = ordersRouter.createCaller(ctx);
-      await expect(caller.cancel({ orderId: 'order-uuid-1' })).rejects.toThrow(TRPCError);
+      await expect(caller.cancel({ orderId: 'a1111111-1111-4111-8111-111111111111' })).rejects.toThrow(TRPCError);
     });
   });
 
   describe('list', () => {
     it('retourne la liste des commandes paginée', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -71,7 +71,7 @@ describe('ordersRouter', () => {
   describe('getById', () => {
     it('retourne une commande avec ses articles', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockImplementation((table: string) => {
         if (table === 'orders') {
@@ -93,15 +93,15 @@ describe('ordersRouter', () => {
       });
 
       const caller = ordersRouter.createCaller(ctx);
-      const result = await caller.getById({ orderId: 'order-uuid-1' });
+      const result = await caller.getById({ orderId: 'a1111111-1111-4111-8111-111111111111' });
 
-      expect(result.id).toBe('order-uuid-1');
+      expect(result.id).toBe('a1111111-1111-4111-8111-111111111111');
       expect(result.items).toEqual([]);
     });
 
     it("lève une erreur si la commande n'existe pas", async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -114,14 +114,14 @@ describe('ordersRouter', () => {
       });
 
       const caller = ordersRouter.createCaller(ctx);
-      await expect(caller.getById({ orderId: 'fake-uuid' })).rejects.toThrow('Commande non trouvée');
+      await expect(caller.getById({ orderId: 'a2222222-2222-4222-8222-222222222222' })).rejects.toThrow('Commande non trouvée');
     });
   });
 
   describe('cancel', () => {
     it('annule une commande en attente', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const pendingOrder = { ...MOCK_ORDER, status: 'pending' as const };
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
@@ -138,13 +138,13 @@ describe('ordersRouter', () => {
       });
 
       const caller = ordersRouter.createCaller(ctx);
-      const result = await caller.cancel({ orderId: 'order-uuid-1' });
+      const result = await caller.cancel({ orderId: 'a1111111-1111-4111-8111-111111111111' });
       expect(result.success).toBe(true);
     });
 
     it('refuse d\'annuler une commande expédiée', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const shippedOrder = { ...MOCK_ORDER, status: 'shipped' as const };
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
@@ -158,7 +158,7 @@ describe('ordersRouter', () => {
       });
 
       const caller = ordersRouter.createCaller(ctx);
-      await expect(caller.cancel({ orderId: 'order-uuid-1' })).rejects.toThrow(
+      await expect(caller.cancel({ orderId: 'a1111111-1111-4111-8111-111111111111' })).rejects.toThrow(
         "Impossible d'annuler une commande expédiée"
       );
     });
@@ -167,7 +167,7 @@ describe('ordersRouter', () => {
   describe('updateAddress', () => {
     it('met à jour l\'adresse d\'une commande pending', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const pendingOrder = { ...MOCK_ORDER, status: 'pending' as const };
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
@@ -185,7 +185,7 @@ describe('ordersRouter', () => {
 
       const caller = ordersRouter.createCaller(ctx);
       const result = await caller.updateAddress({
-        orderId: 'order-uuid-1',
+        orderId: 'a1111111-1111-4111-8111-111111111111',
         street: '5 avenue Montaigne',
         city: 'Paris',
         postalCode: '75008',
@@ -197,7 +197,7 @@ describe('ordersRouter', () => {
 
     it('refuse de modifier l\'adresse d\'une commande livrée', async () => {
       const user = createMockUser();
-      const ctx = createMockContext({ user: user as any });
+      const ctx = createMockContext({ user });
       const deliveredOrder = { ...MOCK_ORDER, status: 'delivered' as const };
 
       (ctx.supabase.from as jest.Mock).mockReturnValue({
@@ -213,7 +213,7 @@ describe('ordersRouter', () => {
       const caller = ordersRouter.createCaller(ctx);
       await expect(
         caller.updateAddress({
-          orderId: 'order-uuid-1',
+          orderId: 'a1111111-1111-4111-8111-111111111111',
           street: '5 avenue Montaigne',
           city: 'Paris',
           postalCode: '75008',

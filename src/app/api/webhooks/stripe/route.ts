@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type Stripe from 'stripe';
 import { verifyWebhookSignature } from '@/server/services/payment/stripe.service';
 import { getStripeWebhookSecret } from '@/lib/settings/service';
 
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
   try {
     // Handle payment intent succeeded
     if (event.type === 'payment_intent.succeeded') {
-      const paymentIntent = event.data.object as any;
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
       // Check if already processed (idempotency)
       const { data: existing } = await supabase
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Handle payment intent payment failed
     if (event.type === 'payment_intent.payment_failed') {
-      const paymentIntent = event.data.object as any;
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
       // Check if already processed
       const { data: existing } = await supabase

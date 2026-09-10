@@ -7,7 +7,7 @@
    depuis l'admin plutôt que figée dans .env.local, sur demande Fresnel).
    Vocabulaire de carte identique au reste de l'admin. */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -105,13 +105,21 @@ function PaymentSettingsSection() {
   const [stripeWebhookInput, setStripeWebhookInput] = useState('');
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
+  // Recopie les réglages serveur dans le formulaire local à chaque nouvelle
+  // donnée de requête (chargement initial + refetch après sauvegarde).
+  // Ajustement pendant le rendu (plutôt que setState() dans un effet,
+  // interdit par le React Compiler) : cf.
+  // https://react.dev/learn/you-might-not-need-an-effect
+  // #adjusting-some-state-when-a-prop-changes
+  const [prevSettingsData, setPrevSettingsData] = useState(settingsQ.data);
+  if (settingsQ.data !== prevSettingsData) {
+    setPrevSettingsData(settingsQ.data);
     if (settingsQ.data) {
       setFedaPublicKey(settingsQ.data.fedapay_public_key);
       setFedaEnvironment(settingsQ.data.fedapay_environment);
       setStripePublicKey(settingsQ.data.stripe_publishable_key);
     }
-  }, [settingsQ.data]);
+  }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();

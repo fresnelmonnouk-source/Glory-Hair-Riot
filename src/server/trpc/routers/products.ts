@@ -121,7 +121,7 @@ export const productsRouter = router({
     if (error) throw new Error(error.message);
 
     const categories = Array.from(
-      new Set((data || []).map((w: any) => w.category))
+      new Set((data || []).map((w: { category: string | null }) => w.category))
     ).sort();
 
     return categories;

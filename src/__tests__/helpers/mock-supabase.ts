@@ -43,14 +43,18 @@ export function createMockSupabase(defaults: MockQuery = { data: null, error: nu
   return supabase as unknown as TRPCContext['supabase'];
 }
 
-export function createMockUser(overrides: Partial<{ id: string; email: string }> = {}) {
+export function createMockUser(
+  overrides: Partial<{ id: string; email: string }> = {}
+): NonNullable<TRPCContext['user']> {
   return {
     id: overrides.id ?? 'user-test-uuid-1234',
     email: overrides.email ?? 'test@gloryhair.fr',
     aud: 'authenticated',
     role: 'authenticated',
     created_at: '2026-01-01T00:00:00Z',
-  };
+    // Champs manquants du type Supabase `User` complet : un mock de test
+    // n'a pas besoin de les fournir, d'où le cast plutôt qu'un objet complet.
+  } as unknown as NonNullable<TRPCContext['user']>;
 }
 
 export function createMockContext(
