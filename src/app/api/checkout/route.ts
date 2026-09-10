@@ -25,6 +25,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendEmail, sendAdminEmail, renderOrderItemsHTML } from '@/lib/email/send';
+import { DiscountValidationError, incrementDiscountCodeUsage, validateDiscountCode } from '@/lib/discounts/validate';
 
 export const runtime = 'nodejs';
 
@@ -47,6 +48,7 @@ const BodySchema = z.object({
   }),
   shipping: z.enum(['standard', 'express', 'atelier']),
   payment_method: z.enum(['stripe', 'fedapay', 'cod']),
+  discount_code: z.string().min(1).max(60).optional().nullable(),
 });
 
 const SHIPPING_CENTS: Record<'standard' | 'express' | 'atelier', number> = {
@@ -99,7 +101,30 @@ export async function POST(request: Request) {
   // 4. Compute totals
   const subtotal_cents = body.items.reduce((sum, i) => sum + i.price_at_added * 100 * i.quantity, 0);
   const shipping_cents = SHIPPING_CENTS[body.shipping];
-  const total_cents = subtotal_cents + shipping_cents;
+
+  // 4.5 RE-valide le code promo côté serveur (jamais confiance dans un
+  //     montant envoyé par le client — le code lui-même suffit, le montant
+  //     est TOUJOURS recalculé ici à partir du vrai sous-total serveur).
+  let discountResult: Awaited<ReturnType<typeof validateDiscountCode>> | null = null;
+  if (body.discount_code) {
+    try {
+      discountResult = await validateDiscountCode(admin, body.discount_code, subtotal_cents);
+    } catch (err) {
+      if (err instanceof DiscountValidationError) {
+        return NextResponse.json(
+          { error: 'DISCOUNT_INVALID', userMessage: err.message },
+          { status: 400 },
+        );
+      }
+      console.error('[checkout] discount validation error:', err);
+      return NextResponse.json(
+        { error: 'DISCOUNT_CHECK_FAILED', userMessage: 'Impossible de vérifier le code promo. Réessaie.' },
+        { status: 500 },
+      );
+    }
+  }
+  const discount_cents = discountResult?.discountCents ?? 0;
+  const total_cents = subtotal_cents + shipping_cents - discount_cents;
 
   // 5. INSERT order
   //    - cod : pas de mock à faire, c'est le vrai statut (payé à la livraison)
@@ -116,7 +141,7 @@ export async function POST(request: Request) {
       status: isCod ? 'pending' : 'paid',
       subtotal_cents,
       shipping_cents,
-      discount_cents: 0,
+      discount_cents,
       total_cents,
       shipping_method: body.shipping,
       delivery_name: `${body.address.prenom} ${body.address.nom}`.trim(),
@@ -160,6 +185,15 @@ export async function POST(request: Request) {
       { error: 'ORDER_ITEMS', userMessage: 'Impossible d\'enregistrer les articles. Réessaie.' },
       { status: 500 },
     );
+  }
+
+  // 6.5 Incrémente l'usage du code promo — seulement maintenant que la
+  //     commande est intégralement créée (order + order_items). Best-effort :
+  //     ne bloque jamais une commande déjà confirmée.
+  if (discountResult) {
+    await incrementDiscountCodeUsage(admin, discountResult.id).catch((err) => {
+      console.warn('[checkout] incrementDiscountCodeUsage échoué (non bloquant) :', err);
+    });
   }
 
   // 7. Bump points fidélité (+10 par euro = +1 par 10 cents) — uniquement

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useCartStore, type CartItem } from '@/stores/cart.store';
 import { WIG_BY_ID } from '@/lib/wigs-data';
+import { trpc } from '@/lib/trpc/client';
 
 const TVA_RATE = 0.20;
 
@@ -38,15 +39,42 @@ export function PanierRiot() {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const subtotal = useCartStore((s) => s.getSubtotal());
+  const discountCode = useCartStore((s) => s.discountCode);
+  const discountCents = useCartStore((s) => s.discountCents);
+  const setDiscount = useCartStore((s) => s.setDiscount);
+  const clearDiscount = useCartStore((s) => s.clearDiscount);
   const [promo, setPromo] = useState('');
-  const [promoFeedback, setPromoFeedback] = useState<string | null>(null);
+  const [promoFeedback, setPromoFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const validateM = trpc.discounts.validate.useMutation();
 
   const tva = Math.round(((subtotal * TVA_RATE) / (1 + TVA_RATE)) * 100) / 100;
+  const discountEuros = discountCents / 100;
+  const total = Math.max(0, subtotal - discountEuros);
 
   function applyPromo() {
-    if (!promo.trim()) return;
-    setPromoFeedback('Code invalide : campagne pas encore active.');
-    setTimeout(() => setPromoFeedback(null), 3000);
+    const code = promo.trim();
+    if (!code || validateM.isPending) return;
+    setPromoFeedback(null);
+    validateM.mutate(
+      { code, subtotalCents: Math.round(subtotal * 100) },
+      {
+        onSuccess: (res) => {
+          setDiscount(res.code, res.discountCents);
+          setPromo('');
+          setPromoFeedback({ ok: true, text: `Code ${res.code} appliqué : −${(res.discountCents / 100).toFixed(2)}€` });
+        },
+        onError: (err) => {
+          clearDiscount();
+          setPromoFeedback({ ok: false, text: err.message || 'Code promo invalide.' });
+        },
+      },
+    );
+  }
+
+  function removePromo() {
+    clearDiscount();
+    setPromoFeedback(null);
   }
 
   if (items.length === 0) {
@@ -54,9 +82,9 @@ export function PanierRiot() {
       <section className="mx-auto max-w-[960px] px-6 py-20 md:py-28">
         <h1 className="display text-4xl text-ink md:text-5xl">Votre sac</h1>
         <div className="mt-16 flex flex-col items-center text-center">
-          <p className="display text-2xl text-ink">Ton sac est vide.</p>
+          <p className="display text-2xl text-ink">Votre sac est vide.</p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
-            Pas encore de pièce choisie. 6 perruques tirées brin par brin t&apos;attendent
+            Pas encore de pièce choisie. 6 perruques tirées brin par brin vous attendent
             dans Issue N°01.
           </p>
           <Link
@@ -151,11 +179,17 @@ export function PanierRiot() {
                 <dt className="text-muted">dont TVA</dt>
                 <dd className="text-ink tabular-nums">{tva.toFixed(2)}€</dd>
               </div>
+              {discountCode && (
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-muted">Réduction ({discountCode})</dt>
+                  <dd className="text-[color:var(--success)] tabular-nums">−{discountEuros.toFixed(2)}€</dd>
+                </div>
+              )}
             </dl>
 
             <div className="mt-5 flex items-baseline justify-between gap-4 border-t border-hairline pt-5">
               <span className="text-lg text-ink">Total</span>
-              <span className="text-lg text-accent tabular-nums">{subtotal.toFixed(2)}€</span>
+              <span className="text-lg text-accent tabular-nums">{total.toFixed(2)}€</span>
             </div>
 
             <Link
@@ -169,19 +203,43 @@ export function PanierRiot() {
               Continuer mes achats
             </Link>
 
-            <form onSubmit={(e) => { e.preventDefault(); applyPromo(); }} className="mt-6 flex gap-2 border-t border-hairline pt-5">
-              <input
-                value={promo}
-                onChange={(e) => setPromo(e.target.value)}
-                placeholder="Code promo"
-                aria-label="Code promo"
-                className="flex-1 rounded-sm border border-input bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-faint"
-              />
-              <button type="submit" className="rounded-sm border border-input px-4 py-2 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
-                OK
-              </button>
-            </form>
-            {promoFeedback && <p className="mt-2 text-xs text-danger">{promoFeedback}</p>}
+            {discountCode ? (
+              <div className="mt-6 flex items-center justify-between gap-2 border-t border-hairline pt-5 text-sm">
+                <span className="text-ink">
+                  Code <b className="text-accent">{discountCode}</b> appliqué
+                </span>
+                <button
+                  type="button"
+                  onClick={removePromo}
+                  className="text-xs text-faint underline-offset-4 transition-colors hover:text-ink hover:underline"
+                >
+                  Retirer
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); applyPromo(); }} className="mt-6 flex gap-2 border-t border-hairline pt-5">
+                <input
+                  value={promo}
+                  onChange={(e) => setPromo(e.target.value)}
+                  placeholder="Code promo"
+                  aria-label="Code promo"
+                  disabled={validateM.isPending}
+                  className="flex-1 rounded-sm border border-input bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-faint disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={validateM.isPending || !promo.trim()}
+                  className="rounded-sm border border-input px-4 py-2 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {validateM.isPending ? '…' : 'OK'}
+                </button>
+              </form>
+            )}
+            {promoFeedback && (
+              <p className={`mt-2 text-xs ${promoFeedback.ok ? 'text-[color:var(--success)]' : 'text-danger'}`}>
+                {promoFeedback.text}
+              </p>
+            )}
           </div>
         </aside>
       </div>

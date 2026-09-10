@@ -56,6 +56,9 @@ export function CheckoutRiot() {
   const { user, profile } = useSession();
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.getSubtotal());
+  const discountCode = useCartStore((s) => s.discountCode);
+  const discountCents = useCartStore((s) => s.discountCents);
+  const clearDiscount = useCartStore((s) => s.clearDiscount);
 
   const [address, setAddress] = useState<Address>({
     email: '', prenom: '', nom: '', adresse: '', ville: '', codePostal: '', pays: 'France', telephone: '',
@@ -71,18 +74,26 @@ export function CheckoutRiot() {
 
   // Checkout invité : formulaire vide par défaut. Si une session existe,
   // préremplit email/nom pour éviter de retaper une info déjà connue —
-  // reste entièrement éditable, pas une contrainte.
-  useEffect(() => {
-    if (!user) return;
-    setAddress((a) => {
-      if (a.email) return a; // déjà saisi par l'utilisateur, ne pas écraser
-      const [prenom = '', ...rest] = (profile?.full_name ?? '').split(' ');
-      return { ...a, email: user.email ?? '', prenom, nom: rest.join(' ') };
-    });
-  }, [user, profile]);
+  // reste entièrement éditable, pas une contrainte. Ajustement pendant le
+  // rendu (plutôt que setState() dans un effet, interdit par le React
+  // Compiler) : cf. https://react.dev/learn/you-might-not-need-an-effect
+  // #adjusting-some-state-when-a-prop-changes
+  const [prevSessionKey, setPrevSessionKey] = useState<string | null>(null);
+  const sessionKey = user ? `${user.id}:${profile?.full_name ?? ''}` : null;
+  if (sessionKey !== prevSessionKey) {
+    setPrevSessionKey(sessionKey);
+    if (user) {
+      setAddress((a) => {
+        if (a.email) return a; // déjà saisi par l'utilisateur, ne pas écraser
+        const [prenom = '', ...rest] = (profile?.full_name ?? '').split(' ');
+        return { ...a, email: user.email ?? '', prenom, nom: rest.join(' ') };
+      });
+    }
+  }
 
   const shippingPrice = SHIPPING_OPTIONS.find((s) => s.id === shipping)?.price ?? 0;
-  const total = subtotal + shippingPrice;
+  const discountEuros = discountCents / 100;
+  const total = Math.max(0, subtotal - discountEuros + shippingPrice);
   const tva = Math.round(((total * TVA_RATE) / (1 + TVA_RATE)) * 100) / 100;
 
   const addressValid = useMemo(() => {
@@ -117,6 +128,7 @@ export function CheckoutRiot() {
           address,
           shipping,
           payment_method: payment,
+          discount_code: discountCode ?? undefined,
         }),
       });
       const json = await r.json();
@@ -124,6 +136,12 @@ export function CheckoutRiot() {
         if (r.status === 401) {
           router.push('/connexion?redirect=/checkout');
           return;
+        }
+        if (json.error === 'DISCOUNT_INVALID') {
+          // Le code, valide au moment de l'aperçu panier, ne l'est plus au
+          // checkout (expiré/épuisé entre-temps) — on nettoie l'aperçu client
+          // pour laisser l'utilisateur réessayer sans état incohérent.
+          clearDiscount();
         }
         setError(json.userMessage ?? 'Erreur. Réessaie.');
         setSubmitting(false);
@@ -253,6 +271,12 @@ export function CheckoutRiot() {
                 <dt className="text-muted">dont TVA</dt>
                 <dd className="text-ink tabular-nums">{tva.toFixed(2)}€</dd>
               </div>
+              {discountCode && (
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-muted">Réduction ({discountCode})</dt>
+                  <dd className="text-[color:var(--success)] tabular-nums">−{discountEuros.toFixed(2)}€</dd>
+                </div>
+              )}
             </dl>
 
             <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-hairline pt-4">

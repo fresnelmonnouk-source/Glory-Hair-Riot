@@ -15,9 +15,19 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
+  /* Code promo appliqué (aperçu client, non fiable pour la commande) —
+     src/lib/discounts/validate.ts recalcule toujours discountCents côté
+     serveur au checkout, ce champ ne sert qu'à l'affichage du récap. Toute
+     mutation du panier (ajout/retrait/quantité) invalide l'aperçu : un
+     rabais en % dépend du sous-total, un panier qui change doit être
+     revalidé. */
+  discountCode: string | null;
+  discountCents: number;
   addItem: (item: Omit<CartItem, 'id'>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  setDiscount: (code: string, discountCents: number) => void;
+  clearDiscount: () => void;
   clear: () => void;
   getTotal: () => number;
   getSubtotal: () => number;
@@ -27,6 +37,8 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      discountCode: null,
+      discountCents: 0,
 
       addItem: (item) =>
         set((state) => {
@@ -42,6 +54,8 @@ export const useCartStore = create<CartStore>()(
                   ? { ...i, quantity: i.quantity + item.quantity }
                   : i
               ),
+              discountCode: null,
+              discountCents: 0,
             };
           }
 
@@ -53,12 +67,16 @@ export const useCartStore = create<CartStore>()(
                 id: `${item.wig_id}-${item.variant_id || 'default'}`,
               },
             ],
+            discountCode: null,
+            discountCents: 0,
           };
         }),
 
       removeItem: (id) =>
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
+          discountCode: null,
+          discountCents: 0,
         })),
 
       updateQuantity: (id, quantity) =>
@@ -66,9 +84,14 @@ export const useCartStore = create<CartStore>()(
           items: state.items.map((i) =>
             i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i
           ),
+          discountCode: null,
+          discountCents: 0,
         })),
 
-      clear: () => set({ items: [] }),
+      setDiscount: (code, discountCents) => set({ discountCode: code, discountCents }),
+      clearDiscount: () => set({ discountCode: null, discountCents: 0 }),
+
+      clear: () => set({ items: [], discountCode: null, discountCents: 0 }),
 
       getSubtotal: () => {
         const { items } = get();
