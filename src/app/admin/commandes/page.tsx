@@ -10,6 +10,7 @@
    déjà utilisé sur /admin/produits côté Sandy. */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { OrderStatusPill } from '@/components/admin/ui';
@@ -114,6 +115,9 @@ export default function AdminCommandesPage() {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-end gap-4">
+                          <Link href={`/admin/commandes/${o.id}`} className="text-sm text-muted transition-colors hover:text-ink">
+                            Voir le détail
+                          </Link>
                           {o.status !== 'cancelled' && o.status !== 'delivered' && (
                             <button
                               type="button"

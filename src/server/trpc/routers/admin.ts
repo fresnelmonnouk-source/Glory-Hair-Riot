@@ -147,18 +147,23 @@ export const adminRouter = router({
 
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
 
-      // Calcul ventes par wig depuis order_items (en parallèle)
+      // Calcul ventes par wig depuis order_items (en parallèle).
+      // NB : référençait auparavant order_items.price_at_purchase, une colonne
+      // inexistante (vraie colonne : unit_price_cents, cf. migration 001) — le
+      // select échouait silencieusement (error ignorée), les stats de vente
+      // affichaient donc toujours 0 sur /admin/produits. Même bug que celui
+      // corrigé sur orderDetails ci-dessus, corrigé ici pour la même raison.
       const wigIds = (wigs ?? []).map((w) => w.id);
       const { data: sales } = await ctx.supabase
         .from('order_items')
-        .select('wig_id, quantity, price_at_purchase')
+        .select('wig_id, quantity, unit_price_cents')
         .in('wig_id', wigIds);
 
       const statsByWig = new Map<string, { units: number; revenue: number }>();
       for (const s of sales ?? []) {
         const cur = statsByWig.get(s.wig_id) ?? { units: 0, revenue: 0 };
         cur.units += s.quantity ?? 0;
-        cur.revenue += (s.price_at_purchase ?? 0) * (s.quantity ?? 0);
+        cur.revenue += (s.unit_price_cents ?? 0) * (s.quantity ?? 0);
         statsByWig.set(s.wig_id, cur);
       }
 
@@ -286,19 +291,32 @@ export const adminRouter = router({
     }),
 
   // ─── Détail d'une commande ───────────────────────
+  // NB : cette procédure existait déjà mais référençait des colonnes qui
+  // n'existent pas dans le schéma réel (shipping_address, payment_intent_id,
+  // order_items.price_at_purchase — cf. migration 001 : orders a
+  // delivery_name/delivery_street/.../stripe_payment_intent_id/
+  // fedapay_transaction_id, order_items a unit_price_cents). Le select
+  // échouait donc systématiquement (colonne inconnue → error → NOT_FOUND).
+  // Corrigé ici sur les vrais noms de colonnes pour que la page détail
+  // (/admin/commandes/[id]) puisse effectivement charger une commande.
   orderDetails: adminProcedure
     .input(z.object({ orderId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('orders')
         .select(`
-          id, user_id, total_cents, status, created_at, shipping_address, payment_intent_id,
+          id, user_id, status,
+          subtotal_cents, shipping_cents, discount_cents, total_cents,
+          shipping_method, tracking_number,
+          delivery_name, delivery_street, delivery_city, delivery_postal_code, delivery_country,
+          payment_method, payment_status, stripe_payment_intent_id, fedapay_transaction_id,
+          guest_email, guest_phone, notes, created_at, updated_at,
           users(full_name, email, phone),
-          order_items(id, wig_id, quantity, price_at_purchase, wigs(slug, name))
+          order_items(id, wig_id, variant_id, quantity, unit_price_cents, wigs(slug, name))
         `)
         .eq('id', input.orderId)
         .single();
-      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: 'Commande introuvable.' });
       return data;
     }),
 
@@ -337,6 +355,126 @@ export const adminRouter = router({
       return { ok: true };
     }),
 
+  // ─── Créer un produit ────────────────────────────
+  // Slug unique vérifié explicitement (message clair) + filet de sécurité sur
+  // la contrainte UNIQUE en base (23505) si une création concurrente gagne
+  // la course entre la vérification et l'insert.
+  createProduct: adminProcedure
+    .input(z.object({
+      slug: z.string()
+        .min(1).max(80)
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug invalide : minuscules, chiffres et tirets uniquement (ex. "lace-front-blonde").'),
+      name: z.string().min(1).max(200),
+      base_price: z.number().int().min(1, 'Le prix doit être supérieur à 0.'),
+      category: z.string().min(1).max(60),
+      description: z.string().max(2000).optional(),
+      long_description: z.string().max(10000).optional(),
+      hair_type: z.string().max(60).optional(),
+      length: z.string().max(60).optional(),
+      color: z.string().max(60).optional(),
+      construction_type: z.string().max(60).optional(),
+      tag: z.string().max(30).optional(),
+      sku: z.string().max(60).optional(),
+      stock_quantity: z.number().int().min(0).default(0),
+      display_order: z.number().int().default(0),
+      active: z.boolean().default(true),
+      featured: z.boolean().default(false),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: checkError } = await ctx.supabase
+        .from('wigs')
+        .select('id')
+        .eq('slug', input.slug)
+        .maybeSingle();
+      if (checkError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: checkError.message });
+      if (existing) {
+        throw new TRPCError({ code: 'CONFLICT', message: `Le slug "${input.slug}" est déjà utilisé par un autre produit.` });
+      }
+
+      const { data, error } = await ctx.supabase
+        .from('wigs')
+        .insert({
+          slug: input.slug,
+          name: input.name,
+          base_price: input.base_price,
+          category: input.category,
+          description: input.description ?? null,
+          long_description: input.long_description ?? null,
+          hair_type: input.hair_type ?? null,
+          length: input.length ?? null,
+          color: input.color ?? null,
+          construction_type: input.construction_type ?? null,
+          tag: input.tag ?? null,
+          sku: input.sku ?? null,
+          stock_quantity: input.stock_quantity,
+          display_order: input.display_order,
+          active: input.active,
+          featured: input.featured,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new TRPCError({ code: 'CONFLICT', message: `Le slug "${input.slug}" est déjà utilisé par un autre produit.` });
+        }
+        if (error.code === '42501') {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Écriture refusée par la base (RLS). La migration supabase/migrations/011_admin_wigs_tryon_rls.sql doit être appliquée (Dashboard Supabase → SQL Editor) avant de pouvoir créer un produit.',
+          });
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+      return data;
+    }),
+
+  // ─── Supprimer un produit ────────────────────────
+  // Ne casse jamais l'intégrité d'un historique de commande réel : si des
+  // order_items référencent ce produit, on refuse (message clair, proposant
+  // de désactiver plutôt). order_items.wig_id est de toute façon en
+  // ON DELETE RESTRICT (migration 001) — cette vérification explicite donne
+  // juste un message compréhensible avant de heurter la contrainte FK brute.
+  deleteProduct: adminProcedure
+    .input(z.object({ productId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { count, error: countError } = await ctx.supabase
+        .from('order_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('wig_id', input.productId);
+      if (countError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: countError.message });
+      if ((count ?? 0) > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Ce produit a des commandes associées, désactive-le plutôt que de le supprimer.',
+        });
+      }
+
+      // wig_images n'est PAS strictement nécessaire (ON DELETE CASCADE sur
+      // wig_id) mais supprimé explicitement comme demandé — défensif si la
+      // cascade venait à changer.
+      const { error: imagesError } = await ctx.supabase.from('wig_images').delete().eq('wig_id', input.productId);
+      if (imagesError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: imagesError.message });
+
+      const { error } = await ctx.supabase.from('wigs').delete().eq('id', input.productId);
+      if (error) {
+        if (error.code === '23503') {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Ce produit a des commandes associées, désactive-le plutôt que de le supprimer.',
+          });
+        }
+        if (error.code === '42501') {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Suppression refusée par la base (RLS). La migration supabase/migrations/011_admin_wigs_tryon_rls.sql doit être appliquée (Dashboard Supabase → SQL Editor) avant de pouvoir supprimer un produit.',
+          });
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+      return { ok: true };
+    }),
+
   // ─── Promote user to admin ───────────────────────
   setUserRole: adminProcedure
     .input(z.object({
@@ -358,6 +496,43 @@ export const adminRouter = router({
 
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
       return { ok: true };
+    }),
+
+  // ─── Détail d'un client ──────────────────────────
+  // Profil complet + ses commandes récentes (requête séparée sur orders,
+  // pas de FK inverse pratique à joindre proprement ici) + son historique
+  // d'essai virtuel (tryon_results). Nécessite la policy admin sur
+  // tryon_results ajoutée par la migration 011 (aucune policy admin
+  // n'existait avant — seul le propriétaire ou un essai "shared" étaient
+  // lisibles, cf. migration 001).
+  customerDetails: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: profile, error: profileError } = await ctx.supabase
+        .from('users')
+        .select('id, email, full_name, avatar_url, phone, street_address, city, postal_code, country, role, points, tier, newsletter, accepts_marketing, created_at')
+        .eq('id', input.userId)
+        .maybeSingle();
+      if (profileError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: profileError.message });
+      if (!profile) throw new TRPCError({ code: 'NOT_FOUND', message: 'Client introuvable.' });
+
+      const { data: orders, error: ordersError } = await ctx.supabase
+        .from('orders')
+        .select('id, status, total_cents, created_at')
+        .eq('user_id', input.userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (ordersError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: ordersError.message });
+
+      const { data: tryons, error: tryonsError } = await ctx.supabase
+        .from('tryon_results')
+        .select('id, wig_id, snapshot_url, shared, created_at, wigs(name, slug)')
+        .eq('user_id', input.userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (tryonsError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: tryonsError.message });
+
+      return { profile, orders: orders ?? [], tryons: tryons ?? [] };
     }),
 
   // ─── Magazine — génération d'articles par IA (migration 007) ────

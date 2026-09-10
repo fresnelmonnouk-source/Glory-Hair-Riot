@@ -8,6 +8,7 @@
    vocabulaire de la table. */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Check, X } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { useSession } from '@/hooks/use-session';
@@ -84,6 +85,9 @@ export default function AdminClientsPage() {
                       <td className="px-6 py-5">
                         <div className="font-display text-lg text-ink">{c.full_name ?? 'n/a'}</div>
                         <div className="mt-0.5 text-xs text-faint">{c.email}</div>
+                        <Link href={`/admin/clients/${c.id}`} className="mt-1 inline-block text-xs text-accent transition-colors hover:text-[color:var(--accent-hi)]">
+                          Voir le détail
+                        </Link>
                       </td>
                       <td className="px-4 py-5 text-sm text-faint">
                         {new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
