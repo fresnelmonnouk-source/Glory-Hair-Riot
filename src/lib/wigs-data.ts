@@ -1,4 +1,4 @@
-/* Catalogue Glory Hair RIOT — Issue N°01
+/* Catalogue Glory Hair — Issue N°01
  * Source de vérité : tryon-live.jsx › LIVE_WIGS
  * 6 modèles physiquement référencés.
  */

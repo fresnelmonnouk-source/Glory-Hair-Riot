@@ -3,8 +3,8 @@ import { AdminShell } from '@/components/admin/AdminShell';
 
 
 export const metadata: Metadata = {
-  title: 'Back-office · Glory Hair RIOT',
-  description: 'Administration Glory Hair RIOT · Issue N°01.',
+  title: 'Back-office · Glory Hair',
+  description: 'Administration Glory Hair · Issue N°01.',
   robots: { index: false, follow: false },
 };
 

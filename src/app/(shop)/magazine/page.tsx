@@ -4,7 +4,7 @@ import { MagazineRiot } from '@/components/magazine/MagazineRiot';
 
 
 export const metadata: Metadata = {
-  title: 'Magazine · Issue N°01 · Glory Hair RIOT',
+  title: 'Magazine · Issue N°01 · Glory Hair',
   description: 'Le magazine éditorial Issue N°01 Été 2026 : conseils, tendances, la rédac et l\'atelier Paris 9.',
 };
 
