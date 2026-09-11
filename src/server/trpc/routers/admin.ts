@@ -623,7 +623,7 @@ export const adminRouter = router({
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('pack_items')
-        .select('id, wig_id, quantity, display_order, wigs(name, slug)')
+        .select('id, wig_id, quantity, display_order, wigs!pack_items_wig_id_fkey(name, slug)')
         .eq('pack_id', input.packId)
         .order('display_order', { ascending: true });
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });

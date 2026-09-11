@@ -99,7 +99,7 @@ export async function getWigBySlug(slug: string): Promise<Wig | null> {
   if (wig.isPack) {
     const { data: packItems } = await supabase
       .from('pack_items')
-      .select('quantity, wigs(slug, name)')
+      .select('quantity, wigs!pack_items_wig_id_fkey(slug, name)')
       .eq('pack_id', row.id)
       .order('display_order', { ascending: true });
 
