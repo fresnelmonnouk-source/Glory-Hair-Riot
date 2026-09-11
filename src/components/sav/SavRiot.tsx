@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { trpc } from '@/lib/trpc/client';
 
 interface FaqItem { q: string; a: React.ReactNode }
 
@@ -158,12 +159,20 @@ function TrackOrderCard() {
 }
 
 function ContactCard() {
+  // Numéro WhatsApp réel configurable depuis /admin/reglages (avant : codé en
+  // dur, valeur placeholder jamais vérifiée) — carte masquée tant qu'aucun
+  // numéro n'est configuré plutôt que d'afficher un faux contact.
+  const { data } = trpc.siteSettings.getPublic.useQuery();
+  const whatsapp = data?.whatsappNumber;
+
   return (
     <HelpCard title="Nous contacter">
       <div className="mt-3 space-y-1">
         <InfoRow k="Mail" v="hello@gloryhair.fr" href="mailto:hello@gloryhair.fr" />
         <InfoRow k="Tél" v="+33 1 45 22 18 90" href="tel:+33145221890" />
-        <InfoRow k="WhatsApp" v="+33 6 78 12 34 56" href="https://wa.me/33678123456" external />
+        {whatsapp && (
+          <InfoRow k="WhatsApp" v={whatsapp} href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} external />
+        )}
         <InfoRow k="Élodie" v="Chat 24/7" href="/elodie" />
       </div>
     </HelpCard>

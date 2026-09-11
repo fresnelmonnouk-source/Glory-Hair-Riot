@@ -11,6 +11,7 @@ import { tryonRouter } from './routers/tryon';
 import { reviewsRouter } from './routers/reviews';
 import { discountsRouter } from './routers/discounts';
 import { messagesRouter } from './routers/messages';
+import { siteSettingsRouter } from './routers/site-settings';
 
 export const appRouter = router({
   auth: authRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   reviews: reviewsRouter,
   discounts: discountsRouter,
   messages: messagesRouter,
+  siteSettings: siteSettingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

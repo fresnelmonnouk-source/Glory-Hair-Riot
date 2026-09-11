@@ -44,3 +44,14 @@ export async function getStripeWebhookSecret(): Promise<string | null> {
   const { data } = await supabase.from('settings').select('value').eq('key', 'stripe_webhook_secret').maybeSingle();
   return data?.value || process.env.STRIPE_WEBHOOK_SECRET || null;
 }
+
+/* Réglage public (pas un secret) mais `settings` n'a aucune policy SELECT
+   publique (délibéré, migration 006 — la table porte aussi des clés
+   secrètes) : lu ici en service_role puis exposé au client UNIQUEMENT via
+   une query tRPC dédiée qui ne retourne que cette valeur précise
+   (siteSettings.getPublic), jamais la table entière. */
+export async function getWhatsappNumber(): Promise<string | null> {
+  const supabase = await createServerSupabaseClient(true);
+  const { data } = await supabase.from('settings').select('value').eq('key', 'whatsapp_number').maybeSingle();
+  return data?.value || null;
+}

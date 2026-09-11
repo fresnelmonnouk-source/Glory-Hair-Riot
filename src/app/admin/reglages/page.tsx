@@ -25,8 +25,66 @@ export default function AdminReglagesPage() {
     <div className="flex flex-col gap-10">
       <AdminPageHeader title="Réglages" sub="Interrupteurs globaux et paiement" />
       <FeatureFlagsSection />
+      <ContactSettingsSection />
       <PaymentSettingsSection />
     </div>
+  );
+}
+
+function ContactSettingsSection() {
+  const utils = trpc.useUtils();
+  const settingsQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 10_000 });
+  const saveM = trpc.siteSettings.save.useMutation({
+    onSuccess: () => {
+      void utils.siteSettings.getPublic.invalidate();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    },
+  });
+
+  const [whatsapp, setWhatsapp] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  const [prevData, setPrevData] = useState(settingsQ.data);
+  if (settingsQ.data !== prevData) {
+    setPrevData(settingsQ.data);
+    if (settingsQ.data) setWhatsapp(settingsQ.data.whatsappNumber ?? '');
+  }
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    saveM.mutate({ whatsapp_number: whatsapp });
+  }
+
+  return (
+    <section>
+      <p className="eyebrow">Coordonnées</p>
+      <p className="mt-2 max-w-xl text-sm text-muted">
+        Affiché dans la carte « Nous contacter » du SAV — actuellement un numéro codé en dur (non vérifié), à remplacer par le vrai numéro WhatsApp de la boutique.
+      </p>
+
+      <form onSubmit={handleSave} className="mt-4 flex max-w-xl flex-col gap-5 rounded-lg border border-hairline bg-surface p-6">
+        <div>
+          <label htmlFor="whatsapp" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Numéro WhatsApp</label>
+          <input
+            id="whatsapp"
+            type="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            placeholder="+33 6 12 34 56 78"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={saveM.isPending}
+          className="inline-flex w-fit items-center gap-2 self-start rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {saveM.isPending ? '…' : saved ? (<><Check size={16} strokeWidth={2.5} /> Enregistré</>) : 'Enregistrer'}
+        </button>
+      </form>
+    </section>
   );
 }
 
