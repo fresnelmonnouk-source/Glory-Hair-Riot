@@ -12,6 +12,8 @@ import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 type EditingPatch = {
+  name?: string;
+  name_en?: string;
   base_price?: number;
   stock_quantity?: number;
 };
@@ -65,8 +67,18 @@ export default function AdminProduitsPage() {
     setEditing((s) => ({ ...s, [id]: { ...s[id], ...patch } }));
   }
   function save(id: string) {
-    const patch = editing[id];
-    if (!patch || Object.keys(patch).length === 0) return;
+    const raw = editing[id];
+    if (!raw || Object.keys(raw).length === 0) return;
+    // Un nom vidé n'est pas envoyé (pas de mécanisme de suppression de
+    // traduction ici) : name/name_en exigent min(1) côté serveur, une chaîne
+    // vide ferait échouer silencieusement toute la sauvegarde de la ligne.
+    const patch: EditingPatch = { ...raw };
+    if (patch.name !== undefined && patch.name.trim() === '') delete patch.name;
+    if (patch.name_en !== undefined && patch.name_en.trim() === '') delete patch.name_en;
+    if (Object.keys(patch).length === 0) {
+      setEditing((s) => { const c = { ...s }; delete c[id]; return c; });
+      return;
+    }
     updateM.mutate({ productId: id, patch }, {
       onSuccess: () => setEditing((s) => { const c = { ...s }; delete c[id]; return c; }),
     });
@@ -247,10 +259,26 @@ export default function AdminProduitsPage() {
                   const dirty = !!editing[p.id] && Object.keys(editing[p.id] ?? {}).length > 0;
                   const priceEuros = (editing[p.id]?.base_price ?? p.base_price) / 100;
                   const stock = editing[p.id]?.stock_quantity ?? p.stock_quantity;
+                  const name = editing[p.id]?.name ?? p.name;
+                  const nameEn = editing[p.id]?.name_en ?? p.name_en ?? '';
                   return (
                     <tr key={p.id} className="border-b border-hairline last:border-0">
                       <td className="px-6 py-4">
-                        <div className="font-display text-lg text-ink">{p.name}</div>
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setField(p.id, { name: e.target.value })}
+                          aria-label={`Nom FR de ${p.name}`}
+                          className="w-full min-w-[140px] rounded-sm border border-transparent bg-transparent px-1 -mx-1 font-display text-lg text-ink outline-none focus:border-[color:var(--accent)]"
+                        />
+                        <input
+                          type="text"
+                          value={nameEn}
+                          onChange={(e) => setField(p.id, { name_en: e.target.value })}
+                          placeholder="Nom (EN) — non traduit"
+                          aria-label={`Nom EN de ${p.name}`}
+                          className="mt-1 w-full min-w-[140px] rounded-sm border border-transparent bg-transparent px-1 -mx-1 text-xs text-muted outline-none placeholder:italic placeholder:text-faint focus:border-[color:var(--accent)]"
+                        />
                         <div className="mt-0.5 text-xs text-faint">/{p.slug}</div>
                       </td>
                       <td className="px-4 py-4 text-sm text-muted">{p.category ?? 'n/a'}</td>

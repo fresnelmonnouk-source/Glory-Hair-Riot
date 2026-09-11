@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Wig } from '@/lib/wigs-data';
+import type { Locale } from '@/i18n/config';
 
 /* Lecture catalogue réel (table wigs + wig_images, migration 006) — même
    forme (interface Wig) que l'ancien src/lib/wigs-data.ts pour que
@@ -46,16 +47,24 @@ function parseLengthFromName(name: string): number {
   return m ? Number(m[1]) : 0;
 }
 
-function mapRow(row: WigRow): Wig {
+// Nom traduit (migration 016, `wig_translations`) — seul champ de cette
+// table réellement affiché aujourd'hui (description/long_description/
+// meta_description existent en base pour usage futur, mais aucun composant
+// ne les lit actuellement : voir ProduitRiot, generateMetadata construisent
+// leur propre texte depuis cat/style/tone/price). `length` reste dérivé du
+// nom (traduit ou non, les gabarits `14"`/`20"` etc. sont identiques dans
+// les deux langues).
+function mapRow(row: WigRow, translatedName?: string): Wig {
   const swatches = row.swatches && row.swatches.length === 3
     ? (row.swatches as [string, string, string])
     : (['#4a2a3e', '#4a2a3e', '#4a2a3e'] as [string, string, string]);
 
+  const name = translatedName ?? row.name;
   return {
     id: row.slug,
     num: `N°${String(row.display_order ?? 0).padStart(2, '0')}`,
-    name: row.name,
-    length: parseLengthFromName(row.name),
+    name,
+    length: parseLengthFromName(name),
     cat: row.construction_type ?? '',
     style: row.category ?? '',
     tone: row.color ?? '',
@@ -69,7 +78,37 @@ function mapRow(row: WigRow): Wig {
   };
 }
 
-export async function getWigs(): Promise<Wig[]> {
+// Récupère le nom traduit pour `lang`, avec repli explicite sur 'fr' si la
+// ligne manque (jamais de disparition silencieuse d'un produit faute de
+// traduction — décision documentée dans le plan i18n, à l'inverse du bug
+// trouvé chez Sandy Stylish où un `!inner` fait juste disparaître le
+// produit de la locale sans traduction).
+async function fetchTranslatedNames(
+  supabase: ReturnType<typeof publicWigsClient>,
+  wigIds: string[],
+  lang: Locale,
+): Promise<Map<string, string>> {
+  if (wigIds.length === 0) return new Map();
+  const locales = lang === 'fr' ? ['fr'] : ['fr', 'en'];
+  const { data } = await supabase
+    .from('wig_translations')
+    .select('wig_id, locale, name')
+    .in('wig_id', wigIds)
+    .in('locale', locales);
+
+  const names = new Map<string, string>();
+  for (const row of (data ?? []) as { wig_id: string; locale: string; name: string }[]) {
+    if (row.locale === 'fr') names.set(row.wig_id, row.name);
+  }
+  if (lang !== 'fr') {
+    for (const row of (data ?? []) as { wig_id: string; locale: string; name: string }[]) {
+      if (row.locale === lang) names.set(row.wig_id, row.name);
+    }
+  }
+  return names;
+}
+
+export async function getWigs(lang: Locale): Promise<Wig[]> {
   const supabase = publicWigsClient();
   const { data, error } = await supabase
     .from('wigs')
@@ -78,10 +117,12 @@ export async function getWigs(): Promise<Wig[]> {
     .order('display_order', { ascending: true });
 
   if (error || !data) return [];
-  return (data as unknown as WigRow[]).map(mapRow);
+  const rows = data as unknown as WigRow[];
+  const names = await fetchTranslatedNames(supabase, rows.map((r) => r.id), lang);
+  return rows.map((row) => mapRow(row, names.get(row.id)));
 }
 
-export async function getWigBySlug(slug: string): Promise<Wig | null> {
+export async function getWigBySlug(slug: string, lang: Locale): Promise<Wig | null> {
   const supabase = publicWigsClient();
   const { data, error } = await supabase
     .from('wigs')
@@ -92,7 +133,8 @@ export async function getWigBySlug(slug: string): Promise<Wig | null> {
 
   if (error || !data) return null;
   const row = data as unknown as WigRow;
-  const wig = mapRow(row);
+  const names = await fetchTranslatedNames(supabase, [row.id], lang);
+  const wig = mapRow(row, names.get(row.id));
 
   // Composition du pack (migration 015) — manifeste d'affichage seulement,
   // jamais utilisé par le checkout (qui ne connaît que le pack lui-même).

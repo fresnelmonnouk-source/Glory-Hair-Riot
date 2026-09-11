@@ -260,6 +260,15 @@ export const adminRouter = router({
       // jamais payé en ligne (webhook pas encore reçu, ou annulé) gonflerait
       // artificiellement ses ventes affichées.
       const wigIds = (wigs ?? []).map((w) => w.id);
+
+      // Nom EN (migration 016, wig_translations) — best-effort : si la table
+      // n'existe pas encore (migration pas appliquée), on retombe sur
+      // name_en: null plutôt que de casser toute la page /admin/produits.
+      const { data: translations } = wigIds.length === 0
+        ? { data: [] as { wig_id: string; name: string }[] }
+        : await ctx.supabase.from('wig_translations').select('wig_id, name').eq('locale', 'en').in('wig_id', wigIds);
+      const nameEnByWig = new Map((translations ?? []).map((t) => [t.wig_id, t.name]));
+
       const { data: revenueOrders } = await ctx.supabase.from('orders').select('id').or(REVENUE_ORDER_FILTER);
       const revenueOrderIds = (revenueOrders ?? []).map((o) => o.id);
 
@@ -281,6 +290,7 @@ export const adminRouter = router({
 
       return (wigs ?? []).map((w) => ({
         ...w,
+        name_en: nameEnByWig.get(w.id) ?? null,
         sales: statsByWig.get(w.id) ?? { units: 0, revenue: 0 },
       }));
     }),
@@ -453,6 +463,10 @@ export const adminRouter = router({
       productId: z.string().uuid(),
       patch: z.object({
         name: z.string().min(1).max(200).optional(),
+        // Nom anglais (migration 016, wig_translations) — la ligne FR de
+        // cette table reste synchronisée depuis `name` ci-dessus (voir plus
+        // bas) ; la ligne EN n'existe que si l'admin l'a renseignée ici.
+        name_en: z.string().min(1).max(200).optional(),
         base_price: z.number().int().min(0).optional(),
         stock_quantity: z.number().int().min(0).optional(),
         active: z.boolean().optional(),
@@ -460,11 +474,40 @@ export const adminRouter = router({
       }),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { error } = await ctx.supabase
-        .from('wigs')
-        .update({ ...input.patch, updated_at: new Date().toISOString() })
-        .eq('id', input.productId);
-      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      const { name_en, ...wigPatch } = input.patch;
+
+      if (Object.keys(wigPatch).length > 0) {
+        const { error } = await ctx.supabase
+          .from('wigs')
+          .update({ ...wigPatch, updated_at: new Date().toISOString() })
+          .eq('id', input.productId);
+        if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+
+      // Traductions (migration 016) : upsert plutôt qu'update, car la ligne
+      // EN peut ne pas exister encore (le trigger d'auto-seed ne couvre que
+      // le FR à la création — voir 016_wig_translations.sql). `slug` est
+      // requis par la contrainte UNIQUE(locale, slug) : on réutilise celui
+      // de `wigs` (identique dans les deux locales tant que le reste de
+      // l'app ne résout pas encore par slug+locale, cf. Phase 1b en cours).
+      // Colonnes non listées (description, etc.) sont préservées par
+      // Postgres côté ON CONFLICT DO UPDATE — jamais écrasées à NULL.
+      if (input.patch.name !== undefined || name_en !== undefined) {
+        const { data: wigRow } = await ctx.supabase.from('wigs').select('slug').eq('id', input.productId).single();
+        if (wigRow) {
+          if (input.patch.name !== undefined) {
+            await ctx.supabase
+              .from('wig_translations')
+              .upsert({ wig_id: input.productId, locale: 'fr', slug: wigRow.slug, name: input.patch.name }, { onConflict: 'wig_id,locale' });
+          }
+          if (name_en !== undefined) {
+            await ctx.supabase
+              .from('wig_translations')
+              .upsert({ wig_id: input.productId, locale: 'en', slug: wigRow.slug, name: name_en }, { onConflict: 'wig_id,locale' });
+          }
+        }
+      }
+
       return { ok: true };
     }),
 

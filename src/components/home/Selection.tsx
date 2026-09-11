@@ -9,7 +9,7 @@ import type { Locale } from '@/i18n/config';
    statique — mêmes 4 premiers produits par display_order. */
 
 export async function Selection({ lang }: { lang: Locale }) {
-  const wigs = await getWigs();
+  const wigs = await getWigs(lang);
   const featured = wigs.slice(0, 4);
   if (featured.length === 0) return null;
 

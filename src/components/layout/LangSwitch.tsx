@@ -6,10 +6,13 @@ import { locales, type Locale } from '@/i18n/config';
 
 /* Sélecteur de langue — remplace le "FR / EN" statique/décoratif qui
    existait déjà dans NavRiot. Remplace le segment [lang] de l'URL courante
-   (pattern Sandy Stylish). Limite connue (héritée de Sandy, acceptée pour
-   l'instant) : sur une fiche produit, le slug peut différer par locale une
-   fois wig_translations en place (Phase 1b) — à affiner spécifiquement sur
-   cette page-là plutôt que de complexifier ce composant partagé. */
+   (pattern Sandy Stylish). Le risque hérité de Sandy (slug produit différent
+   par locale → 404 sur simple remplacement de segment) est évité PAR DESIGN
+   ici : migration 016 (wig_translations, Phase 1b) backfille le même slug
+   pour 'en' que pour 'fr' tant que getWigs/getWigBySlug n'ont pas de vraie
+   raison de diverger. Si un slug EN distinct est introduit un jour, ce
+   composant devra être revu (résolution du slug de la locale cible avant de
+   construire le lien) — jusque-là, le remplacement naïf reste correct. */
 export function LangSwitch({ lang }: { lang: Locale }) {
   const pathname = usePathname() ?? `/${lang}`;
   const rest = pathname.split('/').slice(2).join('/'); // retire le segment [lang] actuel
