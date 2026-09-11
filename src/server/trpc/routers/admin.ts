@@ -44,6 +44,14 @@ function slugifyTitle(title: string): string {
   return base || 'article';
 }
 
+/* Filtre PostgREST "commande comptée comme CA" — paiement à la livraison dès
+   la commande passée (vente réelle, rien à confirmer en ligne), OU tout
+   moyen de paiement une fois confirmé (paid/shipped/delivered). Exclut
+   toujours les commandes annulées, et les paiements en ligne encore
+   'pending' (webhook pas encore reçu, migration 012 — les compter
+   surestimerait le CA). Partagé entre kpis et getStatistics. */
+const REVENUE_ORDER_FILTER = 'and(payment_method.eq.cod,status.neq.cancelled),status.in.(paid,shipped,delivered)';
+
 /** Ajoute un suffixe numérique (-2, -3, ...) tant que le slug existe déjà en base. */
 async function uniqueArticleSlug(supabase: SupabaseClient, baseSlug: string): Promise<string> {
   let candidate = baseSlug;
@@ -65,15 +73,22 @@ export const adminRouter = router({
     const last24h = new Date(Date.now() - 24 * 3600_000).toISOString();
     const prev24h = new Date(Date.now() - 48 * 3600_000).toISOString();
 
-    // CA + count commandes 24h
+    // CA + count commandes 24h — exclut les paiements en ligne (stripe/
+    // fedapay) encore 'pending' (webhook de confirmation pas encore reçu,
+    // migration 012) pour ne pas surestimer le CA, mais garde le paiement à
+    // la livraison (payment_method='cod') dès la commande passée — c'est
+    // une vente réelle, rien à confirmer en ligne, seul le cash arrive plus
+    // tard. Exclut toujours les commandes annulées.
     const { data: recent } = await supabase
       .from('orders')
       .select('total_cents, created_at')
+      .or(REVENUE_ORDER_FILTER)
       .gte('created_at', last24h);
 
     const { data: prevDay } = await supabase
       .from('orders')
       .select('total_cents')
+      .or(REVENUE_ORDER_FILTER)
       .gte('created_at', prev24h)
       .lt('created_at', last24h);
 
@@ -108,6 +123,92 @@ export const adminRouter = router({
       },
     };
   }),
+
+  // ─── Statistiques avancées (page /admin/analytics) ──
+  // Port du pattern getStatistics de Sandy Stylish, adapté au schéma
+  // wigs/orders/order_items — remplace le stub "Bientôt disponible" (gap
+  // #9 de l'audit de parité).
+  getStatistics: adminProcedure
+    .input(z.object({ days: z.union([z.literal(30), z.literal(90), z.literal(365)]).default(30) }))
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const since = new Date(Date.now() - input.days * 24 * 3600_000).toISOString();
+
+      const { data: orders, error: ordersErr } = await supabase
+        .from('orders')
+        .select('id, status, payment_method, total_cents, created_at')
+        .gte('created_at', since);
+
+      if (ordersErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: ordersErr.message });
+
+      const statusCounts = new Map<string, number>();
+      const revenueOrderIds: string[] = [];
+      let revenue = 0;
+
+      for (const o of orders ?? []) {
+        statusCounts.set(o.status, (statusCounts.get(o.status) ?? 0) + 1);
+        const isRevenue = o.status === 'cancelled'
+          ? false
+          : (o.payment_method === 'cod' || ['paid', 'shipped', 'delivered'].includes(o.status));
+        if (isRevenue) {
+          revenueOrderIds.push(o.id);
+          revenue += o.total_cents ?? 0;
+        }
+      }
+
+      const statusSplit = [...statusCounts.entries()]
+        .map(([status, count]) => ({ status, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const ordersCount = revenueOrderIds.length;
+      const averageBasket = ordersCount > 0 ? Math.round(revenue / ordersCount) : 0;
+
+      if (revenueOrderIds.length === 0) {
+        return { periodDays: input.days, revenue: 0, ordersCount: 0, itemsSold: 0, averageBasket: 0, topProducts: [], categories: [], statusSplit };
+      }
+
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('wig_id, quantity, unit_price_cents, wigs(name, category)')
+        .in('order_id', revenueOrderIds);
+
+      type ItemRow = { wig_id: string; quantity: number; unit_price_cents: number; wigs: { name: string; category: string }[] | null };
+      const rows = (items ?? []) as unknown as ItemRow[];
+
+      let itemsSold = 0;
+      const byWig = new Map<string, { name: string; quantity: number; revenue: number }>();
+      const byCategory = new Map<string, number>();
+
+      for (const it of rows) {
+        const wig = it.wigs?.[0];
+        const name = wig?.name ?? 'Produit supprimé';
+        const qty = it.quantity ?? 0;
+        const lineRevenue = (it.unit_price_cents ?? 0) * qty;
+        itemsSold += qty;
+
+        const entry = byWig.get(it.wig_id) ?? { name, quantity: 0, revenue: 0 };
+        entry.quantity += qty;
+        entry.revenue += lineRevenue;
+        byWig.set(it.wig_id, entry);
+
+        if (wig?.category) {
+          byCategory.set(wig.category, (byCategory.get(wig.category) ?? 0) + qty);
+        }
+      }
+
+      const topProducts = [...byWig.values()]
+        .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
+        .slice(0, 6);
+
+      const categorized = [...byCategory.values()].reduce((s, n) => s + n, 0);
+      const categories = categorized > 0
+        ? [...byCategory.entries()]
+            .map(([code, quantity]) => ({ code, label: code, quantity, pct: Math.round((quantity / categorized) * 100) }))
+            .sort((a, b) => b.quantity - a.quantity)
+        : [];
+
+      return { periodDays: input.days, revenue, ordersCount, itemsSold, averageBasket, topProducts, categories, statusSplit };
+    }),
 
   // ─── Liste commandes (paginée) ──────────────────
   listOrders: adminProcedure
@@ -153,11 +254,22 @@ export const adminRouter = router({
       // select échouait silencieusement (error ignorée), les stats de vente
       // affichaient donc toujours 0 sur /admin/produits. Même bug que celui
       // corrigé sur orderDetails ci-dessus, corrigé ici pour la même raison.
+      //
+      // Uniquement les commandes comptées comme CA (REVENUE_ORDER_FILTER,
+      // même règle que kpis/getStatistics) — sinon un article commandé mais
+      // jamais payé en ligne (webhook pas encore reçu, ou annulé) gonflerait
+      // artificiellement ses ventes affichées.
       const wigIds = (wigs ?? []).map((w) => w.id);
-      const { data: sales } = await ctx.supabase
-        .from('order_items')
-        .select('wig_id, quantity, unit_price_cents')
-        .in('wig_id', wigIds);
+      const { data: revenueOrders } = await ctx.supabase.from('orders').select('id').or(REVENUE_ORDER_FILTER);
+      const revenueOrderIds = (revenueOrders ?? []).map((o) => o.id);
+
+      const { data: sales } = revenueOrderIds.length === 0
+        ? { data: [] }
+        : await ctx.supabase
+            .from('order_items')
+            .select('wig_id, quantity, unit_price_cents')
+            .in('wig_id', wigIds)
+            .in('order_id', revenueOrderIds);
 
       const statsByWig = new Map<string, { units: number; revenue: number }>();
       for (const s of sales ?? []) {

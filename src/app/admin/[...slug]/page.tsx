@@ -14,7 +14,6 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   elodie:     { title: 'Élodie · IA', sub: 'Conversations supervisées, prompts, métriques' },
   contenu:    { title: 'Magazine',    sub: 'Articles Issue N°XX, éditos, planning' },
   promos:     { title: 'Promos',      sub: 'Codes promo, campagnes, A/B test' },
-  analytics:  { title: 'Analytics',   sub: 'CA, conversion, sources, cohortes' },
   reglages:   { title: 'Réglages',    sub: 'Paramètres système, intégrations, équipe' },
 };
 
