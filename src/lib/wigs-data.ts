@@ -17,6 +17,8 @@ export interface Wig {
   rating?: number;
   reviews?: number;
   swatches: [string, string, string]; // 3 hex — pastilles RIOT sur ProductZineCard
+  isPack?: boolean;                    // migration 015 — lot à prix fixe, pas une perruque individuelle
+  packItems?: { slug: string; name: string; quantity: number }[]; // composition, si isPack
 }
 
 export const WIGS: Wig[] = [

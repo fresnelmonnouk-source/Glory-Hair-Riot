@@ -23,6 +23,7 @@ function publicWigsClient() {
 }
 
 interface WigRow {
+  id: string;
   slug: string;
   name: string;
   category: string | null;
@@ -34,10 +35,11 @@ interface WigRow {
   display_order: number | null;
   rating: number | null;
   review_count: number | null;
+  is_pack: boolean;
   wig_images: { image_url: string }[] | null;
 }
 
-const SELECT = 'slug, name, category, color, base_price, construction_type, tag, swatches, display_order, rating, review_count, wig_images(image_url)';
+const SELECT = 'id, slug, name, category, color, base_price, construction_type, tag, swatches, display_order, rating, review_count, is_pack, wig_images(image_url)';
 
 function parseLengthFromName(name: string): number {
   const m = name.match(/(\d+)"/);
@@ -63,6 +65,7 @@ function mapRow(row: WigRow): Wig {
     rating: row.rating ?? undefined,
     reviews: row.review_count ?? undefined,
     swatches,
+    isPack: row.is_pack,
   };
 }
 
@@ -88,5 +91,21 @@ export async function getWigBySlug(slug: string): Promise<Wig | null> {
     .maybeSingle();
 
   if (error || !data) return null;
-  return mapRow(data as unknown as WigRow);
+  const row = data as unknown as WigRow;
+  const wig = mapRow(row);
+
+  // Composition du pack (migration 015) — manifeste d'affichage seulement,
+  // jamais utilisé par le checkout (qui ne connaît que le pack lui-même).
+  if (wig.isPack) {
+    const { data: packItems } = await supabase
+      .from('pack_items')
+      .select('quantity, wigs(slug, name)')
+      .eq('pack_id', row.id)
+      .order('display_order', { ascending: true });
+
+    wig.packItems = ((packItems ?? []) as unknown as { quantity: number; wigs: { slug: string; name: string }[] | null }[])
+      .map((r) => ({ slug: r.wigs?.[0]?.slug ?? '', name: r.wigs?.[0]?.name ?? '', quantity: r.quantity }));
+  }
+
+  return wig;
 }

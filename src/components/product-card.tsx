@@ -20,9 +20,15 @@ export function ProductCard({ wig }: { wig: Wig }) {
       </div>
 
       <h3 className="mt-4 font-display text-xl text-ink">
-        {wig.name.replace(/(\d+")/, '').trim()} <span className="text-faint">{wig.length}″</span>
+        {wig.isPack ? wig.name : (
+          <>{wig.name.replace(/(\d+")/, '').trim()} <span className="text-faint">{wig.length}″</span></>
+        )}
       </h3>
-      <p className="mt-1 line-clamp-1 text-sm text-faint">{wig.style} · {wig.tone}</p>
+      {wig.isPack ? (
+        <p className="mt-1 line-clamp-1 text-sm text-faint">Pack</p>
+      ) : (
+        <p className="mt-1 line-clamp-1 text-sm text-faint">{wig.style} · {wig.tone}</p>
+      )}
       <p className="mt-2 text-sm text-accent">{wig.price}€</p>
     </Link>
   );

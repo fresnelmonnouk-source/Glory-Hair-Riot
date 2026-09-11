@@ -12,6 +12,7 @@ const ITEMS: { href: string; label: string }[] = [
   { href: '/admin', label: 'Tableau de bord' },
   { href: '/admin/commandes', label: 'Commandes' },
   { href: '/admin/produits', label: 'Produits' },
+  { href: '/admin/packs', label: 'Packs' },
   { href: '/admin/stock', label: 'Stock' },
   { href: '/admin/clients', label: 'Clients' },
   { href: '/admin/messages', label: 'Messages' },

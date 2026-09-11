@@ -452,6 +452,7 @@ export const adminRouter = router({
     .input(z.object({
       productId: z.string().uuid(),
       patch: z.object({
+        name: z.string().min(1).max(200).optional(),
         base_price: z.number().int().min(0).optional(),
         stock_quantity: z.number().int().min(0).optional(),
         active: z.boolean().optional(),
@@ -491,6 +492,7 @@ export const adminRouter = router({
       display_order: z.number().int().default(0),
       active: z.boolean().default(true),
       featured: z.boolean().default(false),
+      is_pack: z.boolean().default(false),
     }))
     .mutation(async ({ ctx, input }) => {
       const { data: existing, error: checkError } = await ctx.supabase
@@ -522,6 +524,7 @@ export const adminRouter = router({
           display_order: input.display_order,
           active: input.active,
           featured: input.featured,
+          is_pack: input.is_pack,
         })
         .select()
         .single();
@@ -584,6 +587,74 @@ export const adminRouter = router({
         }
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
       }
+      return { ok: true };
+    }),
+
+  // ─── Packs (migration 015) ───────────────────────
+  // Un pack = une ligne `wigs` (is_pack=true, prix fixé directement par
+  // l'admin — jamais calculé depuis les composants, cf. commentaire de la
+  // migration). `pack_items` n'est qu'un manifeste de composition, jamais
+  // touché par le checkout. Création/édition/suppression du pack lui-même :
+  // réutilise createProduct/updateProduct/deleteProduct ci-dessus.
+  listPacks: adminProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('wigs')
+      .select('id, slug, name, base_price, stock_quantity, active')
+      .eq('is_pack', true)
+      .order('created_at', { ascending: false });
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+    return data ?? [];
+  }),
+
+  // Candidats pour composer un pack : tout produit qui n'est PAS lui-même
+  // un pack (pas de pack imbriqué dans un pack).
+  listPackableProducts: adminProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('wigs')
+      .select('id, slug, name')
+      .eq('is_pack', false)
+      .order('name', { ascending: true });
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+    return data ?? [];
+  }),
+
+  getPackItems: adminProcedure
+    .input(z.object({ packId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('pack_items')
+        .select('id, wig_id, quantity, display_order, wigs(name, slug)')
+        .eq('pack_id', input.packId)
+        .order('display_order', { ascending: true });
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      return data ?? [];
+    }),
+
+  // Remplace toute la composition d'un pack en un coup (delete + re-insert) —
+  // suffisant pour un formulaire admin qui soumet la liste complète à chaque
+  // sauvegarde, pas de diff incrémental nécessaire.
+  setPackItems: adminProcedure
+    .input(z.object({
+      packId: z.string().uuid(),
+      items: z.array(z.object({
+        wigId: z.string().uuid(),
+        quantity: z.number().int().min(1).max(50),
+      })).max(30),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error: delError } = await ctx.supabase.from('pack_items').delete().eq('pack_id', input.packId);
+      if (delError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: delError.message });
+
+      if (input.items.length === 0) return { ok: true };
+
+      const rows = input.items.map((it, i) => ({
+        pack_id: input.packId,
+        wig_id: it.wigId,
+        quantity: it.quantity,
+        display_order: i,
+      }));
+      const { error: insError } = await ctx.supabase.from('pack_items').insert(rows);
+      if (insError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: insError.message });
       return { ok: true };
     }),
 

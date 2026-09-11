@@ -27,6 +27,104 @@ const DENSITIES = [
 ] as const;
 
 export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
+  // Pack (migration 015) : pas de coloris/longueur/densité (ce n'est pas
+  // une perruque individuelle), prix fixe, composition affichée à la place.
+  // Branche séparée pour ne RIEN changer au rendu perruque existant.
+  if (wig.isPack) return <PackView wig={wig} />;
+
+  return <WigView wig={wig} similarPool={similarPool} />;
+}
+
+function PackView({ wig }: { wig: Wig }) {
+  const router = useRouter();
+  const { user } = useSession();
+  const [added, setAdded] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+  const addItem = useCartStore((s) => s.addItem);
+
+  const addFavoriteM = trpc.wishlist.addBySlug.useMutation({
+    onSuccess: () => setFavorited(true),
+  });
+
+  function handleAddToCart() {
+    addItem({
+      wig_id: wig.id,
+      variant_id: null,
+      quantity: 1,
+      price_at_added: wig.price,
+      name: wig.name,
+      image_url: wig.img,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  }
+
+  function handleAddFavorite() {
+    if (!user) {
+      router.push(`/connexion?redirect=/perruque/${wig.id}`);
+      return;
+    }
+    addFavoriteM.mutate({ slug: wig.id });
+  }
+
+  return (
+    <section className="mx-auto max-w-[1180px] px-6 py-12 md:px-11 md:py-16">
+      <Link href="/catalogue" className="text-sm text-muted transition-colors hover:text-ink">
+        ← Retour au catalogue
+      </Link>
+
+      <div className="mt-8 grid gap-12 md:grid-cols-2">
+        <ProductGallery images={[wig.img]} alt={wig.name} />
+
+        <div>
+          <p className="eyebrow">Pack</p>
+          <h1 className="display mt-2 text-4xl text-ink md:text-5xl">{wig.name}</h1>
+          <p className="mt-4 text-lg text-accent tabular-nums">{wig.price}€</p>
+
+          {wig.packItems && wig.packItems.length > 0 && (
+            <div className="mt-8">
+              <p className="eyebrow">Contenu du pack</p>
+              <ul className="mt-3 space-y-2">
+                {wig.packItems.map((item) => (
+                  <li key={item.slug} className="flex items-center justify-between gap-3 rounded-sm border border-hairline px-4 py-3 text-sm">
+                    <Link href={`/perruque/${item.slug}`} className="text-ink transition-colors hover:text-accent">{item.name}</Link>
+                    <span className="text-faint">×{item.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="rounded-[2px] bg-accent px-8 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
+            >
+              {added ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={16} /> Ajouté
+                </span>
+              ) : 'Ajouter au sac'}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddFavorite}
+            disabled={favorited || addFavoriteM.isPending}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink disabled:cursor-default disabled:hover:text-muted"
+            aria-label="Ajouter aux favoris"
+          >
+            <Heart aria-hidden size={16} className={favorited ? 'fill-[color:var(--accent)] text-accent' : ''} /> {favorited ? 'Dans vos favoris' : 'Ajouter aux favoris'}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WigView({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
   const router = useRouter();
   const { user } = useSession();
   const [selectedColor, setSelectedColor] = useState(0);
