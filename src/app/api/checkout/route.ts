@@ -234,6 +234,7 @@ export async function POST(request: Request) {
       CustomerEmail: body.address.email,
       Total: (totalCents / 100).toFixed(2).replace('.', ','),
       PaymentMethod: paymentLabel,
+      StatusLabel: body.payment_method === 'cod' ? 'Payé à la livraison' : 'En attente de paiement',
       ItemCount: itemsForEmail.length,
       ItemsList: itemsForEmail.map(i => `${i.name} ×${i.quantity}`).join(', '),
       OrderURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/admin/commandes`,

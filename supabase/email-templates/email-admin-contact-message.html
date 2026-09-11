@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[ADMIN] Nouveau message · Glory Hair</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap');
+  body { margin: 0; padding: 0; background: #1c0f15; color: #ede7d6; font-family: 'Work Sans', system-ui, sans-serif; }
+  .container { max-width: 600px; margin: 0 auto; background: #1c0f15; }
+  .header { background: #150c10; padding: 20px 24px; text-align: center; border-bottom: 1px solid rgba(237, 231, 214, 0.12); }
+  .header h2 { font-family: 'Work Sans', system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #ede7d6; margin: 0; }
+  .content { padding: 28px 24px; }
+  p { font-size: 14px; line-height: 1.6; margin: 0 0 12px; }
+  .muted { color: rgba(237, 231, 214, 0.6); font-size: 12px; }
+  .message-box { background: #2a1720; border: 1px solid rgba(237, 231, 214, 0.12); border-left: 3px solid #6D071A; padding: 16px 18px; margin: 16px 0; white-space: pre-wrap; font-size: 14px; }
+  .btn { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: #6D071A; color: #ffffff; padding: 12px 22px; text-decoration: none; border-radius: 2px; margin: 16px 6px 0 0; }
+  .btn-outline { background: transparent; color: #ede7d6; border: 1px solid rgba(237, 231, 214, 0.4); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>Nouveau message de contact</h2>
+  </div>
+  <div class="content">
+    <p><strong>{{ .Subject }}</strong><br><span class="muted">{{ .ReceivedDate }}</span></p>
+    <p>De : <strong>{{ .SenderName }}</strong> · <a href="mailto:{{ .SenderEmail }}" style="color:#ede7d6;">{{ .SenderEmail }}</a></p>
+    <div class="message-box">{{ .Message }}</div>
+    <div>
+      <a href="mailto:{{ .SenderEmail }}?subject=Re: {{ .Subject }}" class="btn">Répondre</a>
+      <a href="{{ .OrderURL }}" class="btn btn-outline">Voir dans l'admin</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

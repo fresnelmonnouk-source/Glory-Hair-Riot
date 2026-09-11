@@ -14,6 +14,7 @@ const ITEMS: { href: string; label: string }[] = [
   { href: '/admin/produits', label: 'Produits' },
   { href: '/admin/stock', label: 'Stock' },
   { href: '/admin/clients', label: 'Clients' },
+  { href: '/admin/messages', label: 'Messages' },
   { href: '/admin/avis', label: 'Avis' },
   { href: '/admin/elodie', label: 'Élodie · IA' },
   { href: '/admin/contenu', label: 'Magazine' },

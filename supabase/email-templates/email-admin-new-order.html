@@ -39,7 +39,7 @@
         <td>{{ .CustomerName }}<br><span class="muted">{{ .CustomerEmail }}</span></td>
         <td>{{ .Total }} €</td>
         <td>{{ .PaymentMethod }}</td>
-        <td><span class="status-pill">Payée</span></td>
+        <td><span class="status-pill">{{ .StatusLabel }}</span></td>
       </tr>
     </table>
     <p class="muted">Produits ({{ .ItemCount }}) : {{ .ItemsList }}</p>
