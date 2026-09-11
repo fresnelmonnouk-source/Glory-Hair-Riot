@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import type { Locale } from '@/i18n/config';
 
 /* Port structurel 1:1 du HERO de sandy-stylish/src/app/(site)/[lang]/page.tsx
    (grid 2 col, eyebrow + display h1 + CTA primaire+lien texte, 2 plaques
    photo superposées à droite) — photos wigs au lieu de bijoux/parfum. */
 
-export function HeroRiot() {
+export function HeroRiot({ lang }: { lang: Locale }) {
   return (
     <section className="mx-auto grid max-w-[1180px] items-center gap-12 px-6 py-20 md:grid-cols-2 md:py-28">
       <div>
@@ -20,14 +21,14 @@ export function HeroRiot() {
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-6">
           <Link
-            href="/essayage"
+            href={`/${lang}/essayage`}
             className="inline-flex items-center gap-2 rounded-[2px] bg-accent px-7 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
           >
             Essayer en direct
             <span aria-hidden>→</span>
           </Link>
           <Link
-            href="/catalogue"
+            href={`/${lang}/catalogue`}
             className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent"
           >
             Voir le catalogue

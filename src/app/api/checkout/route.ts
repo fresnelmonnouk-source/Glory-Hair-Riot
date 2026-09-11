@@ -68,6 +68,7 @@ const BodySchema = z.object({
   shipping: z.enum(['standard', 'express', 'atelier']),
   payment_method: z.enum(['stripe', 'fedapay', 'cod']),
   discount_code: z.string().min(1).max(60).optional().nullable(),
+  lang: z.enum(['fr', 'en']).default('fr'), // locale du visiteur (migration i18n) — pour les URLs de retour (merci/checkout/compte)
 });
 
 const SHIPPING_CENTS: Record<'standard' | 'express' | 'atelier', number> = {
@@ -264,7 +265,7 @@ export async function POST(request: Request) {
         ShippingCountry: body.address.pays,
         EstimatedDelivery: body.shipping === 'express' ? '24h' : body.shipping === 'standard' ? '48h' : 'Sur RDV',
         PointsEarned: pointsEarned,
-        OrderURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/compte?tab=commandes`,
+        OrderURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/${body.lang}/compte?tab=commandes`,
       },
     }).catch((e) => console.error('[checkout] email send error:', e));
 
@@ -283,8 +284,8 @@ export async function POST(request: Request) {
         currency: 'eur',
         orderId,
         orderRef: ref,
-        successUrl: `${appUrl}/merci?ref=${ref}`,
-        cancelUrl: `${appUrl}/checkout`,
+        successUrl: `${appUrl}/${body.lang}/merci?ref=${ref}`,
+        cancelUrl: `${appUrl}/${body.lang}/checkout`,
         customerEmail: body.address.email,
       });
       await admin.from('orders').update({ stripe_payment_intent_id: paymentIntentId }).eq('id', orderId);

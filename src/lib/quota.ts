@@ -66,8 +66,8 @@ export function writeLastKnownAnonQuota(state: LastKnownAnonQuota): void {
 }
 
 /** Destination du CTA marketing selon l'état de quota connu (bloqué = dernier essai gratuit déjà consommé/refusé par le serveur). */
-export function getLiveCtaHref(blocked: boolean): string {
-  return blocked ? '/essayage/live?mode=paid&price=499' : '/essayage/live?mode=free';
+export function getLiveCtaHref(blocked: boolean, lang: string = 'fr'): string {
+  return blocked ? `/${lang}/essayage/live?mode=paid&price=499` : `/${lang}/essayage/live?mode=free`;
 }
 
 /** Label du CTA marketing selon l'état de quota connu. */

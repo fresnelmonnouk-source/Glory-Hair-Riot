@@ -168,7 +168,7 @@ export default function AdminContenuPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap items-center justify-end gap-3">
                           {a.status === 'published' && (
-                            <Link href={`/magazine/${a.slug}`} target="_blank" className="text-sm text-muted transition-colors hover:text-ink">
+                            <Link href={`/fr/magazine/${a.slug}`} target="_blank" className="text-sm text-muted transition-colors hover:text-ink">
                               Aperçu ↗
                             </Link>
                           )}

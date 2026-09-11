@@ -15,6 +15,7 @@
 
 import Link from 'next/link';
 import type { Article } from '@/lib/articles/service';
+import { useLang } from '@/i18n/client';
 
 const TEAM = [
   { role: 'Direction artistique', name: 'Olivia M.', bio: 'Couleurs, mise en page, direction visuelle.' },
@@ -29,6 +30,7 @@ function estimateReadingMinutes(content: string): number {
 }
 
 export function MagazineRiot({ articles }: { articles: Article[] }) {
+  const lang = useLang();
   return (
     <>
       <section className="mx-auto max-w-[1180px] px-6 pt-16 md:pt-20">
@@ -41,10 +43,10 @@ export function MagazineRiot({ articles }: { articles: Article[] }) {
           Glory Hair, édition été 2026.
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
-          <Link href="/catalogue" className="rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+          <Link href={`/${lang}/catalogue`} className="rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
             Voir le catalogue
           </Link>
-          <Link href="/essayage" className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
+          <Link href={`/${lang}/essayage`} className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
             Essayer une perruque
           </Link>
         </div>
@@ -61,7 +63,7 @@ export function MagazineRiot({ articles }: { articles: Article[] }) {
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
-            {articles.map((article) => <ArticleCard key={article.id} article={article} />)}
+            {articles.map((article) => <ArticleCard key={article.id} article={article} lang={lang} />)}
           </div>
         )}
       </section>
@@ -87,9 +89,9 @@ export function MagazineRiot({ articles }: { articles: Article[] }) {
   );
 }
 
-function ArticleCard({ article }: { article: Article }) {
+function ArticleCard({ article, lang }: { article: Article; lang: import('@/i18n/config').Locale }) {
   return (
-    <Link href={`/magazine/${article.slug}`} className="group block">
+    <Link href={`/${lang}/magazine/${article.slug}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface">
         {article.cover_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element

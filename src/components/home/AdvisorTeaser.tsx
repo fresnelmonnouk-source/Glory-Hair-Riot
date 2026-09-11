@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { WIG_BY_ID } from '@/lib/wigs-data';
+import type { Locale } from '@/i18n/config';
 
 /* Port structurel 1:1 de la section "LE CONSEILLER" de sandy-stylish home
    page.tsx (2 col : texte+CTA / mockup conversation) — mappé sur Élodie,
    l'équivalent GloryHairRiot du conseiller IA Sandy Stylish. */
 
-export function AdvisorTeaser() {
+export function AdvisorTeaser({ lang }: { lang: Locale }) {
   const preview = WIG_BY_ID['ginger'];
 
   return (
@@ -21,7 +22,7 @@ export function AdvisorTeaser() {
             recommande les pièces du catalogue qui correspondent vraiment.
           </p>
           <Link
-            href="/elodie"
+            href={`/${lang}/elodie`}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
           >
             Discuter avec Élodie

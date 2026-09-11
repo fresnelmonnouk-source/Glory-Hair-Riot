@@ -11,6 +11,7 @@ import { trpc } from '@/lib/trpc/client';
 import { ProductCard } from '@/components/product-card';
 import { ProductGallery } from './ProductGallery';
 import { AvisSection } from './AvisSection';
+import type { Locale } from '@/i18n/config';
 
 /* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/produit/[slug]/page.tsx
    (retour catalogue, grid 2 col galerie+infos, lien avis, dl attributs, section
@@ -26,16 +27,16 @@ const DENSITIES = [
   { value: 200, label: '200%' },
 ] as const;
 
-export function ProduitRiot({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
+export function ProduitRiot({ wig, similarPool, lang }: { wig: Wig; similarPool: Wig[]; lang: Locale }) {
   // Pack (migration 015) : pas de coloris/longueur/densité (ce n'est pas
   // une perruque individuelle), prix fixe, composition affichée à la place.
   // Branche séparée pour ne RIEN changer au rendu perruque existant.
-  if (wig.isPack) return <PackView wig={wig} />;
+  if (wig.isPack) return <PackView wig={wig} lang={lang} />;
 
-  return <WigView wig={wig} similarPool={similarPool} />;
+  return <WigView wig={wig} similarPool={similarPool} lang={lang} />;
 }
 
-function PackView({ wig }: { wig: Wig }) {
+function PackView({ wig, lang }: { wig: Wig; lang: Locale }) {
   const router = useRouter();
   const { user } = useSession();
   const [added, setAdded] = useState(false);
@@ -61,7 +62,7 @@ function PackView({ wig }: { wig: Wig }) {
 
   function handleAddFavorite() {
     if (!user) {
-      router.push(`/connexion?redirect=/perruque/${wig.id}`);
+      router.push(`/${lang}/connexion?redirect=/${lang}/perruque/${wig.id}`);
       return;
     }
     addFavoriteM.mutate({ slug: wig.id });
@@ -69,7 +70,7 @@ function PackView({ wig }: { wig: Wig }) {
 
   return (
     <section className="mx-auto max-w-[1180px] px-6 py-12 md:px-11 md:py-16">
-      <Link href="/catalogue" className="text-sm text-muted transition-colors hover:text-ink">
+      <Link href={`/${lang}/catalogue`} className="text-sm text-muted transition-colors hover:text-ink">
         ← Retour au catalogue
       </Link>
 
@@ -87,7 +88,7 @@ function PackView({ wig }: { wig: Wig }) {
               <ul className="mt-3 space-y-2">
                 {wig.packItems.map((item) => (
                   <li key={item.slug} className="flex items-center justify-between gap-3 rounded-sm border border-hairline px-4 py-3 text-sm">
-                    <Link href={`/perruque/${item.slug}`} className="text-ink transition-colors hover:text-accent">{item.name}</Link>
+                    <Link href={`/${lang}/perruque/${item.slug}`} className="text-ink transition-colors hover:text-accent">{item.name}</Link>
                     <span className="text-faint">×{item.quantity}</span>
                   </li>
                 ))}
@@ -124,7 +125,7 @@ function PackView({ wig }: { wig: Wig }) {
   );
 }
 
-function WigView({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
+function WigView({ wig, similarPool, lang }: { wig: Wig; similarPool: Wig[]; lang: Locale }) {
   const router = useRouter();
   const { user } = useSession();
   const [selectedColor, setSelectedColor] = useState(0);
@@ -157,7 +158,7 @@ function WigView({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
 
   function handleAddFavorite() {
     if (!user) {
-      router.push(`/connexion?redirect=/perruque/${wig.id}`);
+      router.push(`/${lang}/connexion?redirect=/${lang}/perruque/${wig.id}`);
       return;
     }
     addFavoriteM.mutate({ slug: wig.id });
@@ -165,7 +166,7 @@ function WigView({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
 
   return (
     <section className="mx-auto max-w-[1180px] px-6 py-12 md:px-11 md:py-16">
-      <Link href="/catalogue" className="text-sm text-muted transition-colors hover:text-ink">
+      <Link href={`/${lang}/catalogue`} className="text-sm text-muted transition-colors hover:text-ink">
         ← Retour au catalogue
       </Link>
 
@@ -285,7 +286,7 @@ function WigView({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
                 </span>
               ) : 'Ajouter au sac'}
             </button>
-            <Link href="/essayage" className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
+            <Link href={`/${lang}/essayage`} className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
               Essayer en direct
             </Link>
           </div>
@@ -328,7 +329,7 @@ function WigView({ wig, similarPool }: { wig: Wig; similarPool: Wig[] }) {
           <h2 className="display text-3xl text-ink">Vous aimerez aussi</h2>
           <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
             {similar.map((w) => (
-              <ProductCard key={w.id} wig={w} />
+              <ProductCard key={w.id} wig={w} lang={lang} />
             ))}
           </div>
         </div>

@@ -7,6 +7,7 @@
    dédiée). */
 
 import Link from 'next/link';
+import { useLang } from '@/i18n/client';
 import { useMemo } from 'react';
 import { useSession } from '@/hooks/use-session';
 
@@ -43,6 +44,7 @@ const PTS_LOG = [
 ];
 
 export function FideliteRiot() {
+  const lang = useLang();
   const { profile, loading } = useSession();
 
   const USER = useMemo(() => {
@@ -146,7 +148,7 @@ export function FideliteRiot() {
                 </div>
               ))}
             </div>
-            <Link href="/compte" className="mt-5 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
+            <Link href={`/${lang}/compte`} className="mt-5 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
               Parrainer une amie
             </Link>
           </Card>

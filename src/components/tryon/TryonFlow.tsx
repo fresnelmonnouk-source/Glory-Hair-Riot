@@ -35,6 +35,8 @@
  */
 
 import Link from 'next/link';
+import { useLang } from '@/i18n/client';
+import type { Locale } from '@/i18n/config';
 import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import { Check } from 'lucide-react';
 import { WIGS, type Wig } from '@/lib/wigs-data';
@@ -183,6 +185,7 @@ interface LogEntry { t: string; msg: string; level: LogLevel }
 
 export function TryonFlow() {
   /* État ----------------------------------------- */
+  const lang = useLang();
   const debugEnabled = useDebugEnabled();
   const { user } = useSession();
   const isLoggedIn = Boolean(user);
@@ -480,7 +483,7 @@ export function TryonFlow() {
       <Stepper step={step} sessionCount={sessionCount} totalCostCents={totalCostCents} quotaLabel={quotaPillLabel} quotaHot={quotaBlocked} />
 
       <main className="relative flex flex-1 justify-center px-4 py-10 md:px-8 md:py-14">
-        {step === 0 && <ScreenIntro onStart={() => setStep(1)} />}
+        {step === 0 && <ScreenIntro onStart={() => setStep(1)} lang={lang} />}
         {step === 1 && <ScreenPhoto
           personBlob={personBlob}
           personUrl={personUrl}
@@ -569,7 +572,7 @@ function Pill({ label, value, hot }: { label: string; value: string; hot?: boole
 
 // ─── SCREEN 00 : INTRO ──────────────────────────
 
-function ScreenIntro({ onStart }: { onStart: () => void }) {
+function ScreenIntro({ onStart, lang }: { onStart: () => void; lang: Locale }) {
   const heroWigA = WIGS.find((w) => w.id === 'ginger') ?? WIGS[0]!;
   const heroWigB = WIGS.find((w) => w.id === 'bordeaux') ?? WIGS[1] ?? WIGS[0]!;
 
@@ -594,7 +597,7 @@ function ScreenIntro({ onStart }: { onStart: () => void }) {
           >
             Commencer <span aria-hidden>→</span>
           </button>
-          <Link href="/essayage" className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
+          <Link href={`/${lang}/essayage`} className="text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent">
             Comment ça marche ?
           </Link>
         </div>

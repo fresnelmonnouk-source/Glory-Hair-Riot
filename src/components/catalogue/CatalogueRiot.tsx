@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { type Wig } from '@/lib/wigs-data';
 import { ProductCard } from '@/components/product-card';
+import type { Locale } from '@/i18n/config';
 
 /* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/[category]/page.tsx
    (eyebrow + display h1 + compteur, grille grid-cols-2/3/4 gap-x-6 gap-y-12) —
@@ -24,7 +25,7 @@ const FILTERS: ReadonlyArray<{ id: FilterId; label: string; match: (w: Wig) => b
   { id: 'budget', label: 'Sous 300€', match: (w) => w.price < 300 },
 ] as const;
 
-export function CatalogueRiot({ wigs }: { wigs: Wig[] }) {
+export function CatalogueRiot({ wigs, lang }: { wigs: Wig[]; lang: Locale }) {
   const [activeId, setActiveId] = useState<FilterId>('all');
 
   const { filtered, counts } = useMemo(() => {
@@ -80,7 +81,7 @@ export function CatalogueRiot({ wigs }: { wigs: Wig[] }) {
       ) : (
         <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((w) => (
-            <ProductCard key={w.id} wig={w} />
+            <ProductCard key={w.id} wig={w} lang={lang} />
           ))}
         </div>
       )}

@@ -14,32 +14,23 @@ import { WIG_BY_ID } from '@/lib/wigs-data';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
 import { ProductCard } from '@/components/product-card';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/dictionaries';
 
 const TIER_LABEL: Record<string, string> = { bronze: 'Bronze', argent: 'Argent', or: 'Or', vip: 'VIP' };
 
 type TabId = 'commandes' | 'essayages' | 'souhaits' | 'fidelite' | 'adresses' | 'paiement' | 'preferences' | 'sav';
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'commandes', label: 'Commandes' },
-  { id: 'essayages', label: 'Essayages' },
-  { id: 'souhaits', label: 'Souhaits' },
-  { id: 'fidelite', label: 'Glory Club' },
-  { id: 'adresses', label: 'Adresses' },
-  { id: 'paiement', label: 'Paiement' },
-  { id: 'preferences', label: 'Profil' },
-  { id: 'sav', label: 'SAV' },
-];
-
 const STATUS_LABEL: Record<string, string> = {
   pending: 'En attente', paid: 'Payée', shipped: 'En route', delivered: 'Livrée', cancelled: 'Annulée',
 };
 
-const TAB_IDS = TABS.map((t) => t.id);
+const TAB_IDS: TabId[] = ['commandes', 'essayages', 'souhaits', 'fidelite', 'adresses', 'paiement', 'preferences', 'sav'];
 function isTabId(v: string | null): v is TabId {
   return !!v && (TAB_IDS as string[]).includes(v);
 }
 
-export function CompteRiot() {
+export function CompteRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams?.get('tab') ?? null;
@@ -48,10 +39,21 @@ export function CompteRiot() {
   const [signingOut, setSigningOut] = useState(false);
   const { user, profile, loading, signOut } = useSession();
 
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'commandes', label: dict.account.tabOrders },
+    { id: 'essayages', label: dict.account.tabTryOns },
+    { id: 'souhaits', label: dict.account.tabWishlist },
+    { id: 'fidelite', label: dict.account.tabLoyalty },
+    { id: 'adresses', label: dict.account.tabAddresses },
+    { id: 'paiement', label: dict.account.tabPayment },
+    { id: 'preferences', label: dict.account.tabProfile },
+    { id: 'sav', label: dict.account.tabSupport },
+  ];
+
   async function handleSignOut() {
     setSigningOut(true);
     await signOut();
-    router.replace('/');
+    router.replace(`/${lang}`);
     router.refresh();
   }
 
@@ -73,7 +75,7 @@ export function CompteRiot() {
   return (
     <section className="mx-auto max-w-[1040px] px-6 py-12 md:px-11 md:py-16">
       <div className="flex flex-wrap items-center justify-between gap-6">
-        <h1 className="display text-4xl text-ink md:text-5xl">Mon compte</h1>
+        <h1 className="display text-4xl text-ink md:text-5xl">{dict.account.title}</h1>
         <div className="flex items-center gap-4">
           <span className="hidden text-sm text-muted sm:inline">
             {displayName ? `${displayName} · ` : ''}{profile?.email ?? user?.email}
@@ -83,7 +85,7 @@ export function CompteRiot() {
             onClick={() => setConfirmOpen(true)}
             className="inline-flex items-center gap-2 rounded-sm border border-line px-4 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] hover:text-accent"
           >
-            Déconnexion
+            {dict.account.signOut}
           </button>
         </div>
       </div>
@@ -107,27 +109,27 @@ export function CompteRiot() {
       </nav>
 
       <div className="mt-8">
-        {activeTab === 'commandes' && <OrdersPanel />}
-        {activeTab === 'essayages' && <EssaisPanel />}
-        {activeTab === 'souhaits' && <WishlistPanel />}
+        {activeTab === 'commandes' && <OrdersPanel lang={lang} dict={dict} />}
+        {activeTab === 'essayages' && <EssaisPanel lang={lang} dict={dict} />}
+        {activeTab === 'souhaits' && <WishlistPanel lang={lang} dict={dict} />}
         {activeTab === 'fidelite' && <FidelitePanel points={profile?.points ?? 0} />}
         {activeTab === 'adresses' && <ComingSoon title="Adresses" body="La gestion des adresses de livraison arrive bientôt." />}
         {activeTab === 'paiement' && <ComingSoon title="Moyens de paiement" body="La gestion des moyens de paiement arrive bientôt." />}
-        {activeTab === 'preferences' && <ProfilePanel email={user?.email} fullName={profile?.full_name} newsletter={profile?.newsletter} tier={profile?.tier} />}
-        {activeTab === 'sav' && <ComingSoon title="SAV" body="Besoin d'aide sur une commande ou une perruque ?" linkHref="/sav" linkLabel="Aller au centre SAV" />}
+        {activeTab === 'preferences' && <ProfilePanel lang={lang} dict={dict} email={user?.email} fullName={profile?.full_name} newsletter={profile?.newsletter} tier={profile?.tier} />}
+        {activeTab === 'sav' && <ComingSoon title="SAV" body="Besoin d'aide sur une commande ou une perruque ?" linkHref={`/${lang}/sav`} linkLabel="Aller au centre SAV" />}
       </div>
 
       {confirmOpen && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm" onClick={() => setConfirmOpen(false)}>
           <div className="w-full max-w-[420px] rounded-lg border border-hairline bg-surface p-7 md:p-8" onClick={(e) => e.stopPropagation()}>
-            <h2 className="display mt-1 text-2xl text-ink">Se déconnecter ?</h2>
-            <p className="mt-3 leading-relaxed text-muted">Vous devrez vous reconnecter pour accéder à votre compte.</p>
+            <h2 className="display mt-1 text-2xl text-ink">{dict.account.signOutConfirmTitle}</h2>
+            <p className="mt-3 leading-relaxed text-muted">{dict.account.signOutConfirmBody}</p>
             <div className="mt-7 flex justify-end gap-3">
               <button type="button" onClick={() => setConfirmOpen(false)} className="rounded-sm border border-line px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
-                Annuler
+                {dict.account.cancel}
               </button>
               <button type="button" disabled={signingOut} onClick={() => void handleSignOut()} className="rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60">
-                {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
+                {signingOut ? '…' : dict.account.signOut}
               </button>
             </div>
           </div>
@@ -163,13 +165,13 @@ function ComingSoon({ title, body, linkHref, linkLabel }: { title: string; body:
   );
 }
 
-function OrdersPanel() {
+function OrdersPanel({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const { data, isLoading, error } = trpc.orders.list.useQuery({ page: 1, limit: 20 });
 
-  if (isLoading) return <p className="py-10 text-center text-sm text-faint">Chargement des commandes…</p>;
+  if (isLoading) return <p className="py-10 text-center text-sm text-faint">{dict.common.loading}</p>;
   if (error) return <p className="py-10 text-center text-sm text-danger">{error.message}</p>;
   if (!data || data.orders.length === 0) {
-    return <EmptyCard title="Aucune commande" body="Vos commandes apparaîtront ici." linkHref="/catalogue" linkLabel="Voir le catalogue" />;
+    return <EmptyCard title={dict.account.noOrders} body={dict.account.noOrdersBody} linkHref={`/${lang}/catalogue`} linkLabel={dict.cart.seeCatalogue} />;
   }
 
   return (
@@ -195,13 +197,13 @@ function OrdersPanel() {
   );
 }
 
-function EssaisPanel() {
+function EssaisPanel({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const { data, isLoading, error } = trpc.tryon.history.list.useQuery({ limit: 20 });
 
-  if (isLoading) return <p className="py-10 text-center text-sm text-faint">Chargement des essais…</p>;
+  if (isLoading) return <p className="py-10 text-center text-sm text-faint">{dict.common.loading}</p>;
   if (error) return <p className="py-10 text-center text-sm text-danger">{error.message}</p>;
   if (!data || data.length === 0) {
-    return <EmptyCard title="Aucun essai" body="Vos essais virtuels apparaîtront ici." linkHref="/essayage" linkLabel="Essayer une perruque" />;
+    return <EmptyCard title={dict.account.noTryOns} body={dict.account.noTryOnsBody} linkHref={`/${lang}/essayage`} linkLabel="Essayer une perruque" />;
   }
 
   return (
@@ -214,7 +216,7 @@ function EssaisPanel() {
         const d = new Date(e.created_at);
         return (
           <li key={e.id}>
-            <Link href={slug ? `/perruque/${slug}` : '/essayage'} className="flex items-center gap-4 rounded-lg border border-hairline bg-app p-5 transition-colors hover:border-[color:var(--border-accent)]">
+            <Link href={slug ? `/${lang}/perruque/${slug}` : `/${lang}/essayage`} className="flex items-center gap-4 rounded-lg border border-hairline bg-app p-5 transition-colors hover:border-[color:var(--border-accent)]">
               {(e.snapshot_url || wig?.img) && (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={e.snapshot_url ?? wig?.img ?? ''} alt={wigName} className="h-14 w-14 shrink-0 rounded-full object-cover" />
@@ -232,13 +234,13 @@ function EssaisPanel() {
   );
 }
 
-function WishlistPanel() {
+function WishlistPanel({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const { data, isLoading, error } = trpc.wishlist.list.useQuery();
 
-  if (isLoading) return <p className="py-10 text-center text-sm text-faint">Chargement des favoris…</p>;
+  if (isLoading) return <p className="py-10 text-center text-sm text-faint">{dict.common.loading}</p>;
   if (error) return <p className="py-10 text-center text-sm text-danger">{error.message}</p>;
   if (!data || data.length === 0) {
-    return <EmptyCard title="Aucun favori" body="Ajoutez des perruques à vos favoris depuis le catalogue." linkHref="/catalogue" linkLabel="Voir le catalogue" />;
+    return <EmptyCard title={dict.account.noWishlist} body={dict.account.noWishlistBody} linkHref={`/${lang}/catalogue`} linkLabel={dict.cart.seeCatalogue} />;
   }
 
   const wigs = data
@@ -251,7 +253,7 @@ function WishlistPanel() {
 
   return (
     <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
-      {wigs.map((w) => <ProductCard key={w.id} wig={w} />)}
+      {wigs.map((w) => <ProductCard key={w.id} wig={w} lang={lang} />)}
     </div>
   );
 }
@@ -302,7 +304,7 @@ function FidelitePanel({ points }: { points: number }) {
   );
 }
 
-function ProfilePanel({ email, fullName, newsletter, tier }: { email?: string | null; fullName?: string | null; newsletter?: boolean; tier?: string }) {
+function ProfilePanel({ lang, dict, email, fullName, newsletter, tier }: { lang: Locale; dict: Dictionary; email?: string | null; fullName?: string | null; newsletter?: boolean; tier?: string }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="rounded-lg border border-hairline bg-app p-6">
@@ -332,8 +334,8 @@ function ProfilePanel({ email, fullName, newsletter, tier }: { email?: string | 
       <div className="rounded-lg border border-hairline bg-app p-6">
         <p className="eyebrow">Sécurité</p>
         <p className="mt-4 leading-relaxed text-muted">Modifiez votre mot de passe à tout moment. Vous resterez connecté·e après le changement.</p>
-        <Link href="/compte/mot-de-passe" className="mt-5 inline-flex rounded-sm border border-input px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
-          Changer mon mot de passe
+        <Link href={`/${lang}/compte/mot-de-passe`} className="mt-5 inline-flex rounded-sm border border-input px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
+          {dict.account.changePassword}
         </Link>
       </div>
     </div>

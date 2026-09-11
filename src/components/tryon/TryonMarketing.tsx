@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
 import { ANON_TRIAL_LIMIT, readLastKnownAnonQuota, getLiveCtaHref, getLiveCtaLabel, type LastKnownAnonQuota } from '@/lib/quota';
+import { useLang } from '@/i18n/client';
 
 function Pip({ used }: { used: boolean }) {
   return (
@@ -31,6 +32,7 @@ function Pip({ used }: { used: boolean }) {
 }
 
 export function TryonMarketing() {
+  const lang = useLang();
   const { user, loading: sessionLoading } = useSession();
   const isLoggedIn = Boolean(user);
 
@@ -120,7 +122,7 @@ export function TryonMarketing() {
                 Soit 3 essais Premium offerts au total. Plus votre historique gardé, vos favoris
                 sauvés et l&apos;accès au Glory Club.
               </p>
-              <Link href="/connexion" className="mt-3 inline-flex rounded-sm border border-input px-4 py-2 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
+              <Link href={`/${lang}/connexion`} className="mt-3 inline-flex rounded-sm border border-input px-4 py-2 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]">
                 Créer mon compte
               </Link>
             </div>
@@ -133,7 +135,7 @@ export function TryonMarketing() {
           </p>
 
           <Link
-            href={getLiveCtaHref(blocked)}
+            href={getLiveCtaHref(blocked, lang)}
             className="mt-6 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
           >
             {getLiveCtaLabel(blocked)}

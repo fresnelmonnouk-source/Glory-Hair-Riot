@@ -1,14 +1,18 @@
 import Link from 'next/link';
 import type { Wig } from '@/lib/wigs-data';
+import type { Locale } from '@/i18n/config';
 
 /* Port structurel 1:1 de sandy-stylish/src/components/product-card.tsx
    (aspect-[4/5] bg-surface, hover scale, font-display text-xl, prix en
    text-accent) — favoris omis ici (déjà géré ailleurs via trpc.wishlist,
-   pas une primitive partagée côté Sandy sur ce composant précis). */
+   pas une primitive partagée côté Sandy sur ce composant précis). `lang`
+   requis (pas optionnel) : tsc doit forcer la mise à jour de chaque
+   appelant lors de la migration i18n plutôt que de silencieusement
+   retomber sur 'fr' quelque part. */
 
-export function ProductCard({ wig }: { wig: Wig }) {
+export function ProductCard({ wig, lang }: { wig: Wig; lang: Locale }) {
   return (
-    <Link href={`/perruque/${wig.id}`} className="group block">
+    <Link href={`/${lang}/perruque/${wig.id}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

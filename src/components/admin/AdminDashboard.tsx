@@ -98,7 +98,7 @@ export function AdminDashboard() {
           <ul className="mt-6 divide-y divide-hairline">
             {topProducts.map((p, i) => (
               <li key={p.slug}>
-                <Link href={`/perruque/${p.slug}`} target="_blank" className="group flex items-center gap-4 py-4 transition-colors">
+                <Link href={`/fr/perruque/${p.slug}`} target="_blank" className="group flex items-center gap-4 py-4 transition-colors">
                   <span className="w-6 shrink-0 text-sm text-faint tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                   <span className="font-display text-lg text-ink group-hover:text-accent">{p.name}</span>
                   <span className="ml-auto text-sm text-faint">{p.sales.units} ventes</span>

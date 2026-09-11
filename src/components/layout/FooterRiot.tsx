@@ -2,59 +2,65 @@
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/dictionaries';
 
 /* Port structurel 1:1 de sandy-stylish/src/components/site-footer.tsx
    (grid-cols-[1.4fr_repeat(4,1fr)], colonnes eyebrow, bas de page légal) —
    1ère colonne = newsletter (fonctionnalité existante GloryHairRiot,
-   Sandy n'en a pas) au lieu du seul texte de marque. */
+   Sandy n'en a pas) au lieu du seul texte de marque. `lang`/`dict` reçus
+   depuis [lang]/layout.tsx (pattern Sandy, pas de context). */
 
-const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
-  {
-    title: 'Boutique',
-    links: [
-      { label: 'Catalogue', href: '/catalogue' },
-      { label: 'Nouveautés', href: '/catalogue?filtre=nouveautes' },
-      { label: 'Conseil Élodie', href: '/elodie' },
-    ],
-  },
-  {
-    title: 'La maison',
-    links: [
-      { label: 'Notre histoire', href: '/sav/atelier' },
-      { label: 'Livraison', href: '/sav/livraison' },
-      { label: 'Contact', href: '/sav/contact' },
-      { label: 'Magazine', href: '/magazine' },
-    ],
-  },
-  {
-    title: 'Aide',
-    links: [
-      { label: "Centre d'aide", href: '/sav' },
-      { label: 'FAQ', href: '/sav' },
-      { label: 'Essayage virtuel', href: '/essayage' },
-      { label: 'Retours', href: '/sav/retours' },
-    ],
-  },
-  {
-    title: 'Compte',
-    links: [
-      { label: 'Commandes', href: '/compte' },
-      { label: 'Favoris', href: '/compte?tab=souhaits' },
-    ],
-  },
-];
-
-const LEGAL: { label: string; href: string }[] = [
-  { label: 'Mentions légales', href: '/sav' },
-  { label: 'CGU / CGV', href: '/sav' },
-  { label: 'Confidentialité', href: '/sav' },
-];
-
-export function FooterRiot() {
+export function FooterRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
+    {
+      title: dict.footer.colBoutique,
+      links: [
+        { label: dict.nav.catalogue, href: `/${lang}/catalogue` },
+        { label: dict.footer.nouveautes, href: `/${lang}/catalogue?filtre=nouveautes` },
+        { label: dict.footer.conseilElodie, href: `/${lang}/elodie` },
+      ],
+    },
+    {
+      title: dict.footer.colMaison,
+      links: [
+        { label: dict.footer.notreHistoire, href: `/${lang}/sav/atelier` },
+        { label: dict.footer.livraison, href: `/${lang}/sav/livraison` },
+        { label: dict.footer.contact, href: `/${lang}/sav/contact` },
+        { label: dict.nav.magazine, href: `/${lang}/magazine` },
+      ],
+    },
+    {
+      title: dict.footer.colAide,
+      links: [
+        { label: dict.footer.centreAide, href: `/${lang}/sav` },
+        { label: dict.footer.faq, href: `/${lang}/sav` },
+        { label: dict.footer.essayageVirtuel, href: `/${lang}/essayage` },
+        { label: dict.footer.retours, href: `/${lang}/sav/retours` },
+      ],
+    },
+    {
+      title: dict.footer.colCompte,
+      links: [
+        { label: dict.footer.commandes, href: `/${lang}/compte` },
+        { label: dict.nav.favoris, href: `/${lang}/compte?tab=souhaits` },
+      ],
+    },
+  ];
+
+  // TODO Phase 2c (rebrand) : pages légales réelles pas encore construites,
+  // ces 3 liens restent sur /sav (FAQ) en attendant, comme avant cette
+  // migration i18n — ne pas introduire de lien mort.
+  const LEGAL: { label: string; href: string }[] = [
+    { label: dict.footer.mentionsLegales, href: `/${lang}/sav` },
+    { label: dict.footer.cgv, href: `/${lang}/sav` },
+    { label: dict.footer.confidentialite, href: `/${lang}/sav` },
+  ];
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -88,25 +94,25 @@ export function FooterRiot() {
       <div className="mx-auto max-w-[1180px] px-6 py-16">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <p className="font-logo text-2xl tracking-[0.02em] text-ink">Glory Hair</p>
+            <p className="font-logo text-2xl tracking-[0.02em] text-ink">{dict.brand}</p>
             <p className="mt-3 max-w-[280px] text-sm leading-relaxed text-faint">
-              Perruques cheveux humains 100% Remy, tirées à la main dans notre atelier Paris 9.
+              {dict.footer.tagline}
             </p>
             {submitted ? (
-              <p className="mt-4 text-sm text-accent">Inscrit·e ! Merci, à très vite.</p>
+              <p className="mt-4 text-sm text-accent">{dict.footer.inscrit}</p>
             ) : (
               <form onSubmit={onSubmit} className="mt-4 flex max-w-[280px] border-b border-line">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="votre@adresse.email"
+                  placeholder={dict.footer.emailPlaceholder}
                   required
-                  aria-label="Adresse email"
+                  aria-label={dict.footer.emailPlaceholder}
                   className="flex-1 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-faint"
                 />
                 <button type="submit" disabled={submitting} className="text-sm text-accent">
-                  {submitting ? '…' : "S'inscrire"}
+                  {submitting ? '…' : dict.footer.sInscrire}
                 </button>
               </form>
             )}
@@ -130,7 +136,7 @@ export function FooterRiot() {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-hairline pt-6 text-xs text-faint sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} Glory Hair. Tous droits réservés.</p>
+          <p>© {year} {dict.brand}. {dict.footer.droitsReserves}</p>
           <ul className="flex flex-wrap gap-4">
             {LEGAL.map((l) => (
               <li key={l.label}>

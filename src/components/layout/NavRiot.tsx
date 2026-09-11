@@ -7,20 +7,17 @@ import { useEffect, useState } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/dictionaries';
+import { LangSwitch } from './LangSwitch';
 
 /* Port structurel 1:1 de sandy-stylish/src/components/site-header.tsx
    (header sticky h-16, logo font-logo, nav gap-7, actions à droite
-   séparées par "/") — adapté à GloryHairRiot (pas de multi-devise/langue
-   réelle, wishlist + panier au lieu de favoris + panier). */
+   séparées par "/") — adapté à GloryHairRiot (wishlist + panier au lieu de
+   favoris + panier). `lang`/`dict` reçus en props depuis [lang]/layout.tsx
+   (pattern Sandy : pas de context, chaque route re-fournit ces valeurs). */
 
-const NAV: ReadonlyArray<readonly [string, string]> = [
-  ['/catalogue', 'Catalogue'],
-  ['/essayage', 'Essayage'],
-  ['/elodie', 'Conseil Élodie'],
-  ['/magazine', 'Magazine'],
-];
-
-export function NavRiot() {
+export function NavRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const pathname = usePathname() ?? '/';
   const cartCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
   const { user, profile, loading } = useSession();
@@ -30,8 +27,15 @@ export function NavRiot() {
     staleTime: 30_000,
   });
 
-  const accountHref = user ? '/compte' : '/connexion';
-  const accountLabel = user ? (prenom ?? 'Mon compte') : 'Connexion';
+  const NAV: ReadonlyArray<readonly [string, string]> = [
+    [`/${lang}/catalogue`, dict.nav.catalogue],
+    [`/${lang}/essayage`, dict.nav.essayage],
+    [`/${lang}/elodie`, dict.nav.elodie],
+    [`/${lang}/magazine`, dict.nav.magazine],
+  ];
+
+  const accountHref = user ? `/${lang}/compte` : `/${lang}/connexion`;
+  const accountLabel = user ? (prenom ?? dict.nav.monCompte) : dict.nav.connexion;
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -55,8 +59,8 @@ export function NavRiot() {
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-app/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center gap-8 px-6">
-        <Link href="/" className="font-logo text-[22px] leading-none tracking-[0.02em] text-ink md:text-[30px]">
-          Glory Hair
+        <Link href={`/${lang}`} className="font-logo text-[22px] leading-none tracking-[0.02em] text-ink md:text-[30px]">
+          {dict.brand}
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm md:flex">
@@ -69,24 +73,22 @@ export function NavRiot() {
 
         <div className="ml-auto flex items-center gap-4 text-sm">
           <div className="hidden items-center gap-4 md:flex">
-            <span className="text-muted">FR</span>
-            <span className="text-faint">/</span>
-            <span className="text-muted">EN</span>
-            <Link href="/compte?tab=souhaits" className="text-muted transition-colors hover:text-ink">
-              Favoris{user ? ` (${wishlistCount.data ?? 0})` : ''}
+            <LangSwitch lang={lang} />
+            <Link href={`/${lang}/compte?tab=souhaits`} className="text-muted transition-colors hover:text-ink">
+              {dict.nav.favoris}{user ? ` (${wishlistCount.data ?? 0})` : ''}
             </Link>
             <Link href={accountHref} className="text-muted transition-colors hover:text-ink">
               {loading ? '…' : accountLabel}
             </Link>
-            <Link href="/panier" className="text-muted transition-colors hover:text-ink">
-              Panier ({cartCount})
+            <Link href={`/${lang}/panier`} className="text-muted transition-colors hover:text-ink">
+              {dict.nav.panier} ({cartCount})
             </Link>
           </div>
           <div className="flex items-center gap-3 md:hidden">
-            <Link href="/panier" className="text-ink">Panier ({cartCount})</Link>
+            <Link href={`/${lang}/panier`} className="text-ink">{dict.nav.panier} ({cartCount})</Link>
             <button
               type="button"
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menuOpen ? dict.nav.fermerMenu : dict.nav.ouvrirMenu}
               aria-expanded={menuOpen}
               className="text-ink"
               onClick={() => setMenuOpen((v) => !v)}
@@ -106,7 +108,8 @@ export function NavRiot() {
           ))}
           <div className="mt-6 flex flex-col gap-3 text-sm">
             <Link href={accountHref} className="text-muted">{loading ? '…' : accountLabel}</Link>
-            <Link href="/compte?tab=souhaits" className="text-muted">Favoris{user ? ` (${wishlistCount.data ?? 0})` : ''}</Link>
+            <Link href={`/${lang}/compte?tab=souhaits`} className="text-muted">{dict.nav.favoris}{user ? ` (${wishlistCount.data ?? 0})` : ''}</Link>
+            <LangSwitch lang={lang} />
           </div>
         </div>
       )}

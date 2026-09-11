@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { CheckCircle, Star } from 'lucide-react';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
+import { useLang } from '@/i18n/client';
 
 const PAGE_SIZE = 10;
 
@@ -33,6 +34,7 @@ function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 export function AvisSection({ slug }: { slug: string }) {
+  const lang = useLang();
   const { user } = useSession();
   const [offset, setOffset] = useState(0);
   const [rating, setRating] = useState(5);
@@ -118,7 +120,7 @@ export function AvisSection({ slug }: { slug: string }) {
             <>
               <p className="mt-3 text-sm leading-relaxed text-muted">Connectez-vous pour laisser un avis sur ce produit.</p>
               <Link
-                href={`/connexion?redirect=/perruque/${slug}%23avis`}
+                href={`/${lang}/connexion?redirect=/${lang}/perruque/${slug}%23avis`}
                 className="mt-5 inline-flex rounded-sm border border-input px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]"
               >
                 Se connecter

@@ -8,6 +8,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLang } from '@/i18n/client';
 import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { WIGS, type Wig } from '@/lib/wigs-data';
@@ -45,6 +46,7 @@ function findRecommendedWig(text: string): Wig | undefined {
 }
 
 export function ElodieRiot() {
+  const lang = useLang();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'hello',
@@ -148,8 +150,8 @@ export function ElodieRiot() {
 
           <div className="flex-1 space-y-3 overflow-y-auto pt-4">
             {messages.map((m) => (
-              <MessageBubble key={m.id} message={m} onQuickReply={(reply) => {
-                if (reply === "Lancer l'essai") { router.push('/essayage'); return; }
+              <MessageBubble key={m.id} message={m} lang={lang} onQuickReply={(reply) => {
+                if (reply === "Lancer l'essai") { router.push(`/${lang}/essayage`); return; }
                 sendMessage(reply);
               }} />
             ))}
@@ -185,7 +187,7 @@ export function ElodieRiot() {
   );
 }
 
-function MessageBubble({ message, onQuickReply }: { message: Message; onQuickReply: (reply: string) => void }) {
+function MessageBubble({ message, lang, onQuickReply }: { message: Message; lang: string; onQuickReply: (reply: string) => void }) {
   const isUser = message.role === 'user';
   const router = useRouter();
 
@@ -202,7 +204,7 @@ function MessageBubble({ message, onQuickReply }: { message: Message; onQuickRep
 
       {!isUser && message.recommended && (
         <Link
-          href={`/perruque/${message.recommended.id}`}
+          href={`/${lang}/perruque/${message.recommended.id}`}
           className="flex max-w-[88%] items-center gap-3 rounded-lg border border-hairline bg-app px-3 py-2.5 transition-colors hover:border-[color:var(--border-accent)]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -221,7 +223,7 @@ function MessageBubble({ message, onQuickReply }: { message: Message; onQuickRep
               key={qr}
               type="button"
               onClick={() => {
-                if (qr === 'Voir la fiche') { router.push(`/perruque/${message.recommended!.id}`); return; }
+                if (qr === 'Voir la fiche') { router.push(`/${lang}/perruque/${message.recommended!.id}`); return; }
                 onQuickReply(qr);
               }}
               className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition-colors hover:border-[color:var(--border-accent)] hover:text-ink"

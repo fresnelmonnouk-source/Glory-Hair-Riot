@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { useCartStore, type CartItem } from '@/stores/cart.store';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 import { trpc } from '@/lib/trpc/client';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/dictionaries';
 
 const TVA_RATE = 0.20;
 
@@ -34,7 +36,7 @@ function metaLine(item: CartItem): string {
   return `${tone} · ${size}″ · ${density}%`;
 }
 
-export function PanierRiot() {
+export function PanierRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
@@ -80,18 +82,17 @@ export function PanierRiot() {
   if (items.length === 0) {
     return (
       <section className="mx-auto max-w-[960px] px-6 py-20 md:py-28">
-        <h1 className="display text-4xl text-ink md:text-5xl">Votre sac</h1>
+        <h1 className="display text-4xl text-ink md:text-5xl">{dict.cart.title}</h1>
         <div className="mt-16 flex flex-col items-center text-center">
-          <p className="display text-2xl text-ink">Votre sac est vide.</p>
+          <p className="display text-2xl text-ink">{dict.cart.emptyTitle}</p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
-            Pas encore de pièce choisie. 6 perruques tirées brin par brin vous attendent
-            dans Issue N°01.
+            {dict.cart.emptyBody}
           </p>
           <Link
-            href="/catalogue"
+            href={`/${lang}/catalogue`}
             className="mt-8 inline-flex items-center gap-2 rounded-[2px] bg-accent px-7 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
           >
-            Voir le catalogue
+            {dict.cart.seeCatalogue}
             <span aria-hidden>→</span>
           </Link>
         </div>
@@ -101,7 +102,7 @@ export function PanierRiot() {
 
   return (
     <section className="mx-auto max-w-[960px] px-6 py-12 md:py-16">
-      <h1 className="display text-4xl text-ink md:text-5xl">Votre sac</h1>
+      <h1 className="display text-4xl text-ink md:text-5xl">{dict.cart.title}</h1>
 
       <div className="mt-12 grid gap-10 md:grid-cols-[1fr_340px] md:gap-14">
         <ul>
@@ -111,7 +112,7 @@ export function PanierRiot() {
             const size = parseVariant(item.variant_id).size ?? wig?.length ?? '';
             return (
               <li key={item.id} className={`flex items-center gap-5 py-6 ${i > 0 ? 'border-t border-hairline' : ''}`}>
-                <Link href={wig ? `/perruque/${wig.id}` : '#'} className="shrink-0" aria-label={name}>
+                <Link href={wig ? `/${lang}/perruque/${wig.id}` : '#'} className="shrink-0" aria-label={name}>
                   <div className="h-[84px] w-[84px] overflow-hidden rounded-sm bg-surface">
                     {item.image_url ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
@@ -121,7 +122,7 @@ export function PanierRiot() {
                 </Link>
 
                 <div className="min-w-0 flex-1">
-                  <Link href={wig ? `/perruque/${wig.id}` : '#'} className="font-display text-xl text-ink transition-colors hover:text-accent">
+                  <Link href={wig ? `/${lang}/perruque/${wig.id}` : '#'} className="font-display text-xl text-ink transition-colors hover:text-accent">
                     {name} {size}″
                   </Link>
                   <p className="mt-1 text-[13px] text-faint">{metaLine(item)}</p>
@@ -131,7 +132,7 @@ export function PanierRiot() {
                   <button
                     type="button"
                     onClick={() => (item.quantity <= 1 ? removeItem(item.id) : updateQuantity(item.id, item.quantity - 1))}
-                    aria-label={`Diminuer la quantité, ${name}`}
+                    aria-label={`${dict.cart.decreaseQty}, ${name}`}
                     className="px-3 py-2 text-muted transition-colors hover:text-accent"
                   >
                     −
@@ -140,7 +141,7 @@ export function PanierRiot() {
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    aria-label={`Augmenter la quantité, ${name}`}
+                    aria-label={`${dict.cart.increaseQty}, ${name}`}
                     className="px-3 py-2 text-muted transition-colors hover:text-accent"
                   >
                     +
@@ -168,52 +169,52 @@ export function PanierRiot() {
           <div className="rounded-lg border border-hairline bg-app p-6">
             <dl className="space-y-3 text-sm">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-muted">Sous-total</dt>
+                <dt className="text-muted">{dict.cart.subtotal}</dt>
                 <dd className="text-ink tabular-nums">{subtotal.toFixed(2)}€</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-muted">Livraison</dt>
-                <dd className="text-ink">Gratuite</dd>
+                <dt className="text-muted">{dict.cart.shipping}</dt>
+                <dd className="text-ink">{dict.cart.free}</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-muted">dont TVA</dt>
+                <dt className="text-muted">{dict.cart.vatIncluded}</dt>
                 <dd className="text-ink tabular-nums">{tva.toFixed(2)}€</dd>
               </div>
               {discountCode && (
                 <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-muted">Réduction ({discountCode})</dt>
+                  <dt className="text-muted">{dict.cart.discount} ({discountCode})</dt>
                   <dd className="text-[color:var(--success)] tabular-nums">−{discountEuros.toFixed(2)}€</dd>
                 </div>
               )}
             </dl>
 
             <div className="mt-5 flex items-baseline justify-between gap-4 border-t border-hairline pt-5">
-              <span className="text-lg text-ink">Total</span>
+              <span className="text-lg text-ink">{dict.cart.total}</span>
               <span className="text-lg text-accent tabular-nums">{total.toFixed(2)}€</span>
             </div>
 
             <Link
-              href="/checkout"
+              href={`/${lang}/checkout`}
               className="mt-6 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
             >
-              Commander
+              {dict.cart.checkout}
             </Link>
 
-            <Link href="/catalogue" className="mt-4 block text-center text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline">
-              Continuer mes achats
+            <Link href={`/${lang}/catalogue`} className="mt-4 block text-center text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline">
+              {dict.cart.continueShopping}
             </Link>
 
             {discountCode ? (
               <div className="mt-6 flex items-center justify-between gap-2 border-t border-hairline pt-5 text-sm">
                 <span className="text-ink">
-                  Code <b className="text-accent">{discountCode}</b> appliqué
+                  {dict.cart.promoCode} <b className="text-accent">{discountCode}</b> {dict.cart.promoApplied}
                 </span>
                 <button
                   type="button"
                   onClick={removePromo}
                   className="text-xs text-faint underline-offset-4 transition-colors hover:text-ink hover:underline"
                 >
-                  Retirer
+                  {dict.cart.remove}
                 </button>
               </div>
             ) : (
@@ -221,8 +222,8 @@ export function PanierRiot() {
                 <input
                   value={promo}
                   onChange={(e) => setPromo(e.target.value)}
-                  placeholder="Code promo"
-                  aria-label="Code promo"
+                  placeholder={dict.cart.promoCode}
+                  aria-label={dict.cart.promoCode}
                   disabled={validateM.isPending}
                   className="flex-1 rounded-sm border border-input bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-faint disabled:opacity-60"
                 />

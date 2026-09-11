@@ -17,6 +17,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
 import { WIG_BY_ID } from '@/lib/wigs-data';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/dictionaries';
 
 const TVA_RATE = 0.20;
 
@@ -51,7 +53,7 @@ const COUNTRIES = ['France', 'Belgique', 'Suisse', 'Luxembourg', 'Canada', "Côt
 const INPUT_CLASS =
   'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-[color:var(--accent)] focus:outline-none';
 
-export function CheckoutRiot() {
+export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const router = useRouter();
   const { user, profile } = useSession();
   const items = useCartStore((s) => s.items);
@@ -69,8 +71,8 @@ export function CheckoutRiot() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (items.length === 0) router.replace('/panier');
-  }, [items.length, router]);
+    if (items.length === 0) router.replace(`/${lang}/panier`);
+  }, [items.length, router, lang]);
 
   // Checkout invité : formulaire vide par défaut. Si une session existe,
   // préremplit email/nom pour éviter de retaper une info déjà connue —
@@ -129,12 +131,13 @@ export function CheckoutRiot() {
           shipping,
           payment_method: payment,
           discount_code: discountCode ?? undefined,
+          lang,
         }),
       });
       const json = await r.json();
       if (!r.ok) {
         if (r.status === 401) {
-          router.push('/connexion?redirect=/checkout');
+          router.push(`/${lang}/connexion?redirect=/${lang}/checkout`);
           return;
         }
         if (json.error === 'DISCOUNT_INVALID') {
@@ -153,7 +156,7 @@ export function CheckoutRiot() {
         window.location.href = json.redirectUrl;
         return;
       }
-      router.push(`/merci?ref=${json.ref}`);
+      router.push(`/${lang}/merci?ref=${json.ref}`);
     } catch {
       setError('Connexion impossible. Vérifiez votre réseau.');
       setSubmitting(false);
@@ -163,18 +166,18 @@ export function CheckoutRiot() {
   if (items.length === 0) {
     return (
       <section className="mx-auto max-w-[900px] px-6 py-16">
-        <h1 className="display text-4xl text-ink md:text-5xl">Checkout</h1>
+        <h1 className="display text-4xl text-ink md:text-5xl">{dict.checkout.title}</h1>
       </section>
     );
   }
 
   return (
     <section className="mx-auto max-w-[900px] px-6 py-12 md:py-16">
-      <h1 className="display text-4xl text-ink md:text-5xl">Checkout</h1>
+      <h1 className="display text-4xl text-ink md:text-5xl">{dict.checkout.title}</h1>
 
       <form onSubmit={onSubmit} className="mt-10 grid gap-10 md:grid-cols-[1fr_360px] md:gap-14">
         <div>
-          <p className="eyebrow">Contact</p>
+          <p className="eyebrow">{dict.checkout.contact}</p>
           <div className="mt-4">
             <input
               type="email" required value={address.email} onChange={(e) => set('email', e.target.value)}
@@ -182,7 +185,7 @@ export function CheckoutRiot() {
             />
           </div>
 
-          <p className="eyebrow mt-10">Adresse de livraison</p>
+          <p className="eyebrow mt-10">{dict.checkout.deliveryAddress}</p>
           <div className="mt-4 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <input required value={address.prenom} onChange={(e) => set('prenom', e.target.value)} aria-label="Prénom" placeholder="Prénom" className={INPUT_CLASS} autoComplete="given-name" />
@@ -201,7 +204,7 @@ export function CheckoutRiot() {
             </div>
           </div>
 
-          <p className="eyebrow mt-10">Livraison</p>
+          <p className="eyebrow mt-10">{dict.checkout.delivery}</p>
           <div className="mt-4 space-y-3">
             {SHIPPING_OPTIONS.map((opt) => {
               const selected = shipping === opt.id;
@@ -223,7 +226,7 @@ export function CheckoutRiot() {
             })}
           </div>
 
-          <p className="eyebrow mt-10">Paiement</p>
+          <p className="eyebrow mt-10">{dict.checkout.payment}</p>
           <div className="mt-4 space-y-3">
             {PAYMENT_OPTIONS.map((opt) => {
               const selected = payment === opt.id;
@@ -244,8 +247,7 @@ export function CheckoutRiot() {
 
           {payment !== 'cod' && (
             <div className="mt-4 rounded-sm border border-hairline bg-surface px-4 py-3.5 text-xs leading-relaxed text-muted">
-              Vous serez redirigé·e vers une page de paiement sécurisée pour finaliser votre
-              transaction.
+              {dict.checkout.onlinePaymentNotice}
             </div>
           )}
         </div>
@@ -266,27 +268,27 @@ export function CheckoutRiot() {
 
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-muted">Sous-total</dt>
+                <dt className="text-muted">{dict.cart.subtotal}</dt>
                 <dd className="text-ink tabular-nums">{subtotal.toFixed(2)}€</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-muted">Livraison</dt>
-                <dd className="text-ink tabular-nums">{shippingPrice === 0 ? 'Gratuite' : `${shippingPrice.toFixed(2)}€`}</dd>
+                <dt className="text-muted">{dict.cart.shipping}</dt>
+                <dd className="text-ink tabular-nums">{shippingPrice === 0 ? dict.cart.free : `${shippingPrice.toFixed(2)}€`}</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-muted">dont TVA</dt>
+                <dt className="text-muted">{dict.cart.vatIncluded}</dt>
                 <dd className="text-ink tabular-nums">{tva.toFixed(2)}€</dd>
               </div>
               {discountCode && (
                 <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-muted">Réduction ({discountCode})</dt>
+                  <dt className="text-muted">{dict.cart.discount} ({discountCode})</dt>
                   <dd className="text-[color:var(--success)] tabular-nums">−{discountEuros.toFixed(2)}€</dd>
                 </div>
               )}
             </dl>
 
             <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-hairline pt-4">
-              <span className="text-lg text-ink">Total</span>
+              <span className="text-lg text-ink">{dict.cart.total}</span>
               <span className="text-lg text-accent tabular-nums">{total.toFixed(2)}€</span>
             </div>
 
@@ -295,13 +297,13 @@ export function CheckoutRiot() {
               disabled={submitting || !addressValid}
               className="mt-4 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
             >
-              {submitting ? 'Traitement…' : `Confirmer · ${total.toFixed(2)}€`}
+              {submitting ? dict.checkout.processing : `${dict.checkout.confirm} · ${total.toFixed(2)}€`}
             </button>
 
             {error && <p className="mt-3 text-center text-xs text-danger">{error}</p>}
 
-            <Link href="/panier" className="mt-4 block text-center text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline">
-              Modifier mon sac
+            <Link href={`/${lang}/panier`} className="mt-4 block text-center text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline">
+              {dict.checkout.editCart}
             </Link>
           </div>
         </aside>

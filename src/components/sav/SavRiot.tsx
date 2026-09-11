@@ -7,10 +7,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
+import type { Locale } from '@/i18n/config';
 
 interface FaqItem { q: string; a: React.ReactNode }
 
-const FAQ: FaqItem[] = [
+/* FAQ construite par fonction (plutôt que constante de module) : le 1er item
+   contient un lien vers /essayage qui doit être préfixé par la locale. */
+function buildFaq(lang: Locale): FaqItem[] { return [
   {
     q: 'Quelle perruque pour mon visage ?',
     a: (
@@ -18,7 +21,7 @@ const FAQ: FaqItem[] = [
         Demandez à <b>Élodie</b>, notre styliste IA. Décrivez votre forme de visage, votre
         style et votre budget : elle vous recommande la perruque idéale en quelques
         secondes. Vous pouvez aussi tester en direct avec l&apos;
-        <Link href="/essayage" className="underline">essayage virtuel</Link>.
+        <Link href={`/${lang}/essayage`} className="underline">essayage virtuel</Link>.
       </>
     ),
   },
@@ -75,9 +78,10 @@ const FAQ: FaqItem[] = [
       </>
     ),
   },
-];
+]; }
 
-export function SavRiot() {
+export function SavRiot({ lang }: { lang: Locale }) {
+  const FAQ = buildFaq(lang);
   return (
     <section className="mx-auto max-w-[1180px] px-6 py-16 md:py-20">
       <div className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-8">
@@ -92,7 +96,7 @@ export function SavRiot() {
 
         <div className="flex flex-col gap-6">
           <TrackOrderCard />
-          <ContactCard />
+          <ContactCard lang={lang} />
           <AtelierCard />
         </div>
       </div>
@@ -158,7 +162,7 @@ function TrackOrderCard() {
   );
 }
 
-function ContactCard() {
+function ContactCard({ lang }: { lang: Locale }) {
   // Numéro WhatsApp réel configurable depuis /admin/reglages (avant : codé en
   // dur, valeur placeholder jamais vérifiée) — carte masquée tant qu'aucun
   // numéro n'est configuré plutôt que d'afficher un faux contact.
@@ -173,7 +177,7 @@ function ContactCard() {
         {whatsapp && (
           <InfoRow k="WhatsApp" v={whatsapp} href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} external />
         )}
-        <InfoRow k="Élodie" v="Chat 24/7" href="/elodie" />
+        <InfoRow k="Élodie" v="Chat 24/7" href={`/${lang}/elodie`} />
       </div>
     </HelpCard>
   );
