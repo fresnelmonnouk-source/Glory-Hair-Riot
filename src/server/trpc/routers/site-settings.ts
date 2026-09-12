@@ -15,12 +15,13 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, publicProcedure, adminProcedure } from '../init';
-import { getWhatsappNumber, getBrandSettings } from '@/lib/settings/service';
+import { getWhatsappNumber, getBrandSettings, getUsdRate } from '@/lib/settings/service';
+import { PEG_EUR_XOF } from '@/lib/money';
 
 export const siteSettingsRouter = router({
   getPublic: publicProcedure.query(async () => {
-    const [whatsappNumber, brand] = await Promise.all([getWhatsappNumber(), getBrandSettings()]);
-    return { whatsappNumber, brand };
+    const [whatsappNumber, brand, usdRate] = await Promise.all([getWhatsappNumber(), getBrandSettings(), getUsdRate()]);
+    return { whatsappNumber, brand, usdRate };
   }),
 
   save: adminProcedure
@@ -64,6 +65,35 @@ export const siteSettingsRouter = router({
         updated_by: ctx.user.id,
       }));
       const { error } = await ctx.supabase.from('settings').upsert(rows, { onConflict: 'key' });
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      return { ok: true };
+    }),
+
+  // ─── Taux USD affiché (multi-devise, Phase 3) ────
+  // L'admin raisonne naturellement en "1 dollar = combien de FCFA" (marché
+  // ouest-africain) — converti ici vers usd_rate (USD par EUR, la base de
+  // calcul de formatMoney) via le peg EUR/XOF FIXE. `xof_per_usd` vide
+  // efface l'override et retombe sur le taux automatique du cron.
+  saveUsdRate: adminProcedure
+    .input(z.object({ xof_per_usd: z.string().max(20) }))
+    .mutation(async ({ ctx, input }) => {
+      const raw = input.xof_per_usd.trim();
+      let usdRateValue = '';
+      if (raw !== '') {
+        const xofPerUsd = Number(raw);
+        if (!Number.isFinite(xofPerUsd) || xofPerUsd <= 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Taux invalide : indiquez un nombre de FCFA positif.' });
+        }
+        usdRateValue = String(Number((PEG_EUR_XOF / xofPerUsd).toFixed(6)));
+      }
+
+      const { error } = await ctx.supabase.from('settings').upsert({
+        key: 'usd_rate',
+        value: usdRateValue,
+        updated_at: new Date().toISOString(),
+        updated_by: ctx.user.id,
+      }, { onConflict: 'key' });
+
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
       return { ok: true };
     }),

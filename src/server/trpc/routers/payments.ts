@@ -9,6 +9,7 @@ import {
   getTransactionStatus,
 } from '@/server/services/payment/fedapay.service';
 import { getBrandSettings } from '@/lib/settings/service';
+import { eurCentsToXof } from '@/lib/money';
 
 export const paymentsRouter = router({
   createStripeIntent: protectedProcedure
@@ -103,9 +104,14 @@ export const paymentsRouter = router({
       }
 
       // Create FedaPay transaction
+      // `input.amount` suit la convention du reste de l'app (centimes
+      // d'euro) — conversion réelle en francs CFA via le peg fixe avant
+      // l'appel FedaPay (même bug critique que checkout/route.ts, corrigé
+      // ici pour la même raison bien que cette route ne soit appelée par
+      // aucun client actuellement).
       const brand = await getBrandSettings();
       const { transactionId, token } = await createTransaction({
-        amount: input.amount,
+        amount: eurCentsToXof(input.amount),
         currency: 'XOF', // West African CFA franc (can be customized)
         phone: input.phone,
         description: `${brand.name} Order #${input.orderId.substring(0, 8)}`,

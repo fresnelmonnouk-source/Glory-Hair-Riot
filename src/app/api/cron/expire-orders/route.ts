@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { refreshUsdRate } from '@/lib/fx-cron';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -34,5 +35,15 @@ export async function GET(request: NextRequest) {
   }
 
   console.log(`[cron/expire-orders] ${data ?? 0} commande(s) annulée(s), stock restauré.`);
-  return NextResponse.json({ ok: true, cancelled: data ?? 0 });
+
+  // Rafraîchissement du taux EUR→USD affiché (Phase 3, multi-devise) —
+  // bundlé ici plutôt qu'un nouveau cron (même créneau, décision actée du
+  // plan). Best-effort : un échec ne fait jamais échouer l'expiration des
+  // commandes, la fonction elle-même ne touche jamais à un override admin.
+  const fx = await refreshUsdRate();
+  if (!fx.updated) {
+    console.warn(`[cron/expire-orders] taux USD non rafraîchi (${fx.reason ?? 'inconnu'}).`);
+  }
+
+  return NextResponse.json({ ok: true, cancelled: data ?? 0, fx });
 }

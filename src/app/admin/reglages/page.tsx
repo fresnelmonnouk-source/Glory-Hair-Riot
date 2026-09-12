@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { PEG_EUR_XOF } from '@/lib/money';
 
 const FLAG_LABELS: Record<string, string> = {
   tryon: 'Essai virtuel IA',
@@ -27,6 +28,7 @@ export default function AdminReglagesPage() {
       <FeatureFlagsSection />
       <BrandSettingsSection />
       <ContactSettingsSection />
+      <CurrencySettingsSection />
       <PaymentSettingsSection />
     </div>
   );
@@ -214,6 +216,92 @@ function ContactSettingsSection() {
             className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
           />
         </div>
+
+        <button
+          type="submit"
+          disabled={saveM.isPending}
+          className="inline-flex w-fit items-center gap-2 self-start rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {saveM.isPending ? '…' : saved ? (<><Check size={16} strokeWidth={2.5} /> Enregistré</>) : 'Enregistrer'}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function CurrencySettingsSection() {
+  const utils = trpc.useUtils();
+  const settingsQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 10_000 });
+  const saveM = trpc.siteSettings.saveUsdRate.useMutation({
+    onSuccess: () => {
+      void utils.siteSettings.getPublic.invalidate();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    },
+  });
+
+  const [xofPerUsd, setXofPerUsd] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  // Champ vidé volontairement par l'admin (override effacé) : ne pas le
+  // re-remplir automatiquement avec l'ancienne valeur au prochain refetch.
+  const [touched, setTouched] = useState(false);
+  const [prevData, setPrevData] = useState(settingsQ.data);
+  if (settingsQ.data !== prevData) {
+    setPrevData(settingsQ.data);
+    if (settingsQ.data && !touched && settingsQ.data.usdRate.source === 'override') {
+      setXofPerUsd((PEG_EUR_XOF / settingsQ.data.usdRate.rate).toFixed(2));
+    }
+  }
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    saveM.mutate({ xof_per_usd: xofPerUsd });
+  }
+
+  const usdRate = settingsQ.data?.usdRate;
+  // Taux auto (cron) reconverti dans la même unité intuitive "1 USD = X FCFA"
+  // que le champ d'override, pour une comparaison directe.
+  const autoXofPerUsd = usdRate?.autoRate ? Math.round(PEG_EUR_XOF / usdRate.autoRate) : null;
+  const autoAtLabel = usdRate?.autoAt
+    ? new Date(usdRate.autoAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
+
+  return (
+    <section>
+      <p className="eyebrow">Devise affichée</p>
+      <p className="mt-2 max-w-xl text-sm text-muted">
+        Les prix restent facturés en euros (carte) ou en francs CFA réels (mobile money) — ce réglage ne change que
+        l&apos;AFFICHAGE du dollar US pour les visiteurs. Le taux automatique se met à jour chaque nuit ; laissez le
+        champ vide pour le suivre plutôt que de fixer un taux manuel.
+      </p>
+
+      <form onSubmit={handleSave} className="mt-4 flex max-w-xl flex-col gap-5 rounded-lg border border-hairline bg-surface p-6">
+        <div>
+          <label htmlFor="usd-rate" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
+            1 dollar US (affiché) = combien de FCFA ?
+          </label>
+          <input
+            id="usd-rate"
+            type="number"
+            min={1}
+            step="0.01"
+            value={xofPerUsd}
+            onChange={(e) => { setTouched(true); setXofPerUsd(e.target.value); }}
+            placeholder={autoXofPerUsd ? String(autoXofPerUsd) : '600'}
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+          />
+        </div>
+
+        <p className="text-xs text-faint">
+          Taux automatique actuel : {autoXofPerUsd ? `1 $ ≈ ${autoXofPerUsd.toLocaleString('fr-FR')} FCFA` : 'jamais récupéré'}
+          {autoAtLabel && ` (mis à jour le ${autoAtLabel})`}
+          {usdRate?.source === 'default' && ' — aucun taux configuré, valeur de repli utilisée.'}
+        </p>
+
+        {saveM.error && (
+          <p className="text-sm text-[color:var(--danger)]">{saveM.error.message}</p>
+        )}
 
         <button
           type="submit"

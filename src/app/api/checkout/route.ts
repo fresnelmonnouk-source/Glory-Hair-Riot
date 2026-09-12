@@ -46,6 +46,7 @@ import { awardLoyaltyPoints, restoreOrderStock } from '@/lib/loyalty/award-point
 import { createCheckoutSession } from '@/server/services/payment/stripe.service';
 import { createTransaction } from '@/server/services/payment/fedapay.service';
 import { getBrandSettings } from '@/lib/settings/service';
+import { eurCentsToXof } from '@/lib/money';
 
 export const runtime = 'nodejs';
 
@@ -302,8 +303,15 @@ export async function POST(request: Request) {
   // fedapay
   try {
     const fedaBrand = await getBrandSettings();
+    // BUG CRITIQUE trouvé et corrigé ici (Phase 3, multi-devise) :
+    // `totalCents` est en CENTIMES D'EURO (base de toute l'app — wigs,
+    // orders, Stripe). FedaPay n'a pas de sous-unité pour XOF (amount =
+    // nombre entier de francs CFA). Envoyer totalCents tel quel comme
+    // "amount" en XOF sous-facturait le client d'un facteur ~65 000
+    // (25900 centimes d'euro envoyés comme 25900 XOF ≈ 0,40 € au lieu de
+    // 259 €). Conversion réelle via le peg fixe EUR/XOF avant l'appel.
     const { transactionId, token } = await createTransaction({
-      amount: totalCents,
+      amount: eurCentsToXof(totalCents),
       currency: 'XOF',
       phone: body.address.telephone ?? '',
       description: `${fedaBrand.name} Order #${ref}`,

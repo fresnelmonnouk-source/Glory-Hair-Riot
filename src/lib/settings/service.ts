@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { DEFAULT_USD_PER_EUR, type UsdRateInfo } from '@/lib/money';
 
 /* Lecture des réglages sensibles (clé secrète FedaPay) — SERVICE_ROLE
    uniquement, jamais exposée à un client. Utilisée par le code serveur qui
@@ -90,4 +91,37 @@ export async function getBrandSettings(): Promise<BrandSettings> {
     legalAddress: byKey.get('brand_legal_address') || null,
     legalContactEmail: byKey.get('brand_legal_contact_email') || null,
   };
+}
+
+/**
+ * Précédence : usd_rate (override admin, /admin/reglages) → usd_rate_auto
+ * (posé par le cron, /api/cron/expire-orders) → DEFAULT_USD_PER_EUR figé.
+ * Marge de sécurité de 2% déjà appliquée par le cron au moment du calcul de
+ * usd_rate_auto (jamais recalculée ici) — voir src/lib/fx-cron.ts. Vit ici
+ * (pas dans money.ts, gardé 100% pur/client-safe) puisque cette fonction lit
+ * `settings` en service_role, comme le reste de ce fichier.
+ */
+export async function getUsdRate(): Promise<UsdRateInfo> {
+  const supabase = await createServerSupabaseClient(true);
+  const { data } = await supabase
+    .from('settings')
+    .select('key, value')
+    .in('key', ['usd_rate', 'usd_rate_auto', 'usd_rate_auto_at']);
+
+  const byKey = new Map((data ?? []).map((r) => [r.key, r.value as string]));
+  const override = byKey.get('usd_rate');
+  const auto = byKey.get('usd_rate_auto');
+  const autoAt = byKey.get('usd_rate_auto_at') ?? null;
+
+  const overrideNum = override ? Number(override) : NaN;
+  if (Number.isFinite(overrideNum) && overrideNum > 0) {
+    return { rate: overrideNum, source: 'override', autoRate: auto ? Number(auto) : null, autoAt };
+  }
+
+  const autoNum = auto ? Number(auto) : NaN;
+  if (Number.isFinite(autoNum) && autoNum > 0) {
+    return { rate: autoNum, source: 'auto', autoRate: autoNum, autoAt };
+  }
+
+  return { rate: DEFAULT_USD_PER_EUR, source: 'default', autoRate: null, autoAt: null };
 }
