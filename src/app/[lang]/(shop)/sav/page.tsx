@@ -3,7 +3,7 @@ import { SavRiot } from '@/components/sav/SavRiot';
 import { resolvePageLang } from '@/i18n/page-lang';
 
 export const metadata: Metadata = {
-  title: 'Aide & SAV · Glory Hair',
+  title: 'Aide & SAV',
   description: 'FAQ, suivi de commande, contact, atelier Paris 9. On répond en 12h.',
 };
 

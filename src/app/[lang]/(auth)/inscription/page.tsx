@@ -10,10 +10,15 @@ import Link from 'next/link';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { AUTH_INPUT, AuthLabel, AuthShell, FormError, IconBadge } from '@/components/auth/ui';
 import { useLang, getDictionaryClient } from '@/i18n/client';
+import { trpc } from '@/lib/trpc/client';
 
 export default function InscriptionPage() {
   const lang = useLang();
   const dict = getDictionaryClient(lang);
+  // Nom de marque admin-éditable (rebrand, Phase 2) — même repli que
+  // NavRiot/FooterRiot tant que /admin/reglages n'a rien configuré.
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? dict.brand;
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,7 +69,7 @@ export default function InscriptionPage() {
 
   return (
     <AuthShell
-      eyebrow="Rejoindre Glory Hair"
+      eyebrow={`Rejoindre ${brandName}`}
       title={dict.auth.signUpTitle}
       lead={dict.auth.signUpLead}
       bullets={['+2 essais virtuels Premium offerts', 'Glory Club : points fidélité', 'Historique de commandes']}

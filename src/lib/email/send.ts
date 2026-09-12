@@ -19,6 +19,7 @@
 import { Resend } from 'resend';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { getBrandSettings } from '@/lib/settings/service';
 
 const TEMPLATES_DIR = path.join(process.cwd(), 'supabase', 'email-templates');
 
@@ -85,7 +86,20 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
 
   try {
     const tpl = await loadTemplate(opts.template);
-    const html = render(tpl, opts.data ?? {});
+    // Injecte BrandName/SiteURL automatiquement (rebrand, Phase 2) — une
+    // seule fois ici plutôt que dans chaque route appelante. `data` explicite
+    // reste prioritaire si un appelant fournit déjà sa propre valeur. SiteURL
+    // sans slash final (les templates l'utilisent en préfixe "{{.SiteURL}}/fr/...")
+    // pour que les liens des templates suivent automatiquement le domaine
+    // configuré (NEXT_PUBLIC_APP_URL) plutôt que de rester figés sur l'ancien
+    // domaine .vercel.app quand celui-ci changera (migration de domaine).
+    const brand = await getBrandSettings();
+    const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://glory-hair-riot.vercel.app').replace(/\/+$/, '');
+    // Repli sur ADMIN_TO tant que brand_legal_contact_email n'est pas encore
+    // rempli par Fresnel (/admin/reglages) — jamais un template affiché avec
+    // une adresse de contact vide.
+    const supportEmail = brand.legalContactEmail || ADMIN_TO;
+    const html = render(tpl, { BrandName: brand.name, SiteURL: siteUrl, SupportEmail: supportEmail, ...(opts.data ?? {}) });
 
     const result = await resend.emails.send({
       from: opts.from ?? FROM_DEFAULT,

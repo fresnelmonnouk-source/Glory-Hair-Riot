@@ -17,10 +17,10 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
   const article = await getArticleBySlug(params.slug);
   if (!article) {
-    return { title: 'Article introuvable · Glory Hair' };
+    return { title: 'Article introuvable' };
   }
   return {
-    title: `${article.title} · Magazine · Glory Hair`,
+    title: `${article.title} · Magazine`,
     description: article.excerpt ?? undefined,
     openGraph: article.cover_image_url ? { images: [{ url: article.cover_image_url }] } : undefined,
   };

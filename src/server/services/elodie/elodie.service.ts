@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { getBrandSettings } from '@/lib/settings/service';
 
 /**
  * Lazy client : on instancie SEULEMENT au premier appel, pas au load du module.
@@ -16,7 +17,11 @@ function getDeepseek(): OpenAI {
   return _deepseek;
 }
 
-const ELODIE_SYSTEM_PROMPT = `Tu es ELODIE, l'assistante IA de Glory Hair.
+// Fonction plutôt que const (rebrand, Phase 2) : le nom de marque vient
+// désormais de /admin/reglages (settings.brand_name), lu à chaque appel
+// plutôt que figé au chargement du module.
+function buildElodieSystemPrompt(brandName: string): string {
+  return `Tu es ELODIE, l'assistante IA de ${brandName}.
 
 Tu es une experte en perruques, essayage virtuel, et conseils beauté. Tu parles français avec élégance et tu es toujours positive.
 
@@ -38,6 +43,7 @@ Ne discute pas:
 - Politique, religion, ou sujets sensibles
 - Détails privés des clients
 - Informations confidentielles de l'entreprise`;
+}
 
 export type ElodieErrorCode =
   | 'MISSING_KEY'
@@ -65,10 +71,11 @@ export async function getElodieResponse(
   }
 
   try {
+    const brand = await getBrandSettings();
     const response = await getDeepseek().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
-        { role: 'system', content: ELODIE_SYSTEM_PROMPT },
+        { role: 'system', content: buildElodieSystemPrompt(brand.name) },
         ...messages,
       ],
       temperature: 0.3,

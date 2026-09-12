@@ -4,6 +4,7 @@ import { TRPCProvider } from '@/lib/trpc/provider';
 import { fontVars } from '../fonts';
 import { locales, isLocale, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
+import { getBrandSettings } from '@/lib/settings/service';
 import { NavRiot } from '@/components/layout/NavRiot';
 import { FooterRiot } from '@/components/layout/FooterRiot';
 import '@/styles/riot.css';
@@ -22,18 +23,25 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
   const locale: Locale = isLocale(lang) ? lang : 'fr';
-  const title = locale === 'en'
-    ? 'Glory Hair · Premium human hair wigs'
-    : 'Glory Hair · Perruques cheveux humains premium';
+  const brand = await getBrandSettings();
+  const tagline = locale === 'en'
+    ? 'Premium human hair wigs'
+    : 'Perruques cheveux humains premium';
   const description = locale === 'en'
     ? '100% Remy human hair wigs, AI virtual try-on. Paris 9 atelier.'
     : 'Perruques cheveux humains 100% Remy, essayage virtuel par IA. Atelier Paris 9.';
+  const fullTitle = `${brand.name} · ${tagline}`;
 
   return {
-    title,
+    // `template` s'applique à chaque page enfant qui fournit un `title`
+    // simple (chaîne) — GloryHairRiot devenant RHD Empire (ou tout futur
+    // rebrand) ne demande plus qu'un changement ici, pas dans chacune des
+    // ~13 pages qui ont désormais juste leur titre propre (voir leurs
+    // generateMetadata/metadata, suffixe "· Glory Hair" retiré).
+    title: { default: fullTitle, template: `%s · ${brand.name}` },
     description,
     keywords: ['perruques', 'extensions', 'cheveux humains', 'essayage virtuel', 'IA', 'beauté'],
-    openGraph: { title, description, type: 'website' },
+    openGraph: { title: fullTitle, description, type: 'website' },
     alternates: {
       languages: { fr: '/fr', en: '/en' },
     },

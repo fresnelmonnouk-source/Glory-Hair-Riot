@@ -25,6 +25,7 @@ import OpenAI from 'openai';
 import { Resend } from 'resend';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getBrandSettings } from '@/lib/settings/service';
 
 // ────────────────────────────────────────────────────────────────────────
 // Erreurs
@@ -141,7 +142,10 @@ async function fetchArticleMaterial(supabase: SupabaseClient): Promise<ArticleMa
 // Prompt
 // ────────────────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Tu es la rédactrice éditoriale IA de la newsletter hebdomadaire de Glory Hair, marque de perruques 100% cheveux humains. Univers de marque : premium, élégant, palette bordeaux/ivoire, jamais de ton "punk fanzine" ou familier (cette identité est révolue).
+// Fonction plutôt que const (rebrand, Phase 2) : le nom de marque vient
+// désormais de /admin/reglages (settings.brand_name).
+function buildSystemPrompt(brandName: string): string {
+  return `Tu es la rédactrice éditoriale IA de la newsletter hebdomadaire de ${brandName}, marque de perruques 100% cheveux humains. Univers de marque : premium, élégant, palette bordeaux/ivoire, jamais de ton "punk fanzine" ou familier (cette identité est révolue).
 
 RÈGLE DE PONCTUATION STRICTE : n'utilise JAMAIS le tiret cadratin (—) ni le tiret demi-cadratin (–), dans le sujet comme dans le corps. Remplace-les toujours par une virgule, un point, deux-points, ou reformule la phrase.
 
@@ -157,9 +161,14 @@ FORMAT DE SORTIE — réponds UNIQUEMENT avec un objet JSON valide, rien d'autre
 
 - "subject" : objet d'email court et engageant (moins de 70 caractères), cohérent avec le contenu.
 - "html_body" : HTML simple et propre, pensé pour un client mail (styles inline basiques si besoin, PAS de <script>, PAS de feuille de style externe, PAS de sélecteurs CSS avancés). Structure suggérée : une accroche courte, puis 3 à 5 éléments (perruques et/ou articles fournis) présentés avec leur nom + description courte + prix réel s'il est fourni, puis un appel à l'action vers le catalogue. Ton élégant, phrases courtes, pas de superlatifs excessifs.`;
+}
 
 function buildUserPrompt(wigs: WigMaterial[], articles: ArticleMaterial[]): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://glory-hair-riot.vercel.app';
+  // "/boutique" n'a jamais été une route valide (le vrai catalogue vit sur
+  // /catalogue, devenu /fr/catalogue depuis le passage i18n, Phase 1a) —
+  // bug pré-existant trouvé au passage, corrigé ici plutôt que remonté à
+  // part puisqu'il est dans la même prompt que le rebrand.
   return `Voici les données RÉELLES à utiliser pour la newsletter de cette semaine. N'utilise aucune autre information que celle-ci (voir règles anti-hallucination).
 
 PERRUQUES EN AVANT (catalogue actif) :
@@ -168,7 +177,7 @@ ${wigs.length > 0 ? JSON.stringify(wigs, null, 2) : '(aucune perruque disponible
 ARTICLES DE MAGAZINE RÉCENTS :
 ${articles.length > 0 ? JSON.stringify(articles, null, 2) : '(aucun article publié récemment)'}
 
-URL du catalogue à utiliser pour le lien d'appel à l'action : ${appUrl}/boutique
+URL du catalogue à utiliser pour le lien d'appel à l'action : ${appUrl}/fr/catalogue
 
 Rédige la newsletter hebdomadaire au format JSON demandé.`;
 }
@@ -215,9 +224,10 @@ export async function generateNewsletterDraft(): Promise<NewsletterDraft> {
 
   const supabase = await createServerSupabaseClient(true); // service role : pas de session (CRON) ni RLS à gérer ici
 
-  const [wigs, articles] = await Promise.all([
+  const [wigs, articles, brand] = await Promise.all([
     fetchWigMaterial(supabase),
     fetchArticleMaterial(supabase),
+    getBrandSettings(),
   ]);
 
   let completion;
@@ -225,7 +235,7 @@ export async function generateNewsletterDraft(): Promise<NewsletterDraft> {
     completion = await getDeepseek().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: buildSystemPrompt(brand.name) },
         { role: 'user', content: buildUserPrompt(wigs, articles) },
       ],
       temperature: 0.6,
@@ -313,6 +323,7 @@ export async function sendNewsletterToActiveSubscribers(
   const resend = new Resend(process.env.RESEND_API_KEY);
   const from = process.env.EMAIL_FROM || 'Glory Hair <onboarding@resend.dev>';
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+  const brand = await getBrandSettings();
 
   const BATCH_SIZE = 100; // limite Resend Batch API
   let sent = 0;
@@ -323,7 +334,7 @@ export async function sendNewsletterToActiveSubscribers(
       from,
       to: email,
       subject,
-      html: appendUnsubscribeFooter(htmlBody, email, appUrl),
+      html: appendUnsubscribeFooter(htmlBody, email, appUrl, brand.name),
     }));
 
     try {
@@ -339,12 +350,14 @@ export async function sendNewsletterToActiveSubscribers(
   return { recipientsCount: sent };
 }
 
-function appendUnsubscribeFooter(html: string, email: string, appUrl: string): string {
-  const unsubscribeUrl = `${appUrl}/sav?action=unsubscribe&email=${encodeURIComponent(email)}`;
+function appendUnsubscribeFooter(html: string, email: string, appUrl: string, brandName: string): string {
+  // Manquait le préfixe /fr/ depuis le passage des routes boutique sous
+  // /[lang]/ (Phase 1a) — /sav tout court n'existe plus.
+  const unsubscribeUrl = `${appUrl}/fr/sav?action=unsubscribe&email=${encodeURIComponent(email)}`;
   const footer = `
     <hr style="margin:32px 0;border:none;border-top:1px solid #e6ddd4;" />
     <p style="font-family:sans-serif;font-size:12px;color:#8a8078;text-align:center;line-height:1.6;">
-      Vous recevez cet email car vous êtes inscrit·e à la newsletter Glory Hair.<br />
+      Vous recevez cet email car vous êtes inscrit·e à la newsletter ${brandName}.<br />
       <a href="${unsubscribeUrl}" style="color:#7a1f2b;">Se désabonner</a>
     </p>`;
   return `${html}${footer}`;

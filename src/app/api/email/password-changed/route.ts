@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
+import { getBrandSettings } from '@/lib/settings/service';
 
 export const runtime = 'nodejs';
 
@@ -18,9 +19,10 @@ export async function POST() {
     return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
+  const brand = await getBrandSettings();
   const result = await sendEmail({
     to: user.email ?? '',
-    subject: 'Mot de passe modifié · Glory Hair',
+    subject: `Mot de passe modifié · ${brand.name}`,
     template: 'email-password-changed.html',
     data: {
       Email: user.email,

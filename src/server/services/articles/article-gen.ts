@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getBrandSettings } from '@/lib/settings/service';
 
 /**
  * Génération d'articles magazine par IA — texte (DeepSeek) + image de
@@ -57,7 +58,10 @@ export class ArticleGenError extends Error {
 
 // ─── Prompt texte (ton éditorial élégant, PAS "fanzine punk") ────────────
 
-const ARTICLE_SYSTEM_PROMPT = `Tu es la rédactrice en chef du magazine de Glory Hair, une maison de perruques 100% cheveux humains premium (lace front HD, qualité Remy). Le magazine a abandonné son ancienne identité "fanzine punk" : le ton actuel est éditorial, élégant, chaleureux — proche d'un magazine beauté haut de gamme (registre "Sandy Stylish", recoloré dans la palette bordeaux/ivoire de Glory Hair). Tu écris en français.
+// Fonction plutôt que const (rebrand, Phase 2) : le nom de marque vient
+// désormais de /admin/reglages (settings.brand_name).
+function buildArticleSystemPrompt(brandName: string): string {
+  return `Tu es la rédactrice en chef du magazine de ${brandName}, une maison de perruques 100% cheveux humains premium (lace front HD, qualité Remy). Le magazine a abandonné son ancienne identité "fanzine punk" : le ton actuel est éditorial, élégant, chaleureux — proche d'un magazine beauté haut de gamme (registre "Sandy Stylish", recoloré dans la palette bordeaux/ivoire de ${brandName}). Tu écris en français.
 
 Tu rédiges des articles qui mélangent conseils pratiques concrets (entretien, pose, choix de coloris, morphologie du visage) et inspiration (tendances, mise en beauté, confiance en soi). Interdiction d'utiliser un vocabulaire "punk", "rebelle", "zine", "tampon" ou "fanzine" — ce registre est révolu, ne le réintroduis jamais.
 
@@ -69,6 +73,7 @@ Tu dois répondre UNIQUEMENT avec un objet JSON valide (format JSON strict, sans
 - "content" : corps de l'article en Markdown simple (des sous-titres avec "## " si utile, des paragraphes séparés par une ligne vide, pas de tableaux ni d'images intégrées), entre 500 et 900 mots. INTERDICTION d'utiliser le tiret cadratin (—) ou le tiret demi-cadratin (–) : utilise systématiquement une virgule, un point, deux-points ou une reformulation à la place.
 - "tag" : une catégorie courte en 1 à 2 mots (ex. "Entretien", "Couleur", "Tendance", "Conseil pro")
 - "image_prompt" : description en français d'UNE scène photographique CONCRÈTE et élégante liée à l'univers capillaire, destinée à illustrer la couverture — par exemple un gros plan sur une texture de cheveux, un flacon de soin capillaire, une brosse ou un fer à lisser, une ambiance de salon de coiffure, un geste de coiffage. INTERDICTION FORMELLE de métaphore visuelle abstraite ou de cliché littéral (par exemple : jamais de sablier pour évoquer "le temps", jamais d'horloge, de boussole, d'ampoule, d'échelle, de labyrinthe, de puzzle). INTERDICTION de texte, logo ou watermark visible dans la scène décrite. Ne décris pas de visage précis sauf si le sujet de l'article l'exige explicitement.`;
+}
 
 function buildUserPrompt(subject: string, tag?: string): string {
   return [
@@ -109,10 +114,11 @@ export async function generateArticleText(subject: string, tag?: string): Promis
 
   let raw: string;
   try {
+    const brand = await getBrandSettings();
     const response = await getDeepseek().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
-        { role: 'system', content: ARTICLE_SYSTEM_PROMPT },
+        { role: 'system', content: buildArticleSystemPrompt(brand.name) },
         { role: 'user', content: buildUserPrompt(subject, tag) },
       ],
       temperature: 0.7,

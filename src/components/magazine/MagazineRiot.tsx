@@ -16,6 +16,7 @@
 import Link from 'next/link';
 import type { Article } from '@/lib/articles/service';
 import { useLang } from '@/i18n/client';
+import { trpc } from '@/lib/trpc/client';
 
 const TEAM = [
   { role: 'Direction artistique', name: 'Olivia M.', bio: 'Couleurs, mise en page, direction visuelle.' },
@@ -31,6 +32,9 @@ function estimateReadingMinutes(content: string): number {
 
 export function MagazineRiot({ articles }: { articles: Article[] }) {
   const lang = useLang();
+  // Nom de marque admin-éditable (rebrand, Phase 2) — repli "Glory Hair".
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? 'Glory Hair';
   return (
     <>
       <section className="mx-auto max-w-[1180px] px-6 pt-16 md:pt-20">
@@ -40,7 +44,7 @@ export function MagazineRiot({ articles }: { articles: Article[] }) {
         </h1>
         <p className="mt-5 max-w-[560px] leading-relaxed text-muted">
           Tirées brin par brin dans notre atelier Paris 9, photographiées sans filtre. Voici
-          Glory Hair, édition été 2026.
+          {' '}{brandName}, édition été 2026.
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
           <Link href={`/${lang}/catalogue`} className="rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
@@ -63,7 +67,7 @@ export function MagazineRiot({ articles }: { articles: Article[] }) {
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
-            {articles.map((article) => <ArticleCard key={article.id} article={article} lang={lang} />)}
+            {articles.map((article) => <ArticleCard key={article.id} article={article} lang={lang} brandName={brandName} />)}
           </div>
         )}
       </section>
@@ -89,7 +93,7 @@ export function MagazineRiot({ articles }: { articles: Article[] }) {
   );
 }
 
-function ArticleCard({ article, lang }: { article: Article; lang: import('@/i18n/config').Locale }) {
+function ArticleCard({ article, lang, brandName }: { article: Article; lang: import('@/i18n/config').Locale; brandName: string }) {
   return (
     <Link href={`/${lang}/magazine/${article.slug}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface">
@@ -103,7 +107,7 @@ function ArticleCard({ article, lang }: { article: Article; lang: import('@/i18n
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-app">
-            <span className="font-display text-lg text-faint">Glory Hair</span>
+            <span className="font-display text-lg text-faint">{brandName}</span>
           </div>
         )}
       </div>

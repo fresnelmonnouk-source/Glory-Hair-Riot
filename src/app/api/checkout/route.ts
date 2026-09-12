@@ -45,6 +45,7 @@ import { DiscountValidationError, incrementDiscountCodeUsage, validateDiscountCo
 import { awardLoyaltyPoints, restoreOrderStock } from '@/lib/loyalty/award-points';
 import { createCheckoutSession } from '@/server/services/payment/stripe.service';
 import { createTransaction } from '@/server/services/payment/fedapay.service';
+import { getBrandSettings } from '@/lib/settings/service';
 
 export const runtime = 'nodejs';
 
@@ -250,9 +251,10 @@ export async function POST(request: Request) {
       pointsEarned = await awardLoyaltyPoints(admin, { userId: user.id, orderId, totalCents });
     }
 
+    const brand = await getBrandSettings();
     void sendEmail({
       to: body.address.email,
-      subject: `Commande confirmée #${ref} · Glory Hair`,
+      subject: `Commande confirmée #${ref} · ${brand.name}`,
       template: 'email-order-confirmed.html',
       data: {
         UserName: body.address.prenom,
@@ -299,11 +301,12 @@ export async function POST(request: Request) {
 
   // fedapay
   try {
+    const fedaBrand = await getBrandSettings();
     const { transactionId, token } = await createTransaction({
       amount: totalCents,
       currency: 'XOF',
       phone: body.address.telephone ?? '',
-      description: `Glory Hair Order #${ref}`,
+      description: `${fedaBrand.name} Order #${ref}`,
       metadata: { orderId },
     });
     await admin.from('orders').update({ fedapay_transaction_id: transactionId }).eq('id', orderId);

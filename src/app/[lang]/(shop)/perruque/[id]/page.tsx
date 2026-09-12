@@ -21,10 +21,10 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const lang: Locale = isLocale(params.lang) ? params.lang : defaultLocale;
   const wig = await getWigBySlug(params.id, lang);
   if (!wig) {
-    return { title: lang === 'en' ? 'Wig not found · Glory Hair' : 'Perruque introuvable · Glory Hair' };
+    return { title: lang === 'en' ? 'Wig not found' : 'Perruque introuvable' };
   }
   return {
-    title: `${wig.name} · Glory Hair`,
+    title: wig.name,
     description: lang === 'en'
       ? `${wig.cat} ${wig.style} shade ${wig.tone}. 100% Remy human hair, HD lace front. €${wig.price} · Issue N°01.`
       : `${wig.cat} ${wig.style} teinte ${wig.tone}. Cheveux humains Remy 100%, lace front HD. ${wig.price}€ · Issue N°01.`,

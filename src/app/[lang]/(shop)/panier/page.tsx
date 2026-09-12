@@ -7,8 +7,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   const locale: Locale = isLocale(lang) ? lang : 'fr';
   return locale === 'en'
-    ? { title: 'Your bag · Glory Hair', description: 'Your Glory Hair bag summary. Free 48h shipping, 30-day returns, 12-month warranty.' }
-    : { title: 'Votre sac · Glory Hair', description: 'Récap de votre sac Glory Hair. Livraison 48h offerte, retour 30j, garantie 12 mois.' };
+    ? { title: 'Your bag', description: 'Your bag summary. Free 48h shipping, 30-day returns, 12-month warranty.' }
+    : { title: 'Votre sac', description: 'Récap de votre sac. Livraison 48h offerte, retour 30j, garantie 12 mois.' };
 }
 
 export default async function PanierPage({ params }: { params: Promise<{ lang: string }> }) {

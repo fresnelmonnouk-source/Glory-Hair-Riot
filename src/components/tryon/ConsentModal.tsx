@@ -9,6 +9,8 @@
  *   Droit à l'oubli sur demande.
  */
 
+import { trpc } from '@/lib/trpc/client';
+
 interface ConsentModalProps {
   isOpen: boolean;
   onAccept: () => void;
@@ -16,6 +18,10 @@ interface ConsentModalProps {
 }
 
 export function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps) {
+  // Nom de marque admin-éditable (rebrand, Phase 2) — repli "Glory Hair".
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? 'Glory Hair';
+
   if (!isOpen) return null;
 
   return (
@@ -44,7 +50,7 @@ export function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps)
         <div className="mt-5 rounded-sm border border-hairline bg-app p-4 text-sm leading-relaxed">
           <p className="font-display text-base text-ink">Ce qu&apos;on fait</p>
           <ul className="mt-2 list-none space-y-1 p-0 text-muted">
-            <li>→ Envoi sécurisé (HTTPS) au serveur Glory Hair</li>
+            <li>→ Envoi sécurisé (HTTPS) au serveur {brandName}</li>
             <li>→ Appel API Gemini ou OpenAI côté serveur</li>
             <li>→ Image résultat retournée au navigateur</li>
           </ul>

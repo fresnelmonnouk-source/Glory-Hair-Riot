@@ -12,6 +12,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { checkLimit, getRequestIp } from '@/lib/rate-limit';
 import { Resend } from 'resend';
 import { sendEmail } from '@/lib/email/send';
+import { getBrandSettings } from '@/lib/settings/service';
 
 export const runtime = 'nodejs';
 
@@ -87,13 +88,16 @@ export async function POST(request: Request) {
   }
 
   // 5. Email de confirmation (best-effort)
+  const brand = await getBrandSettings();
   void sendEmail({
     to: email,
-    subject: 'Inscription confirmée · Glory Hair',
+    subject: `Inscription confirmée · ${brand.name}`,
     template: 'email-newsletter-confirm.html',
     data: {
       Email: email,
-      UnsubscribeURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/sav?action=unsubscribe&email=${encodeURIComponent(email)}`,
+      // Manquait le préfixe /fr/ depuis le passage des routes boutique sous
+      // /[lang]/ (Phase 1a) — /sav tout court n'existe plus.
+      UnsubscribeURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/fr/sav?action=unsubscribe&email=${encodeURIComponent(email)}`,
     },
   }).catch((e) => console.warn('[newsletter] confirm email skip:', e));
 

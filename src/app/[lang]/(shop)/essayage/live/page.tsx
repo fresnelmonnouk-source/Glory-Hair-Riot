@@ -3,7 +3,7 @@ import { TryonFlow } from '@/components/tryon/TryonFlow';
 
 
 export const metadata: Metadata = {
-  title: 'Essai Live · Glory Hair',
+  title: 'Essai Live',
   description: 'Essayez une perruque sur votre vraie photo. IA photo-réaliste, ~5 secondes, 2 essais offerts.',
 };
 

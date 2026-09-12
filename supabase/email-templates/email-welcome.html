@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bienvenue chez Glory Hair</title>
+<title>Bienvenue chez {{ .BrandName }}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Playfair+Display:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap');
   body { margin: 0; padding: 0; background: #1c0f15; color: #ede7d6; font-family: 'Work Sans', system-ui, sans-serif; }
@@ -32,12 +32,12 @@
 <body>
 <div class="container">
   <div class="header">
-    <p class="logo">Glory Hair</p>
+    <p class="logo">{{ .BrandName }}</p>
   </div>
   <div class="content">
     <p class="eyebrow"><span>·</span> Compte confirmé</p>
     <h1>Bienvenue, {{ .UserName }}</h1>
-    <p class="intro">Voici ce qui vous attend chez Glory Hair.</p>
+    <p class="intro">Voici ce qui vous attend chez {{ .BrandName }}.</p>
 
     <div class="feature">
       <h3>3 essais virtuels offerts</h3>
@@ -53,18 +53,18 @@
     </div>
 
     <div class="btn-wrap">
-      <a href="https://glory-hair-riot.vercel.app/catalogue" class="btn">Découvrir le catalogue</a>
-      <a href="https://glory-hair-riot.vercel.app/elodie" class="btn btn-outline">Parler à Élodie</a>
+      <a href="{{ .SiteURL }}/fr/catalogue" class="btn">Découvrir le catalogue</a>
+      <a href="{{ .SiteURL }}/fr/elodie" class="btn btn-outline">Parler à Élodie</a>
     </div>
 
-    <p class="signoff">À très vite.<br>L'équipe Glory Hair</p>
+    <p class="signoff">À très vite.<br>L'équipe {{ .BrandName }}</p>
   </div>
   <div class="footer">
-    <p>Glory Hair. Perruques cheveux humains, atelier Paris 9.</p>
+    <p>{{ .BrandName }}. Perruques cheveux humains, atelier Paris 9.</p>
     <p>
-      <a href="https://glory-hair-riot.vercel.app">glory-hair-riot.vercel.app</a>
+      <a href="{{ .SiteURL }}">{{ .SiteURL }}</a>
       &nbsp;·&nbsp;
-      <a href="mailto:hello@gloryhair.fr">hello@gloryhair.fr</a>
+      <a href="mailto:{{ .SupportEmail }}">{{ .SupportEmail }}</a>
     </p>
     <p style="font-size: 12px; margin-top: 12px;"><a href="{{ .UnsubscribeURL }}">Se désabonner</a></p>
   </div>

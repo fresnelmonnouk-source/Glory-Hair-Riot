@@ -7,8 +7,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   const locale: Locale = isLocale(lang) ? lang : 'fr';
   return locale === 'en'
-    ? { title: 'Checkout · Glory Hair', description: 'Complete your order in 3 steps. Free 48h shipping, secure Stripe / FedaPay payment.' }
-    : { title: 'Checkout · Glory Hair', description: 'Finalise ta commande en 3 étapes. Livraison 48h offerte, paiement sécurisé Stripe / FedaPay.' };
+    ? { title: 'Checkout', description: 'Complete your order in 3 steps. Free 48h shipping, secure Stripe / FedaPay payment.' }
+    : { title: 'Checkout', description: 'Finalise ta commande en 3 étapes. Livraison 48h offerte, paiement sécurisé Stripe / FedaPay.' };
 }
 
 export default async function CheckoutPage({ params }: { params: Promise<{ lang: string }> }) {

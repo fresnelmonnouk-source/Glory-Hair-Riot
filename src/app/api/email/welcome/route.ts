@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
+import { getBrandSettings } from '@/lib/settings/service';
 
 export const runtime = 'nodejs';
 
@@ -47,13 +48,17 @@ export async function POST() {
     || 'Membre';
 
   // Envoi
+  const brand = await getBrandSettings();
   const result = await sendEmail({
     to: profile?.email ?? user.email ?? '',
-    subject: 'Bienvenue chez Glory Hair',
+    subject: `Bienvenue chez ${brand.name}`,
     template: 'email-welcome.html',
     data: {
       UserName: userName,
-      UnsubscribeURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/compte`,
+      // Manquait le préfixe /fr/ depuis le passage des routes boutique sous
+      // /[lang]/ (Phase 1a) — /compte tout court n'existe plus, ce lien
+      // pointait vers une page inexistante.
+      UnsubscribeURL: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/fr/compte`,
     },
   });
 

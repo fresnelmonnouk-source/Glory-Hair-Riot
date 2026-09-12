@@ -8,8 +8,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   const locale: Locale = isLocale(lang) ? lang : 'fr';
   return locale === 'en'
-    ? { title: 'My account · Glory Hair', description: 'Your orders, try-ons, wishlist, Glory Club points. Issue N°01 personal space.' }
-    : { title: 'Mon compte · Glory Hair', description: 'Tes commandes, essayages, souhaits, points Glory Club. Espace personnel Issue N°01.' };
+    ? { title: 'My account', description: 'Your orders, try-ons, wishlist, Glory Club points. Issue N°01 personal space.' }
+    : { title: 'Mon compte', description: 'Tes commandes, essayages, souhaits, points Glory Club. Espace personnel Issue N°01.' };
 }
 
 export default async function ComptePage({ params }: { params: Promise<{ lang: string }> }) {

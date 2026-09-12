@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendEmail, renderOrderItemsHTML } from '@/lib/email/send';
 import { awardLoyaltyPoints } from '@/lib/loyalty/award-points';
+import { getBrandSettings } from '@/lib/settings/service';
 
 /* Email "Commande confirmée" + crédit des points fidélité pour un paiement en
    ligne (Stripe/FedaPay) — appelé depuis les webhooks UNIQUEMENT au moment où
@@ -59,12 +60,17 @@ export async function sendOrderConfirmedAfterPayment(admin: SupabaseClient, orde
   const itemsHTML = renderOrderItemsHTML(itemsForEmail);
 
   const ref = (order.id as string).slice(0, 8).toUpperCase();
-  const orderUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/compte?tab=commandes`;
+  // Manquait le préfixe /fr/ depuis le passage des routes boutique sous
+  // /[lang]/ (Phase 1a) — /compte tout court n'existe plus. Le lang réel du
+  // client n'est pas persisté sur `orders`, et les e-mails restent en
+  // français pour l'instant (décision explicite du plan i18n) : /fr/ fixe.
+  const orderUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/fr/compte?tab=commandes`;
   const shippingMethod = order.shipping_method as string;
+  const brand = await getBrandSettings();
 
   await sendEmail({
     to: toEmail,
-    subject: `Commande confirmée #${ref} · Glory Hair`,
+    subject: `Commande confirmée #${ref} · ${brand.name}`,
     template: 'email-order-confirmed.html',
     data: {
       UserName: firstName,

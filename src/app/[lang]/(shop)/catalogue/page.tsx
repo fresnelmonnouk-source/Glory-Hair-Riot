@@ -8,8 +8,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   const locale: Locale = isLocale(lang) ? lang : 'fr';
   return locale === 'en'
-    ? { title: 'Catalogue · Glory Hair', description: 'Issue N°01: 6 human-hair wigs, hand-drawn. HD lace front, 100% Remy.' }
-    : { title: 'Catalogue · Glory Hair', description: 'Issue N°01 : 6 perruques cheveux humains tirées à la main. Lace front HD, Remy 100%.' };
+    ? { title: 'Catalogue', description: 'Issue N°01: 6 human-hair wigs, hand-drawn. HD lace front, 100% Remy.' }
+    : { title: 'Catalogue', description: 'Issue N°01 : 6 perruques cheveux humains tirées à la main. Lace front HD, Remy 100%.' };
 }
 
 export default async function CataloguePage({ params }: { params: Promise<{ lang: string }> }) {

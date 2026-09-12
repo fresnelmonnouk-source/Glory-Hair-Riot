@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { getStripeSecretKey } from '@/lib/settings/service';
+import { getStripeSecretKey, getBrandSettings } from '@/lib/settings/service';
 
 /**
  * Clé secrète lue depuis la table `settings` (configurable depuis
@@ -77,7 +77,7 @@ export async function createCheckoutSession({
   cancelUrl,
   customerEmail,
 }: CreateCheckoutSessionParams) {
-  const stripe = await getStripe();
+  const [stripe, brand] = await Promise.all([getStripe(), getBrandSettings()]);
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: [
@@ -85,7 +85,7 @@ export async function createCheckoutSession({
         price_data: {
           currency,
           unit_amount: amountCents,
-          product_data: { name: `Commande #${orderRef} · Glory Hair` },
+          product_data: { name: `Commande #${orderRef} · ${brand.name}` },
         },
         quantity: 1,
       },

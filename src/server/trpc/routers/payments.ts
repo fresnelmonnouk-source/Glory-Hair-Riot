@@ -8,6 +8,7 @@ import {
   createTransaction,
   getTransactionStatus,
 } from '@/server/services/payment/fedapay.service';
+import { getBrandSettings } from '@/lib/settings/service';
 
 export const paymentsRouter = router({
   createStripeIntent: protectedProcedure
@@ -102,11 +103,12 @@ export const paymentsRouter = router({
       }
 
       // Create FedaPay transaction
+      const brand = await getBrandSettings();
       const { transactionId, token } = await createTransaction({
         amount: input.amount,
         currency: 'XOF', // West African CFA franc (can be customized)
         phone: input.phone,
-        description: `Glory Hair Order #${input.orderId.substring(0, 8)}`,
+        description: `${brand.name} Order #${input.orderId.substring(0, 8)}`,
         metadata: {
           orderId: input.orderId,
           userId: userId,
