@@ -105,11 +105,14 @@ async function validateSelfieBlob(blob: Blob): Promise<Validation> {
 }
 
 /**
- * Watermark "★ GLORY HAIR · ISSUE N°01" baked sur l'image résultat via Canvas.
+ * Watermark "★ <marque> · ISSUE N°01" baked sur l'image résultat via Canvas.
  * Visible + persisté dans le download. Si le browser ne supporte pas, fallback
- * sur l'image originale.
+ * sur l'image originale. `brandName` vient de /admin/reglages (rebrand,
+ * Phase 2) ; le domaine de la signature utilise directement
+ * `window.location.host` — reflète toujours le domaine réellement visité
+ * (ancien .vercel.app ou nouveau), sans dépendre d'un réglage à synchroniser.
  */
-async function applyWatermark(dataUrl: string): Promise<string> {
+async function applyWatermark(dataUrl: string, brandName: string): Promise<string> {
   if (typeof window === 'undefined') return dataUrl;
 
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -133,7 +136,7 @@ async function applyWatermark(dataUrl: string): Promise<string> {
   ctx.fillStyle = 'rgba(10,10,10,0.78)';
   ctx.fillRect(0, canvas.height - stripeH, canvas.width, stripeH);
 
-  // 3. Texte "★ GLORY HAIR · ISSUE N°01" centré dans le bandeau, couleur lime
+  // 3. Texte "★ <marque> · ISSUE N°01" centré dans le bandeau, couleur lime
   ctx.fillStyle = '#ede7d6';
   const fontPx = Math.max(14, Math.round(stripeH * 0.42));
   // Note : la police display (Cormorant Garamond) n'est pas forcément dispo en
@@ -142,13 +145,13 @@ async function applyWatermark(dataUrl: string): Promise<string> {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
   const cy = canvas.height - stripeH / 2;
-  ctx.fillText('Glory Hair', canvas.width / 2, cy);
+  ctx.fillText(brandName, canvas.width / 2, cy);
 
-  // 4. Petite signature à droite (URL site)
+  // 4. Petite signature à droite (domaine réellement visité)
   ctx.fillStyle = '#9C3049';
   ctx.font = `${Math.round(fontPx * 0.5)}px "Courier New", monospace`;
   ctx.textAlign = 'right';
-  ctx.fillText('glory-hair-riot.vercel.app', canvas.width - 12, canvas.height - 8);
+  ctx.fillText(window.location.host, canvas.width - 12, canvas.height - 8);
 
   // 5. Export en PNG (qualité fixe + watermark visible)
   return canvas.toDataURL('image/png');
@@ -192,6 +195,10 @@ export function TryonFlow() {
   const utils = trpc.useUtils();
   // Source de vérité connecté : table tryon_quotas via trpc.tryon.quota.
   const quotaQuery = trpc.tryon.quota.useQuery(undefined, { enabled: isLoggedIn });
+  // Nom de marque admin-éditable (rebrand, Phase 2) — utilisé pour le
+  // filigrane Canvas de l'image résultat, repli "Glory Hair".
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? 'Glory Hair';
   const [step, setStep] = useState<0|1|2|3>(0);
   const [consentOpen, setConsentOpen] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -313,7 +320,7 @@ export function TryonFlow() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    const stages = ['Préparation des images…', 'Redimensionnement…', 'Encodage base64…', 'Envoi au serveur Glory Hair…', 'Génération IA…', 'Finalisation…'];
+    const stages = ['Préparation des images…', 'Redimensionnement…', 'Encodage base64…', `Envoi au serveur ${brandName}…`, 'Génération IA…', 'Finalisation…'];
     let stageIdx = 0;
     const timer = setInterval(() => {
       stageIdx = Math.min(stageIdx + 1, stages.length - 1);
@@ -382,9 +389,9 @@ export function TryonFlow() {
       log(`✓ Succès · ${(totalMs/1000).toFixed(1)}s`, 'success');
 
       const rawDataUrl = `data:${json.mimeType};base64,${json.resultBase64}`;
-      // Watermark client-side : ajoute "★ GLORY HAIR · ISSUE N°01" en bas-droite.
+      // Watermark client-side : ajoute "★ <marque> · ISSUE N°01" en bas-droite.
       // Le résultat affiché ET téléchargé est watermarked.
-      const watermarkedUrl = await applyWatermark(rawDataUrl).catch((e) => {
+      const watermarkedUrl = await applyWatermark(rawDataUrl, brandName).catch((e) => {
         log(`⚠ Watermark skip : ${(e as Error).message}`, 'warn');
         return rawDataUrl;
       });
@@ -424,7 +431,7 @@ export function TryonFlow() {
     } finally {
       abortRef.current = null;
     }
-  }, [personBlob, selectedWig, consentGiven, quotaBlocked, isLoggedIn, quotaQuery.data, utils, log]);
+  }, [personBlob, selectedWig, consentGiven, quotaBlocked, isLoggedIn, quotaQuery.data, utils, log, brandName]);
 
   /* Navigation ---------------------------------- */
   const goNext = () => {
@@ -505,6 +512,7 @@ export function TryonFlow() {
           onRegenerate={() => void startGeneration()}
           onDownload={handleDownload}
           onRestart={handleRestart}
+          brandName={brandName}
         />}
       </main>
 
@@ -847,11 +855,12 @@ function ScreenWig({ selectedWig, setSelectedWig, quotaBlocked, quotaBannerMessa
 
 // ─── SCREEN 03 : RESULT ─────────────────────────
 
-function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progress, loaderMsg, costCents, latencyMs, onRegenerate, onDownload, onRestart }: {
+function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progress, loaderMsg, costCents, latencyMs, onRegenerate, onDownload, onRestart, brandName }: {
   status: Status; resultUrl: string | null; personUrl: string | null; error: string | null;
   selectedWig: Wig; progress: number; loaderMsg: string;
   costCents: number | null; latencyMs: number | null;
   onRegenerate: () => void; onDownload: () => void; onRestart: () => void;
+  brandName: string;
 }) {
   const [showBefore, setShowBefore] = useState(false);
 
@@ -890,7 +899,7 @@ function ScreenResult({ status, resultUrl, personUrl, error, selectedWig, progre
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={showBefore ? (personUrl ?? '') : resultUrl} alt={showBefore ? 'Avant' : 'Après'} className="h-full w-full object-cover" />
               <div className="absolute left-4 top-4 z-[5] rounded-full bg-black/70 px-3 py-1.5 text-xs text-ink">
-                {showBefore ? 'Avant' : 'Après · Glory Hair'}
+                {showBefore ? 'Avant' : `Après · ${brandName}`}
               </div>
               {costCents != null && (
                 <div className="absolute bottom-4 right-4 z-[5] rounded-full bg-black/70 px-3 py-1.5 text-xs text-faint">
