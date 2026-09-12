@@ -40,6 +40,9 @@ export function AdminTopbar() {
           Admin
         </span>
         <div className="ml-auto flex items-center gap-6">
+          <Link href="/admin/profil" className="text-sm text-muted transition-colors hover:text-ink">
+            Mon profil
+          </Link>
           <button
             type="button"
             disabled={signingOut}

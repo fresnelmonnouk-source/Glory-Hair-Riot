@@ -8,6 +8,7 @@
    le même vocabulaire de table et de pill (actif/inactif) que Sandy. */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
@@ -114,13 +115,21 @@ export default function AdminProduitsPage() {
         title="Produits"
         sub={`${items.length} perruque${items.length > 1 ? 's' : ''}`}
         actions={
-          <button
-            type="button"
-            onClick={() => setFormOpen((v) => !v)}
-            className="inline-flex items-center rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
-          >
-            {formOpen ? 'Annuler' : '+ Nouveau produit'}
-          </button>
+          <>
+            <Link
+              href="/admin/produits/nouveau"
+              className="inline-flex items-center rounded-sm border border-[color:var(--border-accent)] px-5 py-2.5 text-sm font-medium text-accent transition-colors hover:bg-surface-alt"
+            >
+              ✨ Assistant IA
+            </Link>
+            <button
+              type="button"
+              onClick={() => setFormOpen((v) => !v)}
+              className="inline-flex items-center rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi"
+            >
+              {formOpen ? 'Annuler' : '+ Nouveau produit (manuel)'}
+            </button>
+          </>
         }
       />
 

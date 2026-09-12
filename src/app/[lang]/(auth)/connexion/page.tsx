@@ -26,7 +26,8 @@ function ConnexionContent() {
   const searchParams = useSearchParams();
   const lang = useLang();
   const dict = getDictionaryClient(lang);
-  const redirect = searchParams?.get('redirect') ?? `/${lang}/compte`;
+  const explicitRedirect = searchParams?.get('redirect');
+  const redirect = explicitRedirect ?? `/${lang}/compte`;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,17 +42,32 @@ function ConnexionContent() {
 
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError || !data.user) {
         setError(
-          authError.message === 'Invalid login credentials'
+          authError?.message === 'Invalid login credentials'
             ? 'Email ou mot de passe incorrect.'
-            : authError.message
+            : (authError?.message ?? 'Connexion impossible.')
         );
         setLoading(false);
         return;
       }
-      router.push(redirect);
+
+      // Sans redirect explicite (lien "?redirect=" venu d'une page protégée),
+      // un compte admin est envoyé dans le back-office plutôt que /compte —
+      // avant ce fix, un admin se connectant ici atterrissait toujours côté
+      // client, quel que soit son rôle (bug rapporté par Fresnel 2026-09-12).
+      let destination = redirect;
+      if (!explicitRedirect) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        if (profile?.role === 'admin') destination = '/admin';
+      }
+
+      router.push(destination);
       router.refresh();
     } catch {
       setError('Service indisponible. Réessayez dans un instant.');

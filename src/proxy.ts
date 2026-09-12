@@ -5,6 +5,7 @@ import { defaultLocale, isLocale } from '@/i18n/config';
 
 const PROTECTED_ROUTES = ['/compte'];
 const ADMIN_ROUTES = ['/admin'];
+const ADMIN_LOGIN_ROUTE = '/admin/connexion';
 const AUTH_ROUTES = ['/connexion', '/inscription', '/mot-de-passe-oublie'];
 
 // Exempté du gate maintenance : la page elle-même (pas de boucle), l'admin
@@ -83,18 +84,23 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  const isAdminLogin = pathname === ADMIN_LOGIN_ROUTE;
   const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
-  const isAdmin = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
+  // /admin/connexion est un point d'entrée public à part (son propre lien,
+  // demande explicite de Fresnel) — jamais gaté comme le reste de /admin.
+  const isAdmin = ADMIN_ROUTES.some((r) => pathname.startsWith(r)) && !isAdminLogin;
   const isAuthPage = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
-  if (isProtected || isAdmin || isAuthPage) {
+  if (isProtected || isAdmin || isAuthPage || isAdminLogin) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if ((isProtected || isAdmin) && !user) {
-      // /connexion vit sous /[lang]/(auth)/connexion — il n'existe plus de
-      // route "/connexion" nue, y compris pour la redirection depuis /admin
-      // (qui, lui, reste sans préfixe de langue).
-      const loginUrl = new URL(`/${locale}/connexion`, request.url);
+      // Les routes /admin/* (hors /admin/connexion) redirigent vers l'espace
+      // de connexion ADMIN dédié, pas vers le /connexion client — c'était le
+      // même lien avant, source de confusion (tabs inscription, etc.).
+      const loginUrl = isAdmin
+        ? new URL(ADMIN_LOGIN_ROUTE, request.url)
+        : new URL(`/${locale}/connexion`, request.url);
       loginUrl.searchParams.set('redirect', isAdmin ? pathname : `/${locale}${pathname}`);
       return NextResponse.redirect(loginUrl);
     }
@@ -114,7 +120,30 @@ export async function proxy(request: NextRequest) {
     }
 
     if (isAuthPage && user) {
-      return NextResponse.redirect(new URL(`/${locale}/compte`, request.url));
+      // Un admin déjà connecté qui retombe sur /connexion (lien client) est
+      // envoyé dans le back-office, pas côté client — même correction que
+      // sur le flow de connexion lui-même (bug rapporté 2026-09-12).
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      return NextResponse.redirect(
+        new URL(profile?.role === 'admin' ? '/admin' : `/${locale}/compte`, request.url)
+      );
+    }
+
+    // Déjà connecté et on retombe sur /admin/connexion : renvoyer au bon
+    // endroit selon le rôle réel, plutôt que de réafficher le formulaire.
+    if (isAdminLogin && user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      return NextResponse.redirect(
+        new URL(profile?.role === 'admin' ? '/admin' : `/${locale}/compte`, request.url)
+      );
     }
   }
 

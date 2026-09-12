@@ -21,6 +21,7 @@ export function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps)
   // Nom de marque admin-éditable (rebrand, Phase 2) — repli "Glory Hair".
   const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
   const brandName = brandQ.data?.brand.name ?? 'Glory Hair';
+  const supportEmail = brandQ.data?.brand.legalContactEmail || 'hello@rhdempire.com';
 
   if (!isOpen) return null;
 
@@ -65,7 +66,7 @@ export function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps)
 
         <p className="mt-4 text-xs text-faint">
           Droit à l&apos;oubli : vous pouvez demander la suppression à tout moment depuis
-          votre compte (ou par email hello@gloryhair.fr).
+          votre compte (ou par email {supportEmail}).
         </p>
 
         <div className="mt-6 flex gap-3">

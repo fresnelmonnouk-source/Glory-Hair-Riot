@@ -10,7 +10,7 @@
  * Configuration :
  * - process.env.RESEND_API_KEY (obligatoire)
  * - process.env.EMAIL_FROM (optionnel, défaut : Glory Hair <onboarding@resend.dev>)
- * - process.env.EMAIL_ADMIN_TO (optionnel, défaut : hello@gloryhair.fr)
+ * - process.env.EMAIL_ADMIN_TO (optionnel, défaut : hello@rhdempire.com)
  *
  * Note prod : pour utiliser un from custom (ex: hello@gloryhair.fr), il faut
  * vérifier le domaine dans Resend Dashboard → Domains (SPF/DKIM/DMARC).
@@ -24,7 +24,7 @@ import { getBrandSettings } from '@/lib/settings/service';
 const TEMPLATES_DIR = path.join(process.cwd(), 'supabase', 'email-templates');
 
 const FROM_DEFAULT = process.env.EMAIL_FROM || 'Glory Hair <onboarding@resend.dev>';
-const ADMIN_TO    = process.env.EMAIL_ADMIN_TO || 'hello@gloryhair.fr';
+const ADMIN_TO    = process.env.EMAIL_ADMIN_TO || 'hello@rhdempire.com';
 
 let resendClient: Resend | null = null;
 function getResend(): Resend | null {

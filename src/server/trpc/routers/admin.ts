@@ -31,6 +31,10 @@ import {
   deleteArticleCoverImage,
   ArticleGenError,
 } from '@/server/services/articles/article-gen';
+import {
+  generateProductCopy,
+  ProductCopyGenError,
+} from '@/server/services/products/product-copy-gen';
 
 /** Kebab-case ASCII, sans accents — pour dériver le slug d'un article depuis son titre. */
 function slugifyTitle(title: string): string {
@@ -515,6 +519,30 @@ export const adminRouter = router({
   // Slug unique vérifié explicitement (message clair) + filet de sécurité sur
   // la contrainte UNIQUE en base (23505) si une création concurrente gagne
   // la course entre la vérification et l'insert.
+  // ─── Assistant IA — génère la fiche produit (FR+EN) à partir des faits ──
+  // Nouveau (2026-09-12, demande explicite Fresnel) : équivalent du wizard
+  // IA de Sandy Stylish côté admin (Sandy est taillée bijouterie, faits et
+  // prompt réécrits ici pour des perruques). Ne persiste rien : l'admin
+  // relit/édite dans le wizard avant de publier via createProduct ci-dessous.
+  generateProductCopy: adminProcedure
+    .input(z.object({
+      name: z.string().min(1).max(200),
+      category: z.string().min(1).max(60),
+      constructionType: z.string().min(1).max(60),
+      length: z.string().max(60).optional(),
+      color: z.string().max(60).optional(),
+      hairType: z.string().max(60).optional(),
+      priceEuros: z.number().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        return await generateProductCopy(input);
+      } catch (err) {
+        const message = err instanceof ProductCopyGenError ? err.message : 'Échec de la génération de la fiche produit.';
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+      }
+    }),
+
   createProduct: adminProcedure
     .input(z.object({
       slug: z.string()
@@ -525,6 +553,7 @@ export const adminRouter = router({
       category: z.string().min(1).max(60),
       description: z.string().max(2000).optional(),
       long_description: z.string().max(10000).optional(),
+      meta_description: z.string().max(300).optional(),
       hair_type: z.string().max(60).optional(),
       length: z.string().max(60).optional(),
       color: z.string().max(60).optional(),
@@ -536,6 +565,15 @@ export const adminRouter = router({
       active: z.boolean().default(true),
       featured: z.boolean().default(false),
       is_pack: z.boolean().default(false),
+      // Traduction EN optionnelle (issue du wizard IA) — la ligne FR de
+      // wig_translations est déjà auto-seedée par le trigger de la
+      // migration 016, seule l'EN reste à la charge de l'appelant.
+      translation_en: z.object({
+        name: z.string().min(1).max(200),
+        description: z.string().max(2000).optional(),
+        long_description: z.string().max(10000).optional(),
+        meta_description: z.string().max(300).optional(),
+      }).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { data: existing, error: checkError } = await ctx.supabase
@@ -557,6 +595,7 @@ export const adminRouter = router({
           category: input.category,
           description: input.description ?? null,
           long_description: input.long_description ?? null,
+          meta_description: input.meta_description ?? null,
           hair_type: input.hair_type ?? null,
           length: input.length ?? null,
           color: input.color ?? null,
@@ -584,6 +623,25 @@ export const adminRouter = router({
         }
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
       }
+
+      // Traduction EN best-effort : ne fait jamais échouer la création (déjà
+      // faite, visible en FR) — l'admin peut la compléter plus tard depuis
+      // la liste produits si cet upsert échoue pour une raison quelconque.
+      if (input.translation_en) {
+        const { error: trError } = await ctx.supabase.from('wig_translations').upsert({
+          wig_id: data.id,
+          locale: 'en',
+          slug: data.slug,
+          name: input.translation_en.name,
+          description: input.translation_en.description ?? null,
+          long_description: input.translation_en.long_description ?? null,
+          meta_description: input.translation_en.meta_description ?? null,
+        }, { onConflict: 'wig_id,locale' });
+        if (trError) {
+          console.error('[admin.createProduct] échec upsert traduction EN:', trError.message);
+        }
+      }
+
       return data;
     }),
 

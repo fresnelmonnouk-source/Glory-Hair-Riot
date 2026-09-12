@@ -168,11 +168,12 @@ function ContactCard({ lang }: { lang: Locale }) {
   // numéro n'est configuré plutôt que d'afficher un faux contact.
   const { data } = trpc.siteSettings.getPublic.useQuery();
   const whatsapp = data?.whatsappNumber;
+  const email = data?.brand.legalContactEmail || 'hello@rhdempire.com';
 
   return (
     <HelpCard title="Nous contacter">
       <div className="mt-3 space-y-1">
-        <InfoRow k="Mail" v="hello@gloryhair.fr" href="mailto:hello@gloryhair.fr" />
+        <InfoRow k="Mail" v={email} href={`mailto:${email}`} />
         <InfoRow k="Tél" v="+33 1 45 22 18 90" href="tel:+33145221890" />
         {whatsapp && (
           <InfoRow k="WhatsApp" v={whatsapp} href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} external />
@@ -184,13 +185,16 @@ function ContactCard({ lang }: { lang: Locale }) {
 }
 
 function AtelierCard() {
+  const { data } = trpc.siteSettings.getPublic.useQuery();
+  const email = data?.brand.legalContactEmail || 'hello@rhdempire.com';
+
   return (
     <HelpCard title="Atelier Paris 9">
       <p className="mt-3 text-sm text-muted">Sur rendez-vous, du mardi au samedi.</p>
       <div className="mt-3 space-y-1">
         <InfoRow k="Adresse" v="12 rue Notre-Dame-de-Lorette, 75009" />
         <InfoRow k="Métro" v="Saint-Georges (L12)" />
-        <InfoRow k="RDV" v="Prendre RDV" href="mailto:hello@gloryhair.fr?subject=RDV%20Atelier%20Paris%209" />
+        <InfoRow k="RDV" v="Prendre RDV" href={`mailto:${email}?subject=RDV%20Atelier%20Paris%209`} />
       </div>
     </HelpCard>
   );
