@@ -17,14 +17,20 @@ project_id = "glory-hair-riot"
 # rejeté par GoTrue, qui retombait sur site_url → les liens envoyés
 # pointaient vers localhost même pour un vrai visiteur en prod. Découvert et
 # corrigé le 2026-09-09 (Fresnel : "le lien envoyé renvoie vers localhost").
+#
+# Migration de domaine (2026-09-12, rebrand RHD Empire) : rhdempire.com
+# confirmé enregistré + pointé sur Vercel (www.rhdempire.com sert bien
+# l'app, vérifié avant ce push). site_url passe sur le nouveau domaine ;
+# additional_redirect_urls garde temporairement l'ancien .vercel.app (liens
+# déjà envoyés, favoris existants) le temps de la transition.
 [auth]
-site_url = "https://glory-hair-riot.vercel.app"
-additional_redirect_urls = ["https://glory-hair-riot.vercel.app/**", "http://localhost:3000/**"]
+site_url = "https://www.rhdempire.com"
+additional_redirect_urls = ["https://www.rhdempire.com/**", "https://rhdempire.com/**", "https://glory-hair-riot.vercel.app/**", "http://localhost:3000/**"]
 
 [auth.email.template.recovery]
-subject = "Réinitialisez votre mot de passe · Glory Hair"
+subject = "Réinitialisez votre mot de passe · RHD Empire"
 content_path = "./supabase/email-templates/email-password-reset.html"
 
 [auth.email.template.confirmation]
-subject = "Confirmez votre compte · Glory Hair"
+subject = "Confirmez votre compte · RHD Empire"
 content_path = "./supabase/email-templates/email-confirm-signup.html"
