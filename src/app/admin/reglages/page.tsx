@@ -25,9 +25,148 @@ export default function AdminReglagesPage() {
     <div className="flex flex-col gap-10">
       <AdminPageHeader title="Réglages" sub="Interrupteurs globaux et paiement" />
       <FeatureFlagsSection />
+      <BrandSettingsSection />
       <ContactSettingsSection />
       <PaymentSettingsSection />
     </div>
+  );
+}
+
+function BrandSettingsSection() {
+  const utils = trpc.useUtils();
+  const settingsQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 10_000 });
+  const saveM = trpc.siteSettings.saveBrand.useMutation({
+    onSuccess: () => {
+      void utils.siteSettings.getPublic.invalidate();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    },
+  });
+
+  const [name, setName] = useState('');
+  const [legalName, setLegalName] = useState('');
+  const [legalForm, setLegalForm] = useState('');
+  const [siret, setSiret] = useState('');
+  const [legalAddress, setLegalAddress] = useState('');
+  const [legalContactEmail, setLegalContactEmail] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  const [prevData, setPrevData] = useState(settingsQ.data);
+  if (settingsQ.data !== prevData) {
+    setPrevData(settingsQ.data);
+    if (settingsQ.data) {
+      setName(settingsQ.data.brand.name);
+      setLegalName(settingsQ.data.brand.legalName ?? '');
+      setLegalForm(settingsQ.data.brand.legalForm ?? '');
+      setSiret(settingsQ.data.brand.siret ?? '');
+      setLegalAddress(settingsQ.data.brand.legalAddress ?? '');
+      setLegalContactEmail(settingsQ.data.brand.legalContactEmail ?? '');
+    }
+  }
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    saveM.mutate({
+      brand_name: name,
+      brand_legal_name: legalName,
+      brand_legal_form: legalForm,
+      brand_siret: siret,
+      brand_legal_address: legalAddress,
+      brand_legal_contact_email: legalContactEmail,
+    });
+  }
+
+  return (
+    <section>
+      <p className="eyebrow">Identité de marque</p>
+      <p className="mt-2 max-w-xl text-sm text-muted">
+        Nom affiché sur tout le site (nav, footer, e-mails). Les champs légaux servent aux mentions légales — laissez vide tant qu&apos;ils ne sont pas encore décidés, ils s&apos;afficheront comme « à compléter » plutôt que d&apos;être inventés.
+      </p>
+
+      <form onSubmit={handleSave} className="mt-4 flex max-w-xl flex-col gap-5 rounded-lg border border-hairline bg-surface p-6">
+        <div>
+          <label htmlFor="brand-name" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Nom de la marque</label>
+          <input
+            id="brand-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Glory Hair"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 border-t border-hairline pt-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="brand-legal-name" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Raison sociale</label>
+            <input
+              id="brand-legal-name"
+              type="text"
+              value={legalName}
+              onChange={(e) => setLegalName(e.target.value)}
+              placeholder="Ex. RHD Empire SAS"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+          <div>
+            <label htmlFor="brand-legal-form" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Forme juridique</label>
+            <input
+              id="brand-legal-form"
+              type="text"
+              value={legalForm}
+              onChange={(e) => setLegalForm(e.target.value)}
+              placeholder="Ex. SASU"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+          <div>
+            <label htmlFor="brand-siret" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">SIRET</label>
+            <input
+              id="brand-siret"
+              type="text"
+              value={siret}
+              onChange={(e) => setSiret(e.target.value)}
+              placeholder="123 456 789 00012"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+          <div>
+            <label htmlFor="brand-legal-email" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">E-mail de contact légal</label>
+            <input
+              id="brand-legal-email"
+              type="email"
+              value={legalContactEmail}
+              onChange={(e) => setLegalContactEmail(e.target.value)}
+              placeholder="contact@..."
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="brand-legal-address" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Adresse légale</label>
+            <input
+              id="brand-legal-address"
+              type="text"
+              value={legalAddress}
+              onChange={(e) => setLegalAddress(e.target.value)}
+              placeholder="Numéro, rue, code postal, ville"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            />
+          </div>
+        </div>
+
+        {saveM.error && (
+          <p className="text-sm text-[color:var(--danger)]">{saveM.error.message}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={saveM.isPending}
+          className="inline-flex w-fit items-center gap-2 self-start rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {saveM.isPending ? '…' : saved ? (<><Check size={16} strokeWidth={2.5} /> Enregistré</>) : 'Enregistrer'}
+        </button>
+      </form>
+    </section>
   );
 }
 

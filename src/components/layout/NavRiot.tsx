@@ -26,6 +26,11 @@ export function NavRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
     enabled: !!user,
     staleTime: 30_000,
   });
+  // Nom de marque admin-éditable (rebrand, Phase 2) — repli sur le
+  // dictionnaire i18n (dict.brand, "Glory Hair") tant que la requête charge
+  // ou si l'admin n'a encore rien configuré dans /admin/reglages.
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? dict.brand;
 
   const NAV: ReadonlyArray<readonly [string, string]> = [
     [`/${lang}/catalogue`, dict.nav.catalogue],
@@ -60,7 +65,7 @@ export function NavRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
     <header className="sticky top-0 z-40 border-b border-hairline bg-app/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center gap-8 px-6">
         <Link href={`/${lang}`} className="font-logo text-[22px] leading-none tracking-[0.02em] text-ink md:text-[30px]">
-          {dict.brand}
+          {brandName}
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm md:flex">

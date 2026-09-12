@@ -12,11 +12,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
 
 export function AdminTopbar() {
   const router = useRouter();
   const { signOut } = useSession();
   const [signingOut, setSigningOut] = useState(false);
+  // Nom de marque admin-éditable (rebrand, Phase 2) — repli "Glory Hair"
+  // tant que /admin/reglages n'a rien configuré ou pendant le chargement.
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? 'Glory Hair';
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -29,7 +34,7 @@ export function AdminTopbar() {
     <header className="sticky top-0 z-40 border-b border-hairline bg-deepest/95 backdrop-blur">
       <div className="flex h-16 items-center gap-3 px-6">
         <Link href="/admin" className="font-logo text-[26px] leading-none text-ink">
-          Glory Hair
+          {brandName}
         </Link>
         <span className="rounded-full border border-hairline px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted">
           Admin

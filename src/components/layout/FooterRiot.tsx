@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
+import { trpc } from '@/lib/trpc/client';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries';
 
@@ -16,6 +17,10 @@ export function FooterRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Nom de marque admin-éditable (rebrand, Phase 2) — même pattern que
+  // NavRiot : repli sur dict.brand tant que non configuré/chargé.
+  const brandQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 60_000 });
+  const brandName = brandQ.data?.brand.name ?? dict.brand;
 
   const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     {
@@ -94,7 +99,7 @@ export function FooterRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
       <div className="mx-auto max-w-[1180px] px-6 py-16">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <p className="font-logo text-2xl tracking-[0.02em] text-ink">{dict.brand}</p>
+            <p className="font-logo text-2xl tracking-[0.02em] text-ink">{brandName}</p>
             <p className="mt-3 max-w-[280px] text-sm leading-relaxed text-faint">
               {dict.footer.tagline}
             </p>
@@ -136,7 +141,7 @@ export function FooterRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-hairline pt-6 text-xs text-faint sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} {dict.brand}. {dict.footer.droitsReserves}</p>
+          <p>© {year} {brandName}. {dict.footer.droitsReserves}</p>
           <ul className="flex flex-wrap gap-4">
             {LEGAL.map((l) => (
               <li key={l.label}>
