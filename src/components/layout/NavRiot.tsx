@@ -10,6 +10,7 @@ import { trpc } from '@/lib/trpc/client';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries';
 import { LangSwitch } from './LangSwitch';
+import { CurrencySwitch } from './CurrencySwitch';
 
 /* Port structurel 1:1 de sandy-stylish/src/components/site-header.tsx
    (header sticky h-16, logo font-logo, nav gap-7, actions à droite
@@ -79,6 +80,7 @@ export function NavRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
         <div className="ml-auto flex items-center gap-4 text-sm">
           <div className="hidden items-center gap-4 md:flex">
             <LangSwitch lang={lang} />
+            <CurrencySwitch />
             <Link href={`/${lang}/compte?tab=souhaits`} className="text-muted transition-colors hover:text-ink">
               {dict.nav.favoris}{user ? ` (${wishlistCount.data ?? 0})` : ''}
             </Link>
@@ -115,6 +117,7 @@ export function NavRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
             <Link href={accountHref} className="text-muted">{loading ? '…' : accountLabel}</Link>
             <Link href={`/${lang}/compte?tab=souhaits`} className="text-muted">{dict.nav.favoris}{user ? ` (${wishlistCount.data ?? 0})` : ''}</Link>
             <LangSwitch lang={lang} />
+            <CurrencySwitch />
           </div>
         </div>
       )}

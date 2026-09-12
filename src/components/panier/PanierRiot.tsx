@@ -12,6 +12,7 @@ import { WIG_BY_ID } from '@/lib/wigs-data';
 import { trpc } from '@/lib/trpc/client';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries';
+import { useMoneyFormatter } from '@/lib/currency-client';
 
 const TVA_RATE = 0.20;
 
@@ -49,6 +50,7 @@ export function PanierRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const [promoFeedback, setPromoFeedback] = useState<{ ok: boolean; text: string } | null>(null);
 
   const validateM = trpc.discounts.validate.useMutation();
+  const { money } = useMoneyFormatter();
 
   const tva = Math.round(((subtotal * TVA_RATE) / (1 + TVA_RATE)) * 100) / 100;
   const discountEuros = discountCents / 100;
@@ -64,7 +66,7 @@ export function PanierRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
         onSuccess: (res) => {
           setDiscount(res.code, res.discountCents);
           setPromo('');
-          setPromoFeedback({ ok: true, text: `Code ${res.code} appliqué : −${(res.discountCents / 100).toFixed(2)}€` });
+          setPromoFeedback({ ok: true, text: `Code ${res.code} appliqué : −${money(res.discountCents)}` });
         },
         onError: (err) => {
           clearDiscount();
@@ -149,7 +151,7 @@ export function PanierRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
                 </div>
 
                 <p className="w-24 shrink-0 text-right text-sm text-accent tabular-nums">
-                  {item.price_at_added * item.quantity}€
+                  {money(item.price_at_added * item.quantity * 100)}
                 </p>
 
                 <button
@@ -170,7 +172,7 @@ export function PanierRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
             <dl className="space-y-3 text-sm">
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-muted">{dict.cart.subtotal}</dt>
-                <dd className="text-ink tabular-nums">{subtotal.toFixed(2)}€</dd>
+                <dd className="text-ink tabular-nums">{money(Math.round(subtotal * 100))}</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-muted">{dict.cart.shipping}</dt>
@@ -178,19 +180,19 @@ export function PanierRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
               </div>
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-muted">{dict.cart.vatIncluded}</dt>
-                <dd className="text-ink tabular-nums">{tva.toFixed(2)}€</dd>
+                <dd className="text-ink tabular-nums">{money(Math.round(tva * 100))}</dd>
               </div>
               {discountCode && (
                 <div className="flex items-baseline justify-between gap-4">
                   <dt className="text-muted">{dict.cart.discount} ({discountCode})</dt>
-                  <dd className="text-[color:var(--success)] tabular-nums">−{discountEuros.toFixed(2)}€</dd>
+                  <dd className="text-[color:var(--success)] tabular-nums">−{money(Math.round(discountEuros * 100))}</dd>
                 </div>
               )}
             </dl>
 
             <div className="mt-5 flex items-baseline justify-between gap-4 border-t border-hairline pt-5">
               <span className="text-lg text-ink">{dict.cart.total}</span>
-              <span className="text-lg text-accent tabular-nums">{total.toFixed(2)}€</span>
+              <span className="text-lg text-accent tabular-nums">{money(Math.round(total * 100))}</span>
             </div>
 
             <Link

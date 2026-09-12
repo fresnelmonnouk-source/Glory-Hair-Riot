@@ -19,6 +19,7 @@ import { useSession } from '@/hooks/use-session';
 import { WIG_BY_ID } from '@/lib/wigs-data';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries';
+import { useMoneyFormatter } from '@/lib/currency-client';
 
 const TVA_RATE = 0.20;
 
@@ -61,6 +62,7 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
   const discountCode = useCartStore((s) => s.discountCode);
   const discountCents = useCartStore((s) => s.discountCents);
   const clearDiscount = useCartStore((s) => s.clearDiscount);
+  const { money } = useMoneyFormatter();
 
   const [address, setAddress] = useState<Address>({
     email: '', prenom: '', nom: '', adresse: '', ville: '', codePostal: '', pays: 'France', telephone: '',
@@ -217,7 +219,7 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-3">
                       <span className="text-sm text-ink">{opt.label} · {opt.eta}</span>
-                      <span className="shrink-0 text-sm text-accent tabular-nums">{opt.price === 0 ? 'Gratuite' : `+${opt.price.toFixed(2)}€`}</span>
+                      <span className="shrink-0 text-sm text-accent tabular-nums">{opt.price === 0 ? 'Gratuite' : `+${money(Math.round(opt.price * 100))}`}</span>
                     </span>
                     <span className="mt-0.5 block text-xs text-faint">{opt.note}</span>
                   </span>
@@ -260,7 +262,7 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
                 return (
                   <li key={item.id} className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="min-w-0 truncate text-muted">{item.quantity} × {wig?.name ?? item.name ?? 'Perruque'}</span>
-                    <span className="shrink-0 text-ink tabular-nums">{(item.price_at_added * item.quantity).toFixed(2)}€</span>
+                    <span className="shrink-0 text-ink tabular-nums">{money(Math.round(item.price_at_added * item.quantity * 100))}</span>
                   </li>
                 );
               })}
@@ -269,27 +271,27 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-muted">{dict.cart.subtotal}</dt>
-                <dd className="text-ink tabular-nums">{subtotal.toFixed(2)}€</dd>
+                <dd className="text-ink tabular-nums">{money(Math.round(subtotal * 100))}</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-muted">{dict.cart.shipping}</dt>
-                <dd className="text-ink tabular-nums">{shippingPrice === 0 ? dict.cart.free : `${shippingPrice.toFixed(2)}€`}</dd>
+                <dd className="text-ink tabular-nums">{shippingPrice === 0 ? dict.cart.free : money(Math.round(shippingPrice * 100))}</dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-muted">{dict.cart.vatIncluded}</dt>
-                <dd className="text-ink tabular-nums">{tva.toFixed(2)}€</dd>
+                <dd className="text-ink tabular-nums">{money(Math.round(tva * 100))}</dd>
               </div>
               {discountCode && (
                 <div className="flex items-baseline justify-between gap-4">
                   <dt className="text-muted">{dict.cart.discount} ({discountCode})</dt>
-                  <dd className="text-[color:var(--success)] tabular-nums">−{discountEuros.toFixed(2)}€</dd>
+                  <dd className="text-[color:var(--success)] tabular-nums">−{money(Math.round(discountEuros * 100))}</dd>
                 </div>
               )}
             </dl>
 
             <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-hairline pt-4">
               <span className="text-lg text-ink">{dict.cart.total}</span>
-              <span className="text-lg text-accent tabular-nums">{total.toFixed(2)}€</span>
+              <span className="text-lg text-accent tabular-nums">{money(Math.round(total * 100))}</span>
             </div>
 
             <button
@@ -297,7 +299,7 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
               disabled={submitting || !addressValid}
               className="mt-4 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
             >
-              {submitting ? dict.checkout.processing : `${dict.checkout.confirm} · ${total.toFixed(2)}€`}
+              {submitting ? dict.checkout.processing : `${dict.checkout.confirm} · ${money(Math.round(total * 100))}`}
             </button>
 
             {error && <p className="mt-3 text-center text-xs text-danger">{error}</p>}

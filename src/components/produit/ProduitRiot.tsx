@@ -12,6 +12,7 @@ import { ProductCard } from '@/components/product-card';
 import { ProductGallery } from './ProductGallery';
 import { AvisSection } from './AvisSection';
 import type { Locale } from '@/i18n/config';
+import { useMoneyFormatter } from '@/lib/currency-client';
 
 /* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/produit/[slug]/page.tsx
    (retour catalogue, grid 2 col galerie+infos, lien avis, dl attributs, section
@@ -42,6 +43,7 @@ function PackView({ wig, lang }: { wig: Wig; lang: Locale }) {
   const [added, setAdded] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const { money } = useMoneyFormatter();
 
   const addFavoriteM = trpc.wishlist.addBySlug.useMutation({
     onSuccess: () => setFavorited(true),
@@ -80,7 +82,7 @@ function PackView({ wig, lang }: { wig: Wig; lang: Locale }) {
         <div>
           <p className="eyebrow">Pack</p>
           <h1 className="display mt-2 text-4xl text-ink md:text-5xl">{wig.name}</h1>
-          <p className="mt-4 text-lg text-accent tabular-nums">{wig.price}€</p>
+          <p className="mt-4 text-lg text-accent tabular-nums">{money(wig.price * 100)}</p>
 
           {wig.packItems && wig.packItems.length > 0 && (
             <div className="mt-8">
@@ -135,6 +137,7 @@ function WigView({ wig, similarPool, lang }: { wig: Wig; similarPool: Wig[]; lan
   const [favorited, setFavorited] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
+  const { money } = useMoneyFormatter();
   const nameOnly = wig.name.replace(/\s*\d+"$/, '').trim();
 
   const similar = useMemo(() => similarPool.filter((w) => w.id !== wig.id).slice(0, 4), [similarPool, wig.id]);
@@ -193,7 +196,7 @@ function WigView({ wig, similarPool, lang }: { wig: Wig; similarPool: Wig[]; lan
             </a>
           )}
 
-          <p className="mt-4 text-lg text-accent tabular-nums">{wig.price}€</p>
+          <p className="mt-4 text-lg text-accent tabular-nums">{money(wig.price * 100)}</p>
 
           <p className="mt-6 max-w-prose leading-relaxed text-muted">
             {wig.style} {wig.length}″ teinte {wig.tone.toLowerCase()}. Lace front HD invisible,
