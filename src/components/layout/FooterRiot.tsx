@@ -58,13 +58,12 @@ export function FooterRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
     },
   ];
 
-  // TODO Phase 2c (rebrand) : pages légales réelles pas encore construites,
-  // ces 3 liens restent sur /sav (FAQ) en attendant, comme avant cette
-  // migration i18n — ne pas introduire de lien mort.
+  // Pages légales réelles (Phase 2c, rebrand) — remplacent le repli
+  // temporaire vers /sav (FAQ) posé en Phase 1a.
   const LEGAL: { label: string; href: string }[] = [
-    { label: dict.footer.mentionsLegales, href: `/${lang}/sav` },
-    { label: dict.footer.cgv, href: `/${lang}/sav` },
-    { label: dict.footer.confidentialite, href: `/${lang}/sav` },
+    { label: dict.footer.mentionsLegales, href: `/${lang}/mentions-legales` },
+    { label: dict.footer.cgv, href: `/${lang}/cgv` },
+    { label: dict.footer.confidentialite, href: `/${lang}/confidentialite` },
   ];
 
   async function onSubmit(e: FormEvent) {

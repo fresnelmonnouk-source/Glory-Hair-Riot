@@ -162,9 +162,9 @@ export default function InscriptionPage() {
 
           <p className="text-xs leading-relaxed text-faint">
             En créant un compte, vous acceptez nos{' '}
-            <a href={`/${lang}/sav`} target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">CGV</a>{' '}
+            <a href={`/${lang}/cgv`} target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">CGV</a>{' '}
             et notre{' '}
-            <a href={`/${lang}/sav`} target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">politique de confidentialité</a>.
+            <a href={`/${lang}/confidentialite`} target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">politique de confidentialité</a>.
           </p>
 
           <Link href={`/${lang}/connexion`} className="w-full rounded-sm border border-line px-6 py-3 text-center text-sm text-ink transition-colors hover:border-[color:var(--border-accent)] hover:text-accent">
