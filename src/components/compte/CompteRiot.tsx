@@ -287,11 +287,13 @@ function FidelitePanel({ points }: { points: number }) {
       <div className="rounded-lg border border-hairline bg-app p-6">
         <p className="eyebrow">Gagner des points</p>
         <ul className="mt-4 space-y-3 text-sm">
+          {/* Retiré (audit "mock data" 2026-09-13) : avis/parrainage/
+              anniversaire n'attribuent en réalité aucun point, aucune
+              logique serveur ne les implémente. Seul +10/€ est réel
+              (awardLoyaltyPoints). */}
           {[
             { pts: '+10', label: 'Par euro dépensé' },
-            { pts: '+200', label: 'Avis vérifié photo' },
-            { pts: '+500', label: 'Parrainage validé' },
-            { pts: '+100', label: 'Anniversaire Glory' },
+            { pts: '+50', label: 'Création de compte' },
           ].map((g) => (
             <li key={g.label} className="flex items-center gap-3">
               <span className="w-12 shrink-0 text-accent tabular-nums">{g.pts}</span>

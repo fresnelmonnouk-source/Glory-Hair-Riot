@@ -59,7 +59,12 @@ function AdminConnexionContent() {
 
       if (profile?.role !== 'admin') {
         await supabase.auth.signOut();
-        setError("Ce compte n'a pas les droits administrateur.");
+        // Message générique (audit sécurité 2026-09-13) : "pas les droits
+        // admin" confirmait à quelqu'un qui possède déjà des identifiants
+        // valides (ex. fuités) qu'ils appartiennent bien à un compte admin,
+        // même sans jamais réussir à s'y connecter — même message que les
+        // identifiants invalides, comme /connexion côté client.
+        setError('E-mail ou mot de passe incorrect.');
         setLoading(false);
         return;
       }

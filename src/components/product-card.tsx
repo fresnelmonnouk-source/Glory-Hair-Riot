@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Wig } from '@/lib/wigs-data';
 import type { Locale } from '@/i18n/config';
 import { useMoneyFormatter } from '@/lib/currency-client';
+import { getDictionaryClient } from '@/i18n/client';
 
 /* Port structurel 1:1 de sandy-stylish/src/components/product-card.tsx
    (aspect-[4/5] bg-surface, hover scale, font-display text-xl, prix en
@@ -21,16 +23,30 @@ import { useMoneyFormatter } from '@/lib/currency-client';
 
 export function ProductCard({ wig, lang }: { wig: Wig; lang: Locale }) {
   const { money } = useMoneyFormatter();
+  const dict = getDictionaryClient(lang);
+  const outOfStock = wig.stockQuantity === 0;
   return (
     <Link href={`/${lang}/perruque/${wig.id}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={wig.img}
-          alt={wig.name}
-          className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03]"
-          loading="lazy"
-        />
+        {wig.img ? (
+          <Image
+            src={wig.img}
+            alt={wig.name}
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            className={`object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03] ${outOfStock ? 'grayscale' : ''}`}
+          />
+        ) : (
+          // Jamais de repli sur la photo d'un AUTRE produit (bug corrigé
+          // 2026-09-13) — placeholder neutre le temps qu'une vraie photo
+          // soit ajoutée (ex. produit créé par le wizard IA).
+          <div className="h-full w-full" style={{ background: 'linear-gradient(160deg, var(--accent-hi), var(--accent-deep))' }} />
+        )}
+        {outOfStock && (
+          <span className="absolute left-2 top-2 rounded-full bg-[color:var(--bg-body)]/90 px-2.5 py-1 text-[10px] uppercase tracking-[0.1em] text-muted">
+            {dict.produit.outOfStock}
+          </span>
+        )}
       </div>
 
       <h3 className="mt-4 font-display text-xl text-ink">
@@ -39,7 +55,7 @@ export function ProductCard({ wig, lang }: { wig: Wig; lang: Locale }) {
         )}
       </h3>
       {wig.isPack ? (
-        <p className="mt-1 line-clamp-1 text-sm text-faint">Pack</p>
+        <p className="mt-1 line-clamp-1 text-sm text-faint">{dict.produit.pack}</p>
       ) : (
         <p className="mt-1 line-clamp-1 text-sm text-faint">{wig.style} · {wig.tone}</p>
       )}

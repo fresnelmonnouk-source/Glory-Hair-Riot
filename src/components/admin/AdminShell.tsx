@@ -32,6 +32,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return () => { document.body.style.overflow = prev; };
   }, [drawerOpen]);
 
+  // /admin/connexion est un point d'entrée public, pas une page du
+  // back-office — l'afficher dans la coquille complète (sidebar 14 liens +
+  // bouton Déconnexion) avant même d'être connecté était incohérent et
+  // trompeur (audit visuel 2026-09-13). Rendu seul, sans chrome, comme le
+  // layout (auth) côté client. Placé APRÈS tous les hooks ci-dessus (jamais
+  // de hook après un retour anticipé — règle des Hooks React).
+  if (pathname === '/admin/connexion') {
+    return <div className="min-h-full">{children}</div>;
+  }
+
   return (
     <div className="min-h-full">
       <div className="flex items-stretch border-b border-hairline md:border-b-0">

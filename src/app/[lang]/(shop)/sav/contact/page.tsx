@@ -13,7 +13,7 @@ import { IconBadge } from '@/components/auth/ui';
 import { useLang } from '@/i18n/client';
 
 const INPUT_CLASS =
-  'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-[color:var(--accent)] focus:outline-none';
+  'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-[color:var(--accent-hi)] focus:outline-none';
 
 export default function ContactPage() {
   const lang = useLang();

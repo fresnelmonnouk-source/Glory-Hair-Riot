@@ -16,8 +16,9 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
-const INPUT_CLASS = 'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]';
+const INPUT_CLASS = 'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]';
 
 function slugify(name: string): string {
   return name
@@ -33,6 +34,7 @@ export default function AdminPacksPage() {
   const utils = trpc.useUtils();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const packsQ = trpc.admin.listPacks.useQuery(undefined, { staleTime: 10_000 });
   const candidatesQ = trpc.admin.listPackableProducts.useQuery();
@@ -76,9 +78,9 @@ export default function AdminPacksPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Supprimer ce pack ?')) return;
     await deleteM.mutateAsync({ productId: id });
     if (editingId === id) setFormOpen(false);
+    setPendingDeleteId(null);
   }
 
   return (
@@ -139,7 +141,7 @@ export default function AdminPacksPage() {
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-4">
                         <button type="button" onClick={() => openEdit(p.id)} className="text-sm text-accent transition-colors hover:text-[color:var(--accent-hi)]">Éditer</button>
-                        <button type="button" onClick={() => handleDelete(p.id)} className="text-sm text-faint transition-colors hover:text-[color:var(--danger)]">Supprimer</button>
+                        <button type="button" onClick={() => setPendingDeleteId(p.id)} className="text-sm text-faint transition-colors hover:text-[color:var(--danger)]">Supprimer</button>
                       </div>
                     </td>
                   </tr>
@@ -149,6 +151,17 @@ export default function AdminPacksPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title={`Supprimer "${packs.find((p) => p.id === pendingDeleteId)?.name ?? 'ce pack'}" ?`}
+        description="Cette action est définitive."
+        confirmLabel="Supprimer"
+        danger
+        pending={deleteM.isPending}
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={() => { if (pendingDeleteId) void handleDelete(pendingDeleteId); }}
+      />
     </div>
   );
 }

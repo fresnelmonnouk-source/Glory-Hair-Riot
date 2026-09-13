@@ -9,10 +9,12 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { useSession } from '@/hooks/use-session';
 import { OrderStatusPill } from '@/components/admin/ui';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 function euros(cents: number | null | undefined) {
   return Math.round((cents ?? 0) / 100).toLocaleString('fr-FR');
@@ -25,9 +27,15 @@ export default function AdminClientDetailPage() {
 
   const utils = trpc.useUtils();
   const detailQ = trpc.admin.customerDetails.useQuery({ userId }, { enabled: !!userId });
+  const [pendingRole, setPendingRole] = useState<{ email: string; role: 'customer' | 'admin' | 'support' } | null>(null);
+  const [roleError, setRoleError] = useState<string | null>(null);
   const setRoleM = trpc.admin.setUserRole.useMutation({
-    onSuccess: () => { void utils.admin.customerDetails.invalidate({ userId }); void utils.admin.listCustomers.invalidate(); },
-    onError: (err) => alert(err.message),
+    onSuccess: () => {
+      void utils.admin.customerDetails.invalidate({ userId });
+      void utils.admin.listCustomers.invalidate();
+      setPendingRole(null);
+    },
+    onError: (err) => { setRoleError(err.message); setPendingRole(null); },
   });
 
   if (detailQ.isLoading) {
@@ -72,9 +80,8 @@ export default function AdminClientDetailPage() {
             onChange={(e) => {
               const newRole = e.target.value as 'customer' | 'admin' | 'support';
               if (newRole !== profile.role) {
-                if (confirm(`Changer le rôle de ${profile.email} vers "${newRole}" ?`)) {
-                  setRoleM.mutate({ userId: profile.id, role: newRole });
-                }
+                setRoleError(null);
+                setPendingRole({ email: profile.email, role: newRole });
               }
             }}
             className="rounded-sm border border-input bg-transparent px-3 py-2 text-sm text-ink outline-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -86,6 +93,23 @@ export default function AdminClientDetailPage() {
         </div>
       </div>
       {isSelf && <p className="mt-3 text-xs text-faint">Vous ne pouvez pas modifier votre propre rôle.</p>}
+      {roleError && <p className="mt-3 text-xs text-[color:var(--danger)]">{roleError}</p>}
+
+      <ConfirmDialog
+        open={pendingRole !== null}
+        title={`Changer le rôle de ${pendingRole?.email} vers "${pendingRole?.role}" ?`}
+        description={
+          pendingRole?.role === 'admin'
+            ? 'Ce compte aura un accès complet au back-office (commandes, clients, réglages, paiement).'
+            : undefined
+        }
+        danger={pendingRole?.role === 'admin'}
+        pending={setRoleM.isPending}
+        onCancel={() => setPendingRole(null)}
+        onConfirm={() => {
+          if (pendingRole) setRoleM.mutate({ userId: profile.id, role: pendingRole.role });
+        }}
+      />
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="flex flex-col gap-6 lg:col-span-2">

@@ -23,11 +23,16 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   if (!wig) {
     return { title: lang === 'en' ? 'Wig not found' : 'Perruque introuvable' };
   }
+  // meta_description dédiée (wig_translations, wizard IA ou saisie admin)
+  // prioritaire sur le gabarit générique — audit SEO 2026-09-13 : les 6
+  // fiches produit avaient des meta descriptions quasi identiques faute de
+  // lire ce champ, pourtant en base depuis le début.
+  const fallbackDescription = lang === 'en'
+    ? `${wig.cat} ${wig.style} shade ${wig.tone}. 100% Remy human hair, HD lace front. €${wig.price} · Issue N°01.`
+    : `${wig.cat} ${wig.style} teinte ${wig.tone}. Cheveux humains Remy 100%, lace front HD. ${wig.price}€ · Issue N°01.`;
   return {
     title: wig.name,
-    description: lang === 'en'
-      ? `${wig.cat} ${wig.style} shade ${wig.tone}. 100% Remy human hair, HD lace front. €${wig.price} · Issue N°01.`
-      : `${wig.cat} ${wig.style} teinte ${wig.tone}. Cheveux humains Remy 100%, lace front HD. ${wig.price}€ · Issue N°01.`,
+    description: wig.metaDescription || fallbackDescription,
     // hreflang par fiche produit (pas juste site-wide comme le layout racine) :
     // slug identique dans les deux locales pour l'instant (voir service.ts/
     // migration 016), donc seul le préfixe change — mais calculé ici plutôt

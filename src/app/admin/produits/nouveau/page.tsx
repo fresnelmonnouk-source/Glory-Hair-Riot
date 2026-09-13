@@ -19,10 +19,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
+import { Loader2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
-const INPUT = 'w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]';
+const INPUT = 'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]';
 const LABEL = 'mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted';
 const TEXTAREA = `${INPUT} min-h-[100px] resize-y`;
 
@@ -112,6 +113,7 @@ export default function ProductWizardPage() {
 
   const generateM = trpc.admin.generateProductCopy.useMutation();
   const createM = trpc.admin.createProduct.useMutation();
+  const [translationEnFailed, setTranslationEnFailed] = useState(false);
 
   function patch(p: Partial<Facts>) {
     setFacts((f) => ({ ...f, ...p }));
@@ -170,7 +172,10 @@ export default function ProductWizardPage() {
         },
       },
       {
-        onSuccess: () => setStep(4),
+        onSuccess: (result) => {
+          setTranslationEnFailed(Boolean(result.translationEnFailed));
+          setStep(4);
+        },
       },
     );
   }
@@ -282,15 +287,16 @@ export default function ProductWizardPage() {
             disabled={!canSubmitBrief || !slug}
             className="mt-6 inline-flex items-center gap-2 rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:cursor-not-allowed disabled:opacity-60"
           >
-            ✨ Générer la fiche produit
+            Générer la fiche produit
           </button>
         </form>
       )}
 
       {/* ─── Étape 2 : Génération ─── */}
       {step === 2 && (
-        <div className="mt-8 max-w-2xl rounded-lg border border-hairline bg-surface p-10 text-center">
-          <p className="text-sm text-muted">L&apos;IA rédige la fiche en français et en anglais…</p>
+        <div role="status" aria-live="polite" className="mt-8 max-w-2xl rounded-lg border border-hairline bg-surface p-10 text-center">
+          <Loader2 aria-hidden size={22} className="mx-auto animate-spin text-accent" />
+          <p className="mt-3 text-sm text-muted">L&apos;IA rédige la fiche en français et en anglais…</p>
         </div>
       )}
 
@@ -380,9 +386,17 @@ export default function ProductWizardPage() {
       {step === 4 && (
         <div className="mt-8 max-w-2xl rounded-lg border border-hairline bg-surface p-10 text-center">
           <h2 className="display text-2xl text-ink">Produit publié.</h2>
-          <p className="mt-3 text-sm text-muted">
-            Fiche FR + EN créée. Il ne reste qu&apos;à ajouter les photos (pas encore d&apos;upload
-            depuis l&apos;admin, à faire manuellement en attendant).
+          {translationEnFailed ? (
+            <p className="mt-3 text-sm text-[color:var(--danger)]">
+              Fiche FR créée, mais l&apos;enregistrement de la traduction EN a échoué. La fiche
+              anglaise reste vide pour l&apos;instant, complète-la depuis la liste produits.
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-muted">Fiche FR + EN créée.</p>
+          )}
+          <p className="mt-2 text-sm text-muted">
+            Il ne reste qu&apos;à ajouter les photos (pas encore d&apos;upload depuis l&apos;admin, à
+            faire manuellement en attendant).
           </p>
           <button
             type="button"

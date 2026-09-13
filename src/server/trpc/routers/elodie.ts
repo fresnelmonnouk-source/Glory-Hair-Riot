@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure, publicProcedure } from '../init';
 import { getElodieResponse, ElodieError } from '@/server/services/elodie/elodie.service';
+import { checkLimit, getRequestIp } from '@/lib/rate-limit';
 
 function toTrpcError(err: unknown): never {
   if (err instanceof ElodieError) {
@@ -175,9 +176,27 @@ export const elodieRouter = router({
       return { success: true };
     }),
 
+  // Endpoint PUBLIC (pas de compte requis, pas de persistance) — c'est en
+  // fait celui réellement utilisé par ElodieRiot.tsx (le composant
+  // "Conseiller" affiché sans connexion). Trouvé sans AUCUN rate-limit
+  // (audit 2026-09-13, en répondant à "les IA sont protégées contre les
+  // injections de prompt") : n'importe qui pouvait scripter des appels
+  // illimités à /api/trpc/elodie.chat, sans authentification, à la charge
+  // du compte DeepSeek de Fresnel. Même limite que /api/newsletter (5/h/IP),
+  // un conseil produit n'a pas besoin d'être plus permissif qu'un
+  // formulaire d'inscription.
   chat: publicProcedure
     .input(z.object({ message: z.string().min(1).max(2000) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      const ip = ctx.req ? getRequestIp(ctx.req) : 'unknown';
+      const limit = checkLimit(`elodie-chat:${ip}`, 10, 3600_000);
+      if (!limit.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Trop de messages envoyés. Réessayez dans un instant.',
+        });
+      }
+
       try {
         const { content, tokens_used } = await getElodieResponse([
           { role: 'user', content: input.message }

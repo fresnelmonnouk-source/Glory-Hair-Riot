@@ -47,8 +47,14 @@ import { createCheckoutSession } from '@/server/services/payment/stripe.service'
 import { createTransaction } from '@/server/services/payment/fedapay.service';
 import { getBrandSettings } from '@/lib/settings/service';
 import { eurCentsToXof } from '@/lib/money';
+import { checkLimit, getRequestIp, formatResetDuration } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
+// Explicite (audit fiabilité 2026-09-13) : seule route "argent" du projet
+// sans durée déclarée, contrairement à /api/tryon (60) et aux crons
+// (30/60) — sans elle, un FedaPay lent se ferait tuer par Vercel au lieu
+// que notre propre catch (cancelOrderRestoreStock) gère l'échec proprement.
+export const maxDuration = 30;
 
 const BodySchema = z.object({
   items: z.array(z.object({
@@ -71,6 +77,11 @@ const BodySchema = z.object({
   payment_method: z.enum(['stripe', 'fedapay', 'cod']),
   discount_code: z.string().min(1).max(60).optional().nullable(),
   lang: z.enum(['fr', 'en']).default('fr'), // locale du visiteur (migration i18n) — pour les URLs de retour (merci/checkout/compte)
+  // Idempotence (audit fiabilité 2026-09-13, migration 021) : généré une
+  // fois par le formulaire de checkout, renvoyé tel quel sur un retry réseau
+  // ou un double-clic — place_order renvoie alors la commande déjà créée
+  // au lieu d'en créer une seconde et de décrémenter le stock deux fois.
+  idempotency_key: z.string().uuid().optional(),
 });
 
 const SHIPPING_CENTS: Record<'standard' | 'express' | 'atelier', number> = {
@@ -92,6 +103,23 @@ async function cancelOrderRestoreStock(admin: Admin, orderId: string) {
 }
 
 export async function POST(request: Request) {
+  // 0. Rate-limit (audit sécurité 2026-09-13) — seul endpoint "argent" du
+  // site sans aucune protection jusqu'ici (contrairement à /api/tryon et
+  // /api/newsletter) : un script pouvait spammer des commandes COD sans
+  // authentification, épuiser le vrai stock, saturer la boîte admin, et
+  // harceler une adresse e-mail tierce jamais vérifiée (destinataire de
+  // "commande confirmée"). Deux fenêtres : par IP (anti-bot large) et par
+  // adresse de livraison ciblée (empêche de harceler UNE victime précise
+  // même en changeant d'IP).
+  const ip = getRequestIp(request);
+  const ipLimit = checkLimit(`checkout:ip:${ip}`, 10, 3600_000);
+  if (!ipLimit.allowed) {
+    return NextResponse.json(
+      { error: 'RATE_LIMITED', userMessage: `Trop de tentatives. Réessayez dans ${formatResetDuration(ipLimit.resetMs)}.` },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(ipLimit.resetMs / 1000)) } },
+    );
+  }
+
   // 1. Parse + valide
   let body;
   try {
@@ -101,6 +129,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: 'INVALID_BODY', userMessage: 'Données invalides.', details: err instanceof Error ? err.message : null },
       { status: 400 },
+    );
+  }
+
+  const emailLimit = checkLimit(`checkout:email:${body.address.email.toLowerCase()}`, 5, 3600_000);
+  if (!emailLimit.allowed) {
+    return NextResponse.json(
+      { error: 'RATE_LIMITED', userMessage: `Trop de commandes pour cette adresse. Réessayez dans ${formatResetDuration(emailLimit.resetMs)}.` },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(emailLimit.resetMs / 1000)) } },
     );
   }
 
@@ -145,6 +181,7 @@ export async function POST(request: Request) {
     p_customer_id: user?.id ?? null,
     p_guest_email: user ? null : body.address.email,
     p_guest_phone: user ? null : (body.address.telephone ?? null),
+    p_idempotency_key: body.idempotency_key ?? null,
   });
 
   if (rpcErr || !rpcResult) {

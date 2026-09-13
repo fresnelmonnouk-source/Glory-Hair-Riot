@@ -26,6 +26,13 @@ project_id = "glory-hair-riot"
 [auth]
 site_url = "https://www.rhdempire.com"
 additional_redirect_urls = ["https://www.rhdempire.com/**", "https://rhdempire.com/**", "https://glory-hair-riot.vercel.app/**", "http://localhost:3000/**"]
+# Testé en conditions réelles le 2026-09-13 (audit sécurité) : un compte se
+# créait avec un mot de passe de 6 caractères via l'API Auth directe, alors
+# que TOUTES les pages du site (inscription/reset/changement) affichent et
+# valident 8 caractères minimum côté client uniquement (`minLength={8}`,
+# contournable par un appel API direct). Aligne l'exigence serveur sur ce
+# que l'UI promet déjà.
+minimum_password_length = 8
 
 [auth.email.template.recovery]
 subject = "Réinitialisez votre mot de passe · RHD Empire"

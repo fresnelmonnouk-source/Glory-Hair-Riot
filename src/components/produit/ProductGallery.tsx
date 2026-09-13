@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 /* Port structurel 1:1 de sandy-stylish/src/components/product/product-gallery.tsx
    (image principale aspect-[4/5] + miniatures cliquables). GloryHairRiot n'a
@@ -24,8 +25,14 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
   return (
     <div className="flex flex-col gap-3">
       <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-surface">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={current} alt={alt} className="h-full w-full object-cover" />
+        <Image
+          src={current!}
+          alt={alt}
+          fill
+          priority
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="object-cover"
+        />
       </div>
 
       {images.length > 1 && (
@@ -42,8 +49,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
                 className="relative aspect-square w-16 flex-none overflow-hidden rounded-sm border transition-colors sm:w-[72px]"
                 style={{ borderColor: isActive ? 'var(--border-accent)' : 'var(--border-hairline)' }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <Image src={url} alt="" fill sizes="72px" className="object-cover" />
               </button>
             );
           })}

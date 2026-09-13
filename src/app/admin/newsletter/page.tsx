@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 const PAGE_SIZE = 20;
 
@@ -39,6 +40,7 @@ function NewsletterStatusPill({ status }: { status: string }) {
 
 export default function AdminNewsletterPage() {
   const [page, setPage] = useState(0);
+  const [pendingSend, setPendingSend] = useState<{ id: string; subject: string } | null>(null);
   const offset = page * PAGE_SIZE;
 
   const utils = trpc.useUtils();
@@ -56,6 +58,7 @@ export default function AdminNewsletterPage() {
   const sendM = trpc.admin.sendNewsletter.useMutation({
     onSuccess: () => {
       void utils.admin.listNewsletters.invalidate();
+      setPendingSend(null);
     },
   });
 
@@ -64,11 +67,7 @@ export default function AdminNewsletterPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function handleSend(id: string, subject: string) {
-    const confirmed = window.confirm(
-      `Envoyer « ${subject} » à TOUS les abonnés actifs de la newsletter ?\n\nCette action envoie un vrai email et ne peut pas être annulée.`,
-    );
-    if (!confirmed) return;
-    sendM.mutate({ newsletterId: id });
+    setPendingSend({ id, subject });
   }
 
   return (
@@ -165,6 +164,17 @@ export default function AdminNewsletterPage() {
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingSend !== null}
+        title={`Envoyer « ${pendingSend?.subject} » ?`}
+        description="À TOUS les abonnés actifs de la newsletter. Cette action envoie un vrai email et ne peut pas être annulée."
+        confirmLabel="Envoyer"
+        danger
+        pending={sendM.isPending}
+        onCancel={() => setPendingSend(null)}
+        onConfirm={() => { if (pendingSend) sendM.mutate({ newsletterId: pendingSend.id }); }}
+      />
     </div>
   );
 }

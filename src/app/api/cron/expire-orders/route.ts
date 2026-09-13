@@ -31,19 +31,24 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.rpc('expire_stale_orders', {});
   if (error) {
     console.error('[cron/expire-orders] échec:', error.message);
-    return NextResponse.json({ error: 'RPC_FAILED', message: error.message }, { status: 500 });
+  } else {
+    console.log(`[cron/expire-orders] ${data ?? 0} commande(s) annulée(s), stock restauré.`);
   }
-
-  console.log(`[cron/expire-orders] ${data ?? 0} commande(s) annulée(s), stock restauré.`);
 
   // Rafraîchissement du taux EUR→USD affiché (Phase 3, multi-devise) —
   // bundlé ici plutôt qu'un nouveau cron (même créneau, décision actée du
-  // plan). Best-effort : un échec ne fait jamais échouer l'expiration des
-  // commandes, la fonction elle-même ne touche jamais à un override admin.
+  // plan). Découplé de l'expiration des commandes ci-dessus (audit
+  // fiabilité 2026-09-13) : un `return` anticipé sur l'erreur RPC
+  // empêchait ce rafraîchissement de tourner, donc un seul échec ponctuel
+  // d'expire_stale_orders figeait aussi le taux USD affiché. Best-effort :
+  // ne touche jamais à un override admin.
   const fx = await refreshUsdRate();
   if (!fx.updated) {
     console.warn(`[cron/expire-orders] taux USD non rafraîchi (${fx.reason ?? 'inconnu'}).`);
   }
 
+  if (error) {
+    return NextResponse.json({ error: 'RPC_FAILED', message: error.message, fx }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, cancelled: data ?? 0, fx });
 }

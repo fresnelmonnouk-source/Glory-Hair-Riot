@@ -13,7 +13,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useSession } from '@/hooks/use-session';
 import { WIG_BY_ID } from '@/lib/wigs-data';
@@ -52,7 +52,7 @@ const PAYMENT_OPTIONS: { id: PaymentMode; title: string; desc: string }[] = [
 const COUNTRIES = ['France', 'Belgique', 'Suisse', 'Luxembourg', 'Canada', "Côte d'Ivoire", 'Sénégal', 'Bénin', 'Togo', 'Maroc'];
 
 const INPUT_CLASS =
-  'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-[color:var(--accent)] focus:outline-none';
+  'w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-[color:var(--accent-hi)] focus:outline-none';
 
 export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const router = useRouter();
@@ -62,7 +62,7 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
   const discountCode = useCartStore((s) => s.discountCode);
   const discountCents = useCartStore((s) => s.discountCents);
   const clearDiscount = useCartStore((s) => s.clearDiscount);
-  const { money } = useMoneyFormatter();
+  const { money, currency } = useMoneyFormatter();
 
   const [address, setAddress] = useState<Address>({
     email: '', prenom: '', nom: '', adresse: '', ville: '', codePostal: '', pays: 'France', telephone: '',
@@ -71,6 +71,11 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
   const [payment, setPayment] = useState<PaymentMode>('stripe');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Idempotence (audit fiabilité 2026-09-13, migration 021) : une seule clé
+  // pour toute la durée de vie de ce formulaire — un double-clic ou un
+  // retry après timeout renvoie la MÊME clé, place_order renvoie alors la
+  // commande déjà créée au lieu d'en créer une seconde.
+  const idempotencyKey = useRef(crypto.randomUUID());
 
   useEffect(() => {
     if (items.length === 0) router.replace(`/${lang}/panier`);
@@ -132,6 +137,7 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
           address,
           shipping,
           payment_method: payment,
+          idempotency_key: idempotencyKey.current,
           discount_code: discountCode ?? undefined,
           lang,
         }),
@@ -250,6 +256,16 @@ export function CheckoutRiot({ lang, dict }: { lang: Locale; dict: Dictionary })
           {payment !== 'cod' && (
             <div className="mt-4 rounded-sm border border-hairline bg-surface px-4 py-3.5 text-xs leading-relaxed text-muted">
               {dict.checkout.onlinePaymentNotice}
+              {/* Le checkout facture toujours en EUR (Stripe) ou XOF
+                  (FedaPay) réels, jamais dans la devise affichée (audit
+                  commercial 2026-09-13) — disclaimer visible avant paiement
+                  plutôt qu'une surprise sur le relevé bancaire. */}
+              {payment === 'stripe' && currency !== 'EUR' && (
+                <p className="mt-2 font-medium text-ink">{dict.checkout.billedInEur}</p>
+              )}
+              {payment === 'fedapay' && currency !== 'XOF' && (
+                <p className="mt-2 font-medium text-ink">{dict.checkout.billedInXof}</p>
+              )}
             </div>
           )}
         </div>

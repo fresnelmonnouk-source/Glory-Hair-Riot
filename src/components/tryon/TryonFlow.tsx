@@ -620,11 +620,11 @@ function ScreenIntro({ onStart, lang }: { onStart: () => void; lang: Locale }) {
       <div aria-hidden className="relative hidden h-[480px] md:block">
         <div className="absolute right-0 top-0 h-[420px] w-[64%] overflow-hidden rounded-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={heroWigA.img} alt="" className="h-full w-full object-cover" />
+          <img src={heroWigA.img!} alt="" className="h-full w-full object-cover" />
         </div>
         <div className="absolute bottom-0 left-0 h-[260px] w-[42%] overflow-hidden rounded-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={heroWigB.img} alt="" className="h-full w-full object-cover" />
+          <img src={heroWigB.img!} alt="" className="h-full w-full object-cover" />
         </div>
       </div>
     </div>
@@ -832,7 +832,7 @@ function ScreenWig({ selectedWig, setSelectedWig, quotaBlocked, quotaBannerMessa
                 style={{ borderColor: isActive ? 'var(--accent)' : 'transparent' }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={w.img} alt={w.name} className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03]" loading="lazy" />
+                <img src={w.img!} alt={w.name} className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.03]" loading="lazy" />
                 {w.tag && (
                   <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[10px] uppercase tracking-wide text-on-accent">{w.tag}</span>
                 )}

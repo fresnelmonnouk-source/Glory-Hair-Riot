@@ -18,6 +18,24 @@ const MAINTENANCE_EXEMPT = ['/maintenance', '/admin', '/connexion'];
 // middleware doit retirer ce préfixe avant de comparer aux listes ci-dessus,
 // sinon PROTECTED_ROUTES/AUTH_ROUTES ne matchent plus jamais (bug trouvé au
 // balayage post-migration [lang] : /compte n'était plus du tout protégé).
+// Factorisé (audit technique 2026-09-13) : cette même requête + le même
+// ternaire "admin ? /admin : /compte" étaient dupliqués 3 fois dans ce
+// fichier (dashboard admin, retour sur /connexion déjà connecté, retour sur
+// /admin/connexion déjà connecté) — un futur rôle ("modérateur" par ex.)
+// aurait dû être répliqué à la main dans les trois, avec un risque réel
+// d'en oublier un.
+async function isAdminUser(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+): Promise<boolean> {
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+  return profile?.role === 'admin';
+}
+
 function splitLocale(pathname: string): { locale: string; rest: string } {
   const seg = pathname.split('/')[1] ?? '';
   if (isLocale(seg)) {
@@ -108,42 +126,16 @@ export async function proxy(request: NextRequest) {
     // La coquille /admin n'était protégée par aucun rôle — n'importe quel
     // compte connecté pouvait la charger (les données restaient protégées
     // côté tRPC via adminProcedure, mais pas la navigation elle-même).
-    if (isAdmin && user) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (profile?.role !== 'admin') {
-        return NextResponse.redirect(new URL(`/${locale}/compte`, request.url));
-      }
+    if (isAdmin && user && !(await isAdminUser(supabase, user.id))) {
+      return NextResponse.redirect(new URL(`/${locale}/compte`, request.url));
     }
 
-    if (isAuthPage && user) {
-      // Un admin déjà connecté qui retombe sur /connexion (lien client) est
-      // envoyé dans le back-office, pas côté client — même correction que
-      // sur le flow de connexion lui-même (bug rapporté 2026-09-12).
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      return NextResponse.redirect(
-        new URL(profile?.role === 'admin' ? '/admin' : `/${locale}/compte`, request.url)
-      );
-    }
-
-    // Déjà connecté et on retombe sur /admin/connexion : renvoyer au bon
-    // endroit selon le rôle réel, plutôt que de réafficher le formulaire.
-    if (isAdminLogin && user) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      return NextResponse.redirect(
-        new URL(profile?.role === 'admin' ? '/admin' : `/${locale}/compte`, request.url)
-      );
+    // Un admin déjà connecté qui retombe sur /connexion (client) ou
+    // /admin/connexion est envoyé dans le back-office, pas laissé sur le
+    // formulaire ou côté client (bug rapporté 2026-09-12).
+    if ((isAuthPage || isAdminLogin) && user) {
+      const admin = await isAdminUser(supabase, user.id);
+      return NextResponse.redirect(new URL(admin ? '/admin' : `/${locale}/compte`, request.url));
     }
   }
 

@@ -171,13 +171,24 @@ export const adminRouter = router({
         return { periodDays: input.days, revenue: 0, ordersCount: 0, itemsSold: 0, averageBasket: 0, topProducts: [], categories: [], statusSplit };
       }
 
-      const { data: items } = await supabase
-        .from('order_items')
-        .select('wig_id, quantity, unit_price_cents, wigs(name, category)')
-        .in('order_id', revenueOrderIds);
-
+      // Découpé par lots de 300 IDs (audit perf 2026-09-13) : un `.in()`
+      // sur toute la liste construit une URL GET PostgREST dont la longueur
+      // grandit avec le volume de commandes de la période — sur 365 jours à
+      // fort volume, ça cassait net (pas juste ralentissait) plutôt qu'une
+      // limite progressive. Même stratégie de chunking que l'envoi
+      // newsletter (Resend Batch), qui a le même genre de contrainte.
       type ItemRow = { wig_id: string; quantity: number; unit_price_cents: number; wigs: { name: string; category: string }[] | null };
-      const rows = (items ?? []) as unknown as ItemRow[];
+      const ORDER_IDS_CHUNK = 300;
+      const rows: ItemRow[] = [];
+      for (let i = 0; i < revenueOrderIds.length; i += ORDER_IDS_CHUNK) {
+        const chunk = revenueOrderIds.slice(i, i + ORDER_IDS_CHUNK);
+        const { data: chunkItems, error: chunkErr } = await supabase
+          .from('order_items')
+          .select('wig_id, quantity, unit_price_cents, wigs(name, category)')
+          .in('order_id', chunk);
+        if (chunkErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: chunkErr.message });
+        rows.push(...((chunkItems ?? []) as unknown as ItemRow[]));
+      }
 
       let itemsSold = 0;
       const byWig = new Map<string, { name: string; quantity: number; revenue: number }>();
@@ -276,16 +287,27 @@ export const adminRouter = router({
       const { data: revenueOrders } = await ctx.supabase.from('orders').select('id').or(REVENUE_ORDER_FILTER);
       const revenueOrderIds = (revenueOrders ?? []).map((o) => o.id);
 
-      const { data: sales } = revenueOrderIds.length === 0
-        ? { data: [] }
-        : await ctx.supabase
+      // Découpé par lots (audit perf 2026-09-13, même raison que
+      // getStatistics ci-dessus) : ici sans aucune fenêtre de date en plus
+      // (tout l'historique de commandes), donc le risque de casser net sur
+      // une longue URL PostgREST grandit encore plus vite avec le volume.
+      type SaleRow = { wig_id: string; quantity: number; unit_price_cents: number };
+      const ORDER_IDS_CHUNK = 300;
+      const sales: SaleRow[] = [];
+      if (wigIds.length > 0) {
+        for (let i = 0; i < revenueOrderIds.length; i += ORDER_IDS_CHUNK) {
+          const chunk = revenueOrderIds.slice(i, i + ORDER_IDS_CHUNK);
+          const { data: chunkSales } = await ctx.supabase
             .from('order_items')
             .select('wig_id, quantity, unit_price_cents')
             .in('wig_id', wigIds)
-            .in('order_id', revenueOrderIds);
+            .in('order_id', chunk);
+          sales.push(...((chunkSales ?? []) as SaleRow[]));
+        }
+      }
 
       const statsByWig = new Map<string, { units: number; revenue: number }>();
-      for (const s of sales ?? []) {
+      for (const s of sales) {
         const cur = statsByWig.get(s.wig_id) ?? { units: 0, revenue: 0 };
         cur.units += s.quantity ?? 0;
         cur.revenue += (s.unit_price_cents ?? 0) * (s.quantity ?? 0);
@@ -625,8 +647,11 @@ export const adminRouter = router({
       }
 
       // Traduction EN best-effort : ne fait jamais échouer la création (déjà
-      // faite, visible en FR) — l'admin peut la compléter plus tard depuis
-      // la liste produits si cet upsert échoue pour une raison quelconque.
+      // faite, visible en FR) — mais le wizard doit savoir si elle a raté
+      // (translationEnFailed) plutôt que d'afficher "Produit publié" sans
+      // nuance alors que la fiche EN resterait vide (audit technique
+      // 2026-09-13).
+      let translationEnFailed = false;
       if (input.translation_en) {
         const { error: trError } = await ctx.supabase.from('wig_translations').upsert({
           wig_id: data.id,
@@ -639,10 +664,11 @@ export const adminRouter = router({
         }, { onConflict: 'wig_id,locale' });
         if (trError) {
           console.error('[admin.createProduct] échec upsert traduction EN:', trError.message);
+          translationEnFailed = true;
         }
       }
 
-      return data;
+      return { ...data, translationEnFailed };
     }),
 
   // ─── Supprimer un produit ────────────────────────

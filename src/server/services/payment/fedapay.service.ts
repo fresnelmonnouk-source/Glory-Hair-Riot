@@ -43,6 +43,10 @@ export async function createTransaction({
         callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/fedapay`,
         metadata,
       }),
+      // timeout explicite (audit fiabilité 2026-09-13) : sans lui, un FedaPay
+      // lent laisserait la requête pendre jusqu'au kill Vercel plutôt que
+      // notre propre catch (cancelOrderRestoreStock).
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!response.ok) {
@@ -97,13 +101,36 @@ export async function verifyWebhookSignature(
   signature: string
 ): Promise<boolean> {
   try {
-    const secretKey = await getFedaPaySecretKey();
-    const hash = crypto
-      .createHmac('sha256', secretKey || '')
-      .update(body)
-      .digest('hex');
+    // FedaPay documente que le secret de webhook est un secret DÉDIÉ par
+    // endpoint (Workbench → Webhooks), distinct de la clé API utilisée pour
+    // signer les appels sortants (vérifié via leur doc officielle,
+    // 2026-09-13) — avant, on vérifiait avec la clé API, jamais le bon
+    // secret. Repli sur l'ancien comportement (avec avertissement) tant que
+    // FEDAPAY_WEBHOOK_SECRET n'est pas configuré, pour ne pas casser une
+    // vérification qui fonctionnerait déjà par coïncidence.
+    //
+    // Note honnête : FedaPay ne publie pas l'algorithme exact de son SDK
+    // officiel (Webhook.constructEvent) — leur doc mentionne un timestamp
+    // anti-rejeu dans l'en-tête sans en détailler le format. Le SDK npm
+    // `fedapay` n'a pas pu être utilisé (dépendance `axios` avec des CVE
+    // sans correctif disponible). Ce correctif utilise donc le meilleur
+    // schéma vérifiable (HMAC-SHA256 du corps brut, comparaison à temps
+    // constant) avec le bon secret — à confirmer avec le support FedaPay si
+    // leur format inclut réellement un composant timestamp non couvert ici.
+    const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
+    const secretKey = webhookSecret || (await getFedaPaySecretKey());
+    if (!webhookSecret) {
+      console.warn('[fedapay] FEDAPAY_WEBHOOK_SECRET non configurée — vérification avec la clé API (repli), à corriger.');
+    }
 
-    return hash === signature;
+    const expected = crypto.createHmac('sha256', secretKey || '').update(body).digest('hex');
+    const expectedBuf = Buffer.from(expected, 'hex');
+    const signatureBuf = Buffer.from(signature, 'hex');
+
+    // Comparaison à temps constant : `===` sur un HMAC est vulnérable à une
+    // attaque de timing théorique (audit sécurité 2026-09-13).
+    if (expectedBuf.length !== signatureBuf.length) return false;
+    return crypto.timingSafeEqual(expectedBuf, signatureBuf);
   } catch (error) {
     console.error('Webhook verification failed:', error);
     return false;

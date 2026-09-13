@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { type Wig } from '@/lib/wigs-data';
 import { ProductCard } from '@/components/product-card';
 import type { Locale } from '@/i18n/config';
+import { getDictionaryClient } from '@/i18n/client';
 
 /* Port structurel 1:1 de sandy-stylish/src/app/(site)/[lang]/[category]/page.tsx
    (eyebrow + display h1 + compteur, grille grid-cols-2/3/4 gap-x-6 gap-y-12) —
@@ -14,40 +15,42 @@ import type { Locale } from '@/i18n/config';
 
 type FilterId = 'all' | 'straight' | 'wavy' | 'curly' | 'coily' | 'short' | 'long' | 'budget';
 
-const FILTERS: ReadonlyArray<{ id: FilterId; label: string; match: (w: Wig) => boolean }> = [
-  { id: 'all', label: 'Toutes', match: () => true },
-  { id: 'straight', label: 'Lisses', match: (w) => w.style === 'Straight' },
-  { id: 'wavy', label: 'Ondulées', match: (w) => w.style === 'Wavy' || w.style === 'Body Wave' },
-  { id: 'curly', label: 'Bouclées', match: (w) => w.style === 'Curly' },
-  { id: 'coily', label: 'Crépues', match: (w) => w.style === 'Coily' },
-  { id: 'short', label: 'Courtes', match: (w) => w.length <= 16 },
-  { id: 'long', label: 'Longues', match: (w) => w.length >= 20 },
-  { id: 'budget', label: 'Sous 300€', match: (w) => w.price < 300 },
+const FILTER_MATCHERS: ReadonlyArray<{ id: FilterId; match: (w: Wig) => boolean }> = [
+  { id: 'all', match: () => true },
+  { id: 'straight', match: (w) => w.style === 'Straight' },
+  { id: 'wavy', match: (w) => w.style === 'Wavy' || w.style === 'Body Wave' },
+  { id: 'curly', match: (w) => w.style === 'Curly' },
+  { id: 'coily', match: (w) => w.style === 'Coily' },
+  { id: 'short', match: (w) => w.length <= 16 },
+  { id: 'long', match: (w) => w.length >= 20 },
+  { id: 'budget', match: (w) => w.price < 300 },
 ] as const;
 
 export function CatalogueRiot({ wigs, lang }: { wigs: Wig[]; lang: Locale }) {
+  const dict = getDictionaryClient(lang);
   const [activeId, setActiveId] = useState<FilterId>('all');
 
   const { filtered, counts } = useMemo(() => {
     const counts: Record<FilterId, number> = Object.fromEntries(
-      FILTERS.map((f) => [f.id, wigs.filter(f.match).length]),
+      FILTER_MATCHERS.map((f) => [f.id, wigs.filter(f.match).length]),
     ) as Record<FilterId, number>;
-    const active = FILTERS.find((f) => f.id === activeId)!;
+    const active = FILTER_MATCHERS.find((f) => f.id === activeId)!;
     return { filtered: wigs.filter(active.match), counts };
   }, [activeId, wigs]);
 
-  const count = filtered.length <= 1 ? `${filtered.length} pièce` : `${filtered.length} pièces`;
+  const countLabel = (filtered.length <= 1 ? dict.catalogue.resultCountSingular : dict.catalogue.resultCountPlural)
+    .replace('{count}', String(filtered.length));
 
   return (
     <section className="mx-auto max-w-[1180px] px-6 py-16 md:px-11 md:py-20">
       <header className="mb-12">
-        <p className="eyebrow">Catalogue</p>
-        <h1 className="display mt-4 text-5xl text-ink">Toutes les perruques</h1>
-        <p className="mt-3 text-sm text-faint">{count}</p>
+        <p className="eyebrow">{dict.catalogue.eyebrow}</p>
+        <h1 className="display mt-4 text-5xl text-ink">{dict.catalogue.title}</h1>
+        <p className="mt-3 text-sm text-faint">{countLabel}</p>
       </header>
 
       <div className="mb-10 flex flex-wrap gap-2">
-        {FILTERS.map((f) => {
+        {FILTER_MATCHERS.map((f) => {
           const c = counts[f.id];
           const disabled = c === 0;
           const active = activeId === f.id;
@@ -67,7 +70,7 @@ export function CatalogueRiot({ wigs, lang }: { wigs: Wig[]; lang: Locale }) {
                 cursor: disabled ? 'not-allowed' : 'pointer',
               }}
             >
-              {f.label} ({c})
+              {dict.catalogue.filters[f.id]} ({c})
             </button>
           );
         })}
@@ -75,8 +78,8 @@ export function CatalogueRiot({ wigs, lang }: { wigs: Wig[]; lang: Locale }) {
 
       {filtered.length === 0 ? (
         <div className="py-20 text-center">
-          <p className="font-display text-2xl text-ink">Aucune perruque dans cette catégorie</p>
-          <p className="mt-2 text-sm text-muted">pour Issue N°01. Reviens pour Issue N°02.</p>
+          <p className="font-display text-2xl text-ink">{dict.catalogue.emptyTitle}</p>
+          <p className="mt-2 text-sm text-muted">{dict.catalogue.emptyBody}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">

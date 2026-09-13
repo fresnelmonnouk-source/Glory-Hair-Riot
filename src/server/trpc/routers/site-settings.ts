@@ -15,13 +15,15 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, publicProcedure, adminProcedure } from '../init';
-import { getWhatsappNumber, getBrandSettings, getUsdRate } from '@/lib/settings/service';
+import { getWhatsappNumber, getBrandSettings, getUsdRate, getAnalyticsSettings } from '@/lib/settings/service';
 import { PEG_EUR_XOF } from '@/lib/money';
 
 export const siteSettingsRouter = router({
   getPublic: publicProcedure.query(async () => {
-    const [whatsappNumber, brand, usdRate] = await Promise.all([getWhatsappNumber(), getBrandSettings(), getUsdRate()]);
-    return { whatsappNumber, brand, usdRate };
+    const [whatsappNumber, brand, usdRate, analytics] = await Promise.all([
+      getWhatsappNumber(), getBrandSettings(), getUsdRate(), getAnalyticsSettings(),
+    ]);
+    return { whatsappNumber, brand, usdRate, analytics };
   }),
 
   save: adminProcedure
@@ -94,6 +96,35 @@ export const siteSettingsRouter = router({
         updated_by: ctx.user.id,
       }, { onConflict: 'key' });
 
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      return { ok: true };
+    }),
+
+  // ─── Analytics (GA4/Meta Pixel) ───────────────────
+  // Ajouté 2026-09-13 (demande explicite Fresnel) : plutôt que de me
+  // transmettre ses identifiants pour les coder en dur, il peut désormais
+  // les saisir lui-même — pas des secrets (ils apparaissent en clair dans
+  // le HTML de toute page qui les charge), donc même traitement public que
+  // l'identité de marque ci-dessus.
+  saveAnalytics: adminProcedure
+    .input(z.object({
+      ga4_measurement_id: z.string().max(30).refine(
+        (v) => v === '' || /^G-[A-Z0-9]+$/.test(v),
+        'Format attendu : G-XXXXXXXXXX',
+      ),
+      meta_pixel_id: z.string().max(30).refine(
+        (v) => v === '' || /^\d{10,20}$/.test(v),
+        'Le Pixel Meta est une suite de chiffres.',
+      ),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const rows = Object.entries(input).map(([key, value]) => ({
+        key,
+        value: value.trim(),
+        updated_at: new Date().toISOString(),
+        updated_by: ctx.user.id,
+      }));
+      const { error } = await ctx.supabase.from('settings').upsert(rows, { onConflict: 'key' });
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
       return { ok: true };
     }),

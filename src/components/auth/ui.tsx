@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { Sparkle } from 'lucide-react';
 
 export const AUTH_INPUT =
-  'w-full rounded-sm border border-[color:var(--border-input)] bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:border-[color:var(--accent)] focus:outline-none';
+  'w-full rounded-sm border border-[color:var(--border-input)] bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:border-[color:var(--accent-hi)] focus:outline-none';
 
 export function AuthLabel({ htmlFor, children }: { htmlFor?: string; children: ReactNode }) {
   return (

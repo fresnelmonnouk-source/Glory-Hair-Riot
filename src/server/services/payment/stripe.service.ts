@@ -11,7 +11,10 @@ import { getStripeSecretKey, getBrandSettings } from '@/lib/settings/service';
  */
 async function getStripe(): Promise<Stripe> {
   const secretKey = (await getStripeSecretKey()) || 'sk_placeholder';
-  return new Stripe(secretKey, { apiVersion: '2023-10-16' });
+  // timeout explicite (audit fiabilité 2026-09-13) : sans lui, un Stripe
+  // lent laisserait la requête pendre jusqu'à ce que Vercel tue la fonction
+  // au lieu que notre propre catch (cancelOrderRestoreStock) s'en occupe.
+  return new Stripe(secretKey, { apiVersion: '2023-10-16', timeout: 10_000 });
 }
 
 export interface CreatePaymentIntentParams {

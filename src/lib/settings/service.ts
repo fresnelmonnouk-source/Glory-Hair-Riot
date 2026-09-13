@@ -57,6 +57,29 @@ export async function getWhatsappNumber(): Promise<string | null> {
   return data?.value || null;
 }
 
+export interface AnalyticsSettings {
+  ga4MeasurementId: string | null;
+  metaPixelId: string | null;
+}
+
+// Publics par nature (un ID GA4/Pixel apparaît de toute façon en clair dans
+// le code source de n'importe quelle page qui le charge) — même traitement
+// que whatsapp_number : lu en service_role, exposé via siteSettings.getPublic.
+// Ajouté à la demande de Fresnel (2026-09-13) pour ne plus dépendre de moi
+// pour coller ses identifiants — configurable depuis /admin/reglages.
+export async function getAnalyticsSettings(): Promise<AnalyticsSettings> {
+  const supabase = await createServerSupabaseClient(true);
+  const { data } = await supabase
+    .from('settings')
+    .select('key, value')
+    .in('key', ['ga4_measurement_id', 'meta_pixel_id']);
+  const byKey = new Map((data ?? []).map((r) => [r.key, r.value as string]));
+  return {
+    ga4MeasurementId: byKey.get('ga4_measurement_id') || null,
+    metaPixelId: byKey.get('meta_pixel_id') || null,
+  };
+}
+
 export interface BrandSettings {
   name: string;
   legalName: string | null;

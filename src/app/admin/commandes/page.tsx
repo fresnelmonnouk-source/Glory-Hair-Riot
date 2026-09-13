@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { trpc } from '@/lib/trpc/client';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { OrderStatusPill } from '@/components/admin/ui';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 const STATUSES = ['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'] as const;
 type Status = typeof STATUSES[number];
@@ -38,6 +39,7 @@ const PAGE_SIZE = 20;
 export default function AdminCommandesPage() {
   const [status, setStatus] = useState<Status>('all');
   const [page, setPage] = useState(0);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
   const offset = page * PAGE_SIZE;
 
   const utils = trpc.useUtils();
@@ -49,6 +51,7 @@ export default function AdminCommandesPage() {
     onSuccess: () => {
       void utils.admin.listOrders.invalidate();
       void utils.admin.kpis.invalidate();
+      setPendingCancelId(null);
     },
   });
 
@@ -122,7 +125,7 @@ export default function AdminCommandesPage() {
                             <button
                               type="button"
                               disabled={setStatusM.isPending}
-                              onClick={() => { if (confirm('Annuler cette commande ?')) setStatusM.mutate({ orderId: o.id, status: 'cancelled' }); }}
+                              onClick={() => setPendingCancelId(o.id)}
                               className="text-sm text-faint transition-colors hover:text-[color:var(--danger)] disabled:opacity-40"
                             >
                               Annuler
@@ -160,6 +163,17 @@ export default function AdminCommandesPage() {
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingCancelId !== null}
+        title="Annuler cette commande ?"
+        description="Le stock réservé sera restauré. Cette action ne peut pas être annulée."
+        confirmLabel="Annuler la commande"
+        danger
+        pending={setStatusM.isPending}
+        onCancel={() => setPendingCancelId(null)}
+        onConfirm={() => { if (pendingCancelId) setStatusM.mutate({ orderId: pendingCancelId, status: 'cancelled' }); }}
+      />
     </div>
   );
 }

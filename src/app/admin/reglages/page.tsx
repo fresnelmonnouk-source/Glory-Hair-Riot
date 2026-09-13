@@ -28,9 +28,90 @@ export default function AdminReglagesPage() {
       <FeatureFlagsSection />
       <BrandSettingsSection />
       <ContactSettingsSection />
+      <AnalyticsSettingsSection />
       <CurrencySettingsSection />
       <PaymentSettingsSection />
     </div>
+  );
+}
+
+function AnalyticsSettingsSection() {
+  const utils = trpc.useUtils();
+  const settingsQ = trpc.siteSettings.getPublic.useQuery(undefined, { staleTime: 10_000 });
+  const saveM = trpc.siteSettings.saveAnalytics.useMutation({
+    onSuccess: () => {
+      void utils.siteSettings.getPublic.invalidate();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    },
+  });
+
+  const [ga4, setGa4] = useState('');
+  const [pixel, setPixel] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const [prevData, setPrevData] = useState(settingsQ.data);
+  if (settingsQ.data !== prevData) {
+    setPrevData(settingsQ.data);
+    if (settingsQ.data) {
+      setGa4(settingsQ.data.analytics.ga4MeasurementId ?? '');
+      setPixel(settingsQ.data.analytics.metaPixelId ?? '');
+    }
+  }
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    saveM.mutate(
+      { ga4_measurement_id: ga4.trim(), meta_pixel_id: pixel.trim() },
+      { onError: (err) => setFormError(err.message) },
+    );
+  }
+
+  return (
+    <section>
+      <p className="eyebrow">Analytics</p>
+      <p className="mt-2 max-w-xl text-sm text-muted">
+        Aucun outil de mesure n&apos;était installé jusqu&apos;ici (funnel invisible). Renseignez vos
+        identifiants pour activer le suivi — rien n&apos;est envoyé tant que les deux champs sont vides.
+      </p>
+
+      <form onSubmit={handleSave} className="mt-4 flex max-w-xl flex-col gap-5 rounded-lg border border-hairline bg-surface p-6">
+        <div>
+          <label htmlFor="ga4" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">GA4 — Measurement ID</label>
+          <input
+            id="ga4"
+            type="text"
+            value={ga4}
+            onChange={(e) => setGa4(e.target.value)}
+            placeholder="G-XXXXXXXXXX"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
+          />
+        </div>
+        <div>
+          <label htmlFor="pixel" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Meta Pixel — ID</label>
+          <input
+            id="pixel"
+            type="text"
+            value={pixel}
+            onChange={(e) => setPixel(e.target.value)}
+            placeholder="1234567890123456"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
+          />
+        </div>
+
+        {formError && <p className="text-xs text-[color:var(--danger)]">{formError}</p>}
+
+        <button
+          type="submit"
+          disabled={saveM.isPending}
+          className="inline-flex w-fit items-center gap-2 self-start rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:opacity-60"
+        >
+          {saveM.isPending ? '…' : saved ? (<><Check size={16} strokeWidth={2.5} /> Enregistré</>) : 'Enregistrer'}
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -94,7 +175,7 @@ function BrandSettingsSection() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Glory Hair"
-            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
           />
         </div>
 
@@ -107,7 +188,7 @@ function BrandSettingsSection() {
               value={legalName}
               onChange={(e) => setLegalName(e.target.value)}
               placeholder="Ex. RHD Empire SAS"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
           <div>
@@ -118,7 +199,7 @@ function BrandSettingsSection() {
               value={legalForm}
               onChange={(e) => setLegalForm(e.target.value)}
               placeholder="Ex. SASU"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
           <div>
@@ -129,7 +210,7 @@ function BrandSettingsSection() {
               value={siret}
               onChange={(e) => setSiret(e.target.value)}
               placeholder="123 456 789 00012"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
           <div>
@@ -140,7 +221,7 @@ function BrandSettingsSection() {
               value={legalContactEmail}
               onChange={(e) => setLegalContactEmail(e.target.value)}
               placeholder="contact@..."
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
           <div className="sm:col-span-2">
@@ -151,7 +232,7 @@ function BrandSettingsSection() {
               value={legalAddress}
               onChange={(e) => setLegalAddress(e.target.value)}
               placeholder="Numéro, rue, code postal, ville"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
         </div>
@@ -213,7 +294,7 @@ function ContactSettingsSection() {
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
             placeholder="+33 6 12 34 56 78"
-            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
           />
         </div>
 
@@ -289,7 +370,7 @@ function CurrencySettingsSection() {
             value={xofPerUsd}
             onChange={(e) => { setTouched(true); setXofPerUsd(e.target.value); }}
             placeholder={autoXofPerUsd ? String(autoXofPerUsd) : '600'}
-            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+            className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
           />
         </div>
 
@@ -453,7 +534,7 @@ function PaymentSettingsSection() {
               value={fedaPublicKey}
               onChange={(e) => setFedaPublicKey(e.target.value)}
               placeholder="pk_live_..."
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
 
@@ -468,7 +549,7 @@ function PaymentSettingsSection() {
               onChange={(e) => setFedaSecretInput(e.target.value)}
               placeholder={settingsQ.data?.fedapay_secret_configured ? '••••••••••••••••' : 'sk_live_...'}
               autoComplete="off"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
         </div>
@@ -484,7 +565,7 @@ function PaymentSettingsSection() {
               value={stripePublicKey}
               onChange={(e) => setStripePublicKey(e.target.value)}
               placeholder="pk_live_... ou pk_test_..."
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
 
@@ -499,7 +580,7 @@ function PaymentSettingsSection() {
               onChange={(e) => setStripeSecretInput(e.target.value)}
               placeholder={settingsQ.data?.stripe_secret_configured ? '••••••••••••••••' : 'sk_live_... ou sk_test_...'}
               autoComplete="off"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
 
@@ -514,7 +595,7 @@ function PaymentSettingsSection() {
               onChange={(e) => setStripeWebhookInput(e.target.value)}
               placeholder={settingsQ.data?.stripe_webhook_secret_configured ? '••••••••••••••••' : 'whsec_...'}
               autoComplete="off"
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)]"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)]"
             />
           </div>
         </div>

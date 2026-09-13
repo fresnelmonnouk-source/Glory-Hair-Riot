@@ -171,7 +171,7 @@ export function ElodieRiot() {
               placeholder="Écrivez à Élodie…"
               aria-label="Message pour Élodie"
               autoComplete="off"
-              className="flex-1 rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-faint focus:border-[color:var(--accent)]"
+              className="flex-1 rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-faint focus:border-[color:var(--accent-hi)]"
             />
             <button
               type="submit"
@@ -208,7 +208,8 @@ function MessageBubble({ message, lang, onQuickReply }: { message: Message; lang
           className="flex max-w-[88%] items-center gap-3 rounded-lg border border-hairline bg-app px-3 py-2.5 transition-colors hover:border-[color:var(--border-accent)]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={message.recommended.img} alt={message.recommended.name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
+          {/* img non-null : recommandations tirées du catalogue statique wigs-data.ts, jamais de la DB dynamique */}
+          <img src={message.recommended.img!} alt={message.recommended.name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
           <div>
             <p className="font-display text-sm text-ink">{message.recommended.name}</p>
             <p className="mt-0.5 text-xs text-accent">{message.recommended.price}€ · {message.recommended.swatches.length} coloris</p>

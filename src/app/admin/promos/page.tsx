@@ -46,7 +46,7 @@ const EMPTY_FORM: FormState = {
 };
 
 const INPUT_CLASS =
-  'w-full rounded-sm border border-input bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60';
+  'w-full rounded-sm border border-input bg-transparent px-3 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60';
 const LABEL_CLASS = 'mb-1.5 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted';
 
 function formatValue(discountType: string, discountValue: number): string {

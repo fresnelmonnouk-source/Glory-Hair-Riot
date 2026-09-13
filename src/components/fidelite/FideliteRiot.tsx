@@ -2,14 +2,19 @@
 
 /* Réhabillage dans le langage Sandy Stylish (aucun équivalent chez Sandy).
    Cartes rounded-lg border-hairline bg-app, mêmes barres/listes que le
-   reste du site. Données et logique (session, points, tiers) inchangées —
-   récompenses/historique restent mock (déjà le cas avant, pas de table
-   dédiée). */
+   reste du site. Session/points/tiers réels ; l'historique de points
+   (PTS_LOG) et le catalogue de récompenses (REWARDS) étaient entièrement
+   fictifs — fausses commandes/dates ne correspondant jamais au vrai solde
+   affiché, boutons "Utiliser"/"Activer" sans aucun onClick (ne faisaient
+   rien). Retirés à la demande de Fresnel (2026-09-13) : l'historique lit
+   maintenant la vraie table glory_club_points_log (déjà alimentée par
+   handle_new_user + awardLoyaltyPoints, jamais lue avant) ; les 3 façons de
+   gagner des points non implémentées (avis/parrainage/anniversaire) sont
+   retirées, seules les 2 réelles restent. */
 
-import Link from 'next/link';
-import { useLang } from '@/i18n/client';
 import { useMemo } from 'react';
 import { useSession } from '@/hooks/use-session';
+import { trpc } from '@/lib/trpc/client';
 
 const TIERS = [
   { name: 'Bronze', min: 0, max: 500 },
@@ -18,34 +23,14 @@ const TIERS = [
   { name: 'VIP', min: 3000, max: 6000 },
 ] as const;
 
-const REWARDS = [
-  { nm: '10% sur votre prochaine commande', des: "Valable jusqu'au 30 juin 2026 · cumulable", locked: false, cta: 'Utiliser' },
-  { nm: '+1 essai Premium par 100 pts', des: 'Solde actuel : 24 essais bonus disponibles', locked: false, cta: 'Activer' },
-  { nm: 'Livraison express offerte', des: 'Sur votre prochaine commande dès 100€', locked: false, cta: 'Utiliser' },
-  { nm: 'Accès aux drops VIP', des: 'Débloqué au tier VIP · 520 pts manquants', locked: true, cta: 'Verrouillé' },
-  { nm: 'Atelier Paris 9 : pose VIP offerte', des: 'Débloqué au tier VIP', locked: true, cta: 'Verrouillé' },
-];
-
 const EARN_WAYS = [
   { pts: '+10', label: 'Chaque euro dépensé', note: 'par 1€' },
   { pts: '+50', label: 'Création de compte', note: '+2 essais' },
-  { pts: '+200', label: 'Avis vérifié photo', note: 'par produit' },
-  { pts: '+500', label: 'Parrainage validé', note: 'par filleul' },
-  { pts: '+100', label: 'Anniversaire Glory', note: 'par an' },
-];
-
-const PTS_LOG = [
-  { label: 'Commande #142 · Ginger 22″', date: '20 mai 2026', value: 349 },
-  { label: 'Avis vérifié · Velours 14″', date: '15 mai 2026', value: 200 },
-  { label: 'Essai Premium offert', date: '10 mai 2026', value: -250 },
-  { label: 'Parrainage : Naomi A.', date: '2 mai 2026', value: 500 },
-  { label: 'Commande #128 · Velours', date: '20 avril 2026', value: 259 },
-  { label: 'Anniversaire Glory', date: '12 mars 2026', value: 100 },
 ];
 
 export function FideliteRiot() {
-  const lang = useLang();
   const { profile, loading } = useSession();
+  const pointsLogQ = trpc.loyalty.pointsLog.useQuery(undefined, { enabled: !!profile });
 
   const USER = useMemo(() => {
     if (profile) {
@@ -115,26 +100,6 @@ export function FideliteRiot() {
               })}
             </div>
           </Card>
-
-          <Card title="Récompenses débloquées">
-            <div className="mt-4 flex flex-col gap-3">
-              {REWARDS.map((r, i) => (
-                <div key={i} className="flex items-center gap-4 rounded-sm border border-hairline p-3" style={{ opacity: r.locked ? 0.5 : 1 }}>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-ink">{r.nm}</p>
-                    <p className="mt-0.5 text-xs text-faint">{r.des}</p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={r.locked}
-                    className="shrink-0 rounded-sm border border-input px-3 py-1.5 text-xs text-ink transition-colors hover:border-[color:var(--border-accent)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {r.cta}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -148,24 +113,29 @@ export function FideliteRiot() {
                 </div>
               ))}
             </div>
-            <Link href={`/${lang}/compte`} className="mt-5 flex w-full items-center justify-center rounded-sm bg-accent px-6 py-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi">
-              Parrainer une amie
-            </Link>
           </Card>
 
           <Card title="Historique de points">
             <div className="mt-4 divide-y divide-hairline">
-              {PTS_LOG.map((p, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 py-2.5">
-                  <div>
-                    <p className="text-sm text-ink">{p.label}</p>
-                    <p className="mt-0.5 text-xs text-faint">{p.date}</p>
+              {pointsLogQ.isLoading ? (
+                <p className="py-4 text-sm text-faint">Chargement…</p>
+              ) : !pointsLogQ.data || pointsLogQ.data.length === 0 ? (
+                <p className="py-4 text-sm text-faint">Aucun mouvement de points pour l&apos;instant.</p>
+              ) : (
+                pointsLogQ.data.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between gap-3 py-2.5">
+                    <div>
+                      <p className="text-sm text-ink">{p.label}</p>
+                      <p className="mt-0.5 text-xs text-faint">
+                        {new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <span className={`text-sm tabular-nums ${p.value < 0 ? 'text-danger' : 'text-success'}`}>
+                      {p.value > 0 ? '+' : ''}{p.value}
+                    </span>
                   </div>
-                  <span className={`text-sm tabular-nums ${p.value < 0 ? 'text-danger' : 'text-success'}`}>
-                    {p.value > 0 ? '+' : ''}{p.value}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
         </div>

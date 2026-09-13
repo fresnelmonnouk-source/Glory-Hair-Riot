@@ -26,8 +26,14 @@ function Icon({ name }: { name: Item['icon'] }) {
   }
 }
 
+// Item "Livraison" recalibré marché ouest-africain (audit commercial
+// 2026-09-13) : "48h en France métropolitaine" ciblait le mauvais marché
+// (copié 1:1 de Sandy Stylish), ne répondait pas à l'objection n°1 du
+// marché réel (confiance dans le paiement en ligne). Pas de délai précis
+// inventé faute de donnée réelle par zone — Mobile Money/COD sont, eux,
+// des faits déjà réels (checkout).
 const ITEMS: Item[] = [
-  { t: 'Livraison rapide', d: '48h en France métropolitaine', icon: 'truck' },
+  { t: 'Mobile Money & à la livraison', d: 'Payez comme vous préférez, en toute confiance', icon: 'truck' },
   { t: 'Essai virtuel offert', d: '1 essai IA gratuit par appareil', icon: 'camera' },
   { t: 'Authenticité garantie', d: '100% cheveux humains Remy', icon: 'shield' },
   { t: 'Conseil sur mesure', d: 'Élodie vous guide', icon: 'chat' },

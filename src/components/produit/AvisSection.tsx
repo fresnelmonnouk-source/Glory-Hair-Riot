@@ -13,15 +13,10 @@ import Link from 'next/link';
 import { CheckCircle, Star } from 'lucide-react';
 import { useSession } from '@/hooks/use-session';
 import { trpc } from '@/lib/trpc/client';
-import { useLang } from '@/i18n/client';
+import { getDictionaryClient } from '@/i18n/client';
+import type { Locale } from '@/i18n/config';
 
 const PAGE_SIZE = 10;
-
-const STATUS_MESSAGE: Record<string, string> = {
-  pending: 'Votre avis est en attente de modération : il sera visible ici une fois validé.',
-  published: 'Votre avis est publié, merci !',
-  rejected: "Votre avis n'a pas été retenu par notre équipe.",
-};
 
 function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
@@ -33,8 +28,13 @@ function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
   );
 }
 
-export function AvisSection({ slug }: { slug: string }) {
-  const lang = useLang();
+export function AvisSection({ slug, lang }: { slug: string; lang: Locale }) {
+  const dict = getDictionaryClient(lang);
+  // Date des avis toujours au format FR quelle que soit la langue affichée
+  // (bug repéré par Marcus en écrivant la copy 2026-09-13, `toLocaleDateString`
+  // codé en dur sur 'fr-FR') — 'en-GB' pour rester cohérent avec le reste du
+  // dictionnaire anglais déjà en orthographe britannique.
+  const dateLocale = lang === 'fr' ? 'fr-FR' : 'en-GB';
   const { user } = useSession();
   const [offset, setOffset] = useState(0);
   const [rating, setRating] = useState(5);
@@ -66,15 +66,15 @@ export function AvisSection({ slug }: { slug: string }) {
 
   return (
     <div id="avis" className="mt-16 scroll-mt-24 border-t border-hairline pt-12">
-      <h2 className="display text-3xl text-ink">Avis clients {total > 0 && <span className="text-lg text-faint">({total})</span>}</h2>
+      <h2 className="display text-3xl text-ink">{dict.produit.avis.title} {total > 0 && <span className="text-lg text-faint">({total})</span>}</h2>
 
       <div className="mt-8 grid gap-10 md:grid-cols-[1fr_360px]">
         {/* ─── Liste des avis publiés ─── */}
         <div>
           {listQ.isLoading ? (
-            <p className="text-sm text-faint">Chargement des avis…</p>
+            <p className="text-sm text-faint">{dict.produit.avis.loading}</p>
           ) : items.length === 0 ? (
-            <p className="text-sm text-muted">Aucun avis publié pour l&apos;instant. Soyez le premier·ère à donner votre avis.</p>
+            <p className="text-sm text-muted">{dict.produit.avis.emptyState}</p>
           ) : (
             <ul className="space-y-6">
               {items.map((r) => {
@@ -85,11 +85,11 @@ export function AvisSection({ slug }: { slug: string }) {
                       <Stars rating={r.rating} />
                       {r.verified_purchase && (
                         <span className="inline-flex items-center gap-1 text-xs text-success">
-                          <CheckCircle size={12} /> Achat vérifié
+                          <CheckCircle size={12} /> {dict.produit.avis.verifiedPurchase}
                         </span>
                       )}
                       <span className="ml-auto text-xs text-faint">
-                        {d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {d.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
                     </div>
                     {r.title && <p className="mt-3 font-display text-lg text-ink">{r.title}</p>}
@@ -107,41 +107,46 @@ export function AvisSection({ slug }: { slug: string }) {
               disabled={listQ.isFetching}
               className="mt-6 text-sm text-ink underline decoration-[color:var(--accent)] decoration-1 underline-offset-4 transition-colors hover:text-accent disabled:opacity-60"
             >
-              {listQ.isFetching ? 'Chargement…' : 'Voir plus d\'avis'}
+              {listQ.isFetching ? dict.produit.avis.loadingMore : dict.produit.avis.loadMore}
             </button>
           )}
         </div>
 
         {/* ─── Dépôt d'avis ─── */}
         <div className="rounded-lg border border-hairline bg-app p-6">
-          <p className="eyebrow">Donner mon avis</p>
+          <p className="eyebrow">{dict.produit.avis.writeReviewEyebrow}</p>
 
           {!user ? (
             <>
-              <p className="mt-3 text-sm leading-relaxed text-muted">Connectez-vous pour laisser un avis sur ce produit.</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{dict.produit.avis.signInPrompt}</p>
               <Link
                 href={`/${lang}/connexion?redirect=/${lang}/perruque/${slug}%23avis`}
                 className="mt-5 inline-flex rounded-sm border border-input px-5 py-2.5 text-sm text-ink transition-colors hover:border-[color:var(--border-accent)]"
               >
-                Se connecter
+                {dict.produit.avis.signInCta}
               </Link>
             </>
           ) : myReviewQ.isLoading ? (
-            <p className="mt-3 text-sm text-faint">Vérification…</p>
+            <p className="mt-3 text-sm text-faint">{dict.produit.avis.checkingStatus}</p>
           ) : myReviewQ.data ? (
-            <p className="mt-3 text-sm leading-relaxed text-muted">{STATUS_MESSAGE[myReviewQ.data.status] ?? 'Avis déjà déposé.'}</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              {(myReviewQ.data.status === 'pending' && dict.produit.avis.statusPending)
+                || (myReviewQ.data.status === 'published' && dict.produit.avis.statusPublished)
+                || (myReviewQ.data.status === 'rejected' && dict.produit.avis.statusRejected)
+                || dict.produit.avis.statusDefault}
+            </p>
           ) : (
             <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
               <div>
-                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">Note</p>
-                <div className="flex gap-1" role="radiogroup" aria-label="Note sur 5">
+                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">{dict.produit.avis.ratingLabel}</p>
+                <div className="flex gap-1" role="radiogroup" aria-label={dict.produit.avis.ratingAriaLabel}>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
                       type="button"
                       role="radio"
                       aria-checked={rating === n}
-                      aria-label={`${n} étoile${n > 1 ? 's' : ''}`}
+                      aria-label={(n > 1 ? dict.produit.avis.starAriaLabelPlural : dict.produit.avis.starAriaLabelSingular).replace('{n}', String(n))}
                       onClick={() => setRating(n)}
                       className="p-0.5"
                     >
@@ -153,7 +158,7 @@ export function AvisSection({ slug }: { slug: string }) {
 
               <div>
                 <label htmlFor="avis-title" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                  Titre (optionnel)
+                  {dict.produit.avis.titleFieldLabel}
                 </label>
                 <input
                   id="avis-title"
@@ -162,13 +167,13 @@ export function AvisSection({ slug }: { slug: string }) {
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={120}
                   disabled={createM.isPending}
-                  className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                  className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
                 />
               </div>
 
               <div>
                 <label htmlFor="avis-body" className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                  Votre avis
+                  {dict.produit.avis.bodyFieldLabel}
                 </label>
                 <textarea
                   id="avis-body"
@@ -179,20 +184,20 @@ export function AvisSection({ slug }: { slug: string }) {
                   required
                   minLength={10}
                   disabled={createM.isPending}
-                  placeholder="Qualité, confort, tenue dans le temps…"
-                  className="w-full resize-none rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                  placeholder={dict.produit.avis.bodyPlaceholder}
+                  className="w-full resize-none rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
                 />
               </div>
 
               {createM.error && <p className="text-sm text-[color:var(--danger)]">{createM.error.message}</p>}
-              {createM.isSuccess && <p className="text-sm text-success">Merci ! Votre avis est en attente de modération.</p>}
+              {createM.isSuccess && <p className="text-sm text-success">{dict.produit.avis.submitSuccess}</p>}
 
               <button
                 type="submit"
                 disabled={createM.isPending || body.trim().length < 10}
                 className="inline-flex w-fit items-center gap-2 rounded-sm bg-accent px-6 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hi disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {createM.isPending ? 'Envoi…' : 'Publier mon avis'}
+                {createM.isPending ? dict.produit.avis.submitPending : dict.produit.avis.submitCta}
               </button>
             </form>
           )}

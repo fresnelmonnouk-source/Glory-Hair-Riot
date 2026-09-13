@@ -305,6 +305,12 @@ const PROVIDERS: ProviderDef[] = process.env.TRYON_DISABLE_GEMINI === '1'
 // ─── Handler ───────────────────────────────────────────
 
 async function loadWigImage(wig: Wig): Promise<{ base64: string; mime: string }> {
+  // wig.img est ici TOUJOURS renseigné (WIG_BY_ID vient du catalogue statique
+  // wigs-data.ts, pas de la DB — voir Wig.img devenu nullable pour le
+  // catalogue dynamique). Garde explicite plutôt qu'un cast silencieux.
+  if (!wig.img) {
+    throw new Error(`Perruque "${wig.id}" sans image de référence dans le catalogue statique.`);
+  }
   // wig.img = '/images/velours.jpg' → public/images/velours.jpg
   const rel = wig.img.replace(/^\//, '');
   const abs = path.join(process.cwd(), 'public', rel);
@@ -473,24 +479,26 @@ export async function POST(request: Request) {
 
       attempts.push({ provider: p.id, ok: true, latencyMs: r.latencyMs });
 
-      // Bump quota DB pour user logged + log dans tryon_results
+      // Bump quota DB pour user logged + log dans tryon_results.
+      // RPC atomique (migration 019, consume_tryon_quota) plutôt qu'un
+      // upsert lire-puis-écrire côté JS : ce dernier permettait à 2 requêtes
+      // concurrentes du même compte (2 onglets pendant les 5-35s de latence
+      // IA) de lire le même used_count avant que l'une n'écrive, la seconde
+      // écrasant la première au lieu de s'additionner — quota contournable
+      // à volonté (audit sécurité 2026-09-13). service_role : la policy
+      // self-update a été retirée en 019, seul ce RPC peut écrire la table.
       let newQuota: { used: number; granted: number } | null = null;
       if (user) {
-        const usedAfter = (quotaRow?.used_count ?? 0) + 1;
-        const granted = quotaRow?.granted ?? 5;
-        const upsert = await supabase
-          .from('tryon_quotas')
-          .upsert({
-            user_id: user.id,
-            used_count: usedAfter,
-            granted,
-            last_used_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' });
-        if (upsert.error) {
-          console.warn('[tryon] upsert quota failed:', upsert.error.message);
+        const admin = await createServerSupabaseClient(true);
+        const { data: quotaResult, error: quotaErr } = await admin
+          .rpc('consume_tryon_quota', { p_user_id: user.id })
+          .single();
+        if (quotaErr) {
+          console.warn('[tryon] consume_tryon_quota failed:', quotaErr.message);
+        } else if (quotaResult) {
+          const q = quotaResult as unknown as { allowed: boolean; used_count: number; granted: number };
+          newQuota = { used: q.used_count, granted: q.granted };
         }
-        newQuota = { used: usedAfter, granted };
       }
 
       return NextResponse.json({

@@ -11,7 +11,7 @@ export interface Wig {
   cat: string;          // 'Closure' | 'Lace Front' | '360 Lace' | 'Full Lace'
   style: string;        // 'Wavy' | 'Straight' | 'Body Wave'
   tone: string;         // 'Châtain', 'Moka', 'Ginger', 'Plum', 'Argent', 'Blond doré'
-  img: string;          // chemin /public — ex: '/images/velours.jpg'
+  img: string | null;   // chemin /public — ex: '/images/velours.jpg' ; null = aucune photo réelle (jamais de repli sur la photo d'un AUTRE produit)
   price: number;        // EUR
   tag?: 'BEST' | 'NEW' | 'HOT' | 'EDIT';
   rating?: number;
@@ -19,6 +19,8 @@ export interface Wig {
   swatches: [string, string, string]; // 3 hex — pastilles RIOT sur ProductZineCard
   isPack?: boolean;                    // migration 015 — lot à prix fixe, pas une perruque individuelle
   packItems?: { slug: string; name: string; quantity: number }[]; // composition, si isPack
+  metaDescription?: string;            // wig_translations.meta_description (repli FR), pour <meta name="description">
+  stockQuantity?: number;              // wigs.stock_quantity — pour afficher "rupture de stock" avant le checkout
 }
 
 export const WIGS: Wig[] = [

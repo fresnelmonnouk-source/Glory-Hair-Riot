@@ -7,6 +7,7 @@ import { getDictionary } from '@/i18n/dictionaries';
 import { getBrandSettings } from '@/lib/settings/service';
 import { NavRiot } from '@/components/layout/NavRiot';
 import { FooterRiot } from '@/components/layout/FooterRiot';
+import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts';
 import '@/styles/riot.css';
 
 /* Racine indépendante pour toutes les pages publiques (remplace l'ancien
@@ -70,6 +71,7 @@ export default async function LangLayout({
     <html lang={lang} className={fontVars}>
       <body suppressHydrationWarning>
         <TRPCProvider>
+          <AnalyticsScripts />
           <NavRiot lang={lang} dict={dict} />
           <main>{children}</main>
           <FooterRiot lang={lang} dict={dict} />

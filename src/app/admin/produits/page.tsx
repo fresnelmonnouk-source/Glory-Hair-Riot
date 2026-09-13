@@ -120,7 +120,7 @@ export default function AdminProduitsPage() {
               href="/admin/produits/nouveau"
               className="inline-flex items-center rounded-sm border border-[color:var(--border-accent)] px-5 py-2.5 text-sm font-medium text-accent transition-colors hover:bg-surface-alt"
             >
-              ✨ Assistant IA
+              Assistant IA
             </Link>
             <button
               type="button"
@@ -151,7 +151,7 @@ export default function AdminProduitsPage() {
                 }}
                 placeholder="Ex. Miel 18&quot;"
                 disabled={createM.isPending}
-                className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
               />
             </div>
             <div>
@@ -165,7 +165,7 @@ export default function AdminProduitsPage() {
                 onChange={(e) => { setSlugTouched(true); setForm((f) => ({ ...f, slug: slugify(e.target.value) })); }}
                 placeholder="miel-18"
                 disabled={createM.isPending}
-                className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
               />
             </div>
             <div>
@@ -179,7 +179,7 @@ export default function AdminProduitsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 placeholder="Ex. Wavy, Straight, Body Wave"
                 disabled={createM.isPending}
-                className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
               />
             </div>
             <div className="flex gap-4">
@@ -196,7 +196,7 @@ export default function AdminProduitsPage() {
                   onChange={(e) => setForm((f) => ({ ...f, priceEuros: e.target.value }))}
                   placeholder="199"
                   disabled={createM.isPending}
-                  className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                  className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
                 />
               </div>
               <div className="flex-1">
@@ -211,7 +211,7 @@ export default function AdminProduitsPage() {
                   value={form.stock_quantity}
                   onChange={(e) => setForm((f) => ({ ...f, stock_quantity: e.target.value }))}
                   disabled={createM.isPending}
-                  className="w-full rounded-sm border border-input bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+                  className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
                 />
               </div>
             </div>
@@ -278,7 +278,7 @@ export default function AdminProduitsPage() {
                           value={name}
                           onChange={(e) => setField(p.id, { name: e.target.value })}
                           aria-label={`Nom FR de ${p.name}`}
-                          className="w-full min-w-[140px] rounded-sm border border-transparent bg-transparent px-1 -mx-1 font-display text-lg text-ink outline-none focus:border-[color:var(--accent)]"
+                          className="w-full min-w-[140px] rounded-sm border border-transparent bg-transparent px-1 -mx-1 font-display text-lg text-ink outline-none focus:border-[color:var(--accent-hi)]"
                         />
                         <input
                           type="text"
@@ -286,7 +286,7 @@ export default function AdminProduitsPage() {
                           onChange={(e) => setField(p.id, { name_en: e.target.value })}
                           placeholder="Nom (EN) — non traduit"
                           aria-label={`Nom EN de ${p.name}`}
-                          className="mt-1 w-full min-w-[140px] rounded-sm border border-transparent bg-transparent px-1 -mx-1 text-xs text-muted outline-none placeholder:italic placeholder:text-faint focus:border-[color:var(--accent)]"
+                          className="mt-1 w-full min-w-[140px] rounded-sm border border-transparent bg-transparent px-1 -mx-1 text-xs text-muted outline-none placeholder:italic placeholder:text-faint focus:border-[color:var(--accent-hi)]"
                         />
                         <div className="mt-0.5 text-xs text-faint">/{p.slug}</div>
                       </td>
@@ -299,7 +299,7 @@ export default function AdminProduitsPage() {
                             step={1}
                             value={Math.round(priceEuros)}
                             onChange={(e) => setField(p.id, { base_price: Math.max(0, Math.round(Number(e.target.value)) * 100) })}
-                            className="w-20 rounded-sm border border-input bg-transparent px-2 py-1.5 text-right text-sm text-ink outline-none focus:border-[color:var(--accent)]"
+                            className="w-20 rounded-sm border border-input bg-transparent px-2 py-1.5 text-right text-sm text-ink outline-none focus:border-[color:var(--accent-hi)]"
                           />
                           <span className="text-faint">€</span>
                         </div>
@@ -311,7 +311,7 @@ export default function AdminProduitsPage() {
                           step={1}
                           value={stock}
                           onChange={(e) => setField(p.id, { stock_quantity: Math.max(0, Math.round(Number(e.target.value))) })}
-                          className={`w-16 rounded-sm border px-2 py-1.5 text-right text-sm outline-none focus:border-[color:var(--accent)] ${stock === 0 ? 'border-[color:var(--danger)] text-[color:var(--danger)]' : 'border-input text-ink'}`}
+                          className={`w-16 rounded-sm border px-2 py-1.5 text-right text-sm outline-none focus:border-[color:var(--accent-hi)] ${stock === 0 ? 'border-[color:var(--danger)] text-[color:var(--danger)]' : 'border-input text-ink'}`}
                         />
                       </td>
                       <td className="px-4 py-4 text-right text-sm text-muted tabular-nums">{p.sales.units}</td>

@@ -13,6 +13,7 @@ import { Check, X } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { useSession } from '@/hooks/use-session';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 
 const TIERS = ['all', 'bronze', 'argent', 'or', 'vip'] as const;
 type Tier = typeof TIERS[number];
@@ -30,9 +31,11 @@ export default function AdminClientsPage() {
     { tier, limit: PAGE_SIZE, offset },
     { staleTime: 30_000 },
   );
+  const [pendingRole, setPendingRole] = useState<{ userId: string; email: string; role: 'customer' | 'admin' | 'support' } | null>(null);
+  const [roleError, setRoleError] = useState<string | null>(null);
   const setRoleM = trpc.admin.setUserRole.useMutation({
-    onSuccess: () => { void utils.admin.listCustomers.invalidate(); },
-    onError: (err) => alert(err.message),
+    onSuccess: () => { void utils.admin.listCustomers.invalidate(); setPendingRole(null); },
+    onError: (err) => { setRoleError(err.message); setPendingRole(null); },
   });
 
   const items = listQ.data?.items ?? [];
@@ -108,9 +111,8 @@ export default function AdminClientsPage() {
                           onChange={(e) => {
                             const newRole = e.target.value as 'customer' | 'admin' | 'support';
                             if (newRole !== c.role) {
-                              if (confirm(`Changer le rôle de ${c.email} vers "${newRole}" ?`)) {
-                                setRoleM.mutate({ userId: c.id, role: newRole });
-                              }
+                              setRoleError(null);
+                              setPendingRole({ userId: c.id, email: c.email, role: newRole });
                             }
                           }}
                           className="rounded-sm border border-input bg-transparent px-2 py-1.5 text-sm text-ink outline-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -140,6 +142,24 @@ export default function AdminClientsPage() {
           </button>
         </div>
       )}
+
+      {roleError && <p className="mt-4 text-sm text-[color:var(--danger)]">{roleError}</p>}
+
+      <ConfirmDialog
+        open={pendingRole !== null}
+        title={`Changer le rôle de ${pendingRole?.email} vers "${pendingRole?.role}" ?`}
+        description={
+          pendingRole?.role === 'admin'
+            ? 'Ce compte aura un accès complet au back-office (commandes, clients, réglages, paiement).'
+            : undefined
+        }
+        danger={pendingRole?.role === 'admin'}
+        pending={setRoleM.isPending}
+        onCancel={() => setPendingRole(null)}
+        onConfirm={() => {
+          if (pendingRole) setRoleM.mutate({ userId: pendingRole.userId, role: pendingRole.role });
+        }}
+      />
     </div>
   );
 }

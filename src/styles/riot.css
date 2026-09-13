@@ -129,7 +129,12 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  /* --accent-hi au lieu de --accent (audit a11y 2026-09-13) : contraste
+     mesuré ~1,4:1 sur les fonds sombres du site (--surface/--bg-body),
+     bien sous le minimum WCAG 1.4.11 (3:1) — --accent-hi passe à ~3,15:1.
+     --accent reste correct pour du texte blanc sur bouton plein, mais pas
+     comme couleur de contour fin sur fond sombre. */
+  outline: 2px solid var(--accent-hi);
   outline-offset: 2px;
   border-radius: 2px;
 }

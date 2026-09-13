@@ -81,7 +81,7 @@ export default function AdminContenuPage() {
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ex. Comment entretenir une perruque body wave en été"
               disabled={generateM.isPending}
-              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+              className="w-full rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
             />
           </div>
 
@@ -96,7 +96,7 @@ export default function AdminContenuPage() {
               onChange={(e) => setTag(e.target.value)}
               placeholder="Ex. Entretien, Couleur, Tendance"
               disabled={generateM.isPending}
-              className="w-full max-w-xs rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent)] disabled:opacity-60"
+              className="w-full max-w-xs rounded-sm border border-input bg-transparent px-4 py-3 text-sm text-ink placeholder:text-faint outline-none focus:border-[color:var(--accent-hi)] disabled:opacity-60"
             />
           </div>
 

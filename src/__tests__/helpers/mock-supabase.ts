@@ -63,6 +63,7 @@ export function createMockContext(
   return {
     user: null,
     supabase: createMockSupabase(),
+    req: undefined,
     ...overrides,
   };
 }

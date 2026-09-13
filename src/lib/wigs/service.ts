@@ -37,29 +37,32 @@ interface WigRow {
   rating: number | null;
   review_count: number | null;
   is_pack: boolean;
+  stock_quantity: number;
   wig_images: { image_url: string }[] | null;
 }
 
-const SELECT = 'id, slug, name, category, color, base_price, construction_type, tag, swatches, display_order, rating, review_count, is_pack, wig_images(image_url)';
+const SELECT = 'id, slug, name, category, color, base_price, construction_type, tag, swatches, display_order, rating, review_count, is_pack, stock_quantity, wig_images(image_url)';
 
 function parseLengthFromName(name: string): number {
   const m = name.match(/(\d+)"/);
   return m ? Number(m[1]) : 0;
 }
 
-// Nom traduit (migration 016, `wig_translations`) — seul champ de cette
-// table réellement affiché aujourd'hui (description/long_description/
-// meta_description existent en base pour usage futur, mais aucun composant
-// ne les lit actuellement : voir ProduitRiot, generateMetadata construisent
-// leur propre texte depuis cat/style/tone/price). `length` reste dérivé du
-// nom (traduit ou non, les gabarits `14"`/`20"` etc. sont identiques dans
-// les deux langues).
-function mapRow(row: WigRow, translatedName?: string): Wig {
+interface TranslatedFields { name: string; metaDescription: string | null }
+
+// Nom + meta_description traduits (migration 016, `wig_translations`) —
+// meta_description était en base depuis le début mais jamais lue par aucun
+// composant (audit commercial/SEO 2026-09-13 : 6 fiches produit avec des
+// meta descriptions quasi identiques, générées à la volée dans
+// generateMetadata plutôt que d'utiliser ce champ dédié). `length` reste
+// dérivé du nom (traduit ou non, les gabarits `14"`/`20"` etc. sont
+// identiques dans les deux langues).
+function mapRow(row: WigRow, translated?: TranslatedFields): Wig {
   const swatches = row.swatches && row.swatches.length === 3
     ? (row.swatches as [string, string, string])
     : (['#4a2a3e', '#4a2a3e', '#4a2a3e'] as [string, string, string]);
 
-  const name = translatedName ?? row.name;
+  const name = translated?.name ?? row.name;
   return {
     id: row.slug,
     num: `N°${String(row.display_order ?? 0).padStart(2, '0')}`,
@@ -68,44 +71,51 @@ function mapRow(row: WigRow, translatedName?: string): Wig {
     cat: row.construction_type ?? '',
     style: row.category ?? '',
     tone: row.color ?? '',
-    img: row.wig_images?.[0]?.image_url ?? '/images/velours.jpg',
+    // Jamais de repli sur la photo d'un autre produit (bug trouvé en audit
+    // 2026-09-13 : un produit sans photo héritait silencieusement de
+    // l'image "Velours" — le wizard IA en crée justement sans étape photo).
+    // `null` = les composants affichent un placeholder neutre.
+    img: row.wig_images?.[0]?.image_url ?? null,
     price: Math.round(row.base_price / 100),
     tag: (row.tag ?? undefined) as Wig['tag'],
     rating: row.rating ?? undefined,
     reviews: row.review_count ?? undefined,
     swatches,
     isPack: row.is_pack,
+    metaDescription: translated?.metaDescription ?? undefined,
+    stockQuantity: row.stock_quantity,
   };
 }
 
-// Récupère le nom traduit pour `lang`, avec repli explicite sur 'fr' si la
-// ligne manque (jamais de disparition silencieuse d'un produit faute de
-// traduction — décision documentée dans le plan i18n, à l'inverse du bug
-// trouvé chez Sandy Stylish où un `!inner` fait juste disparaître le
-// produit de la locale sans traduction).
-async function fetchTranslatedNames(
+// Récupère nom + meta_description traduits pour `lang`, avec repli explicite
+// sur 'fr' si la ligne manque (jamais de disparition silencieuse d'un
+// produit faute de traduction — décision documentée dans le plan i18n, à
+// l'inverse du bug trouvé chez Sandy Stylish où un `!inner` fait juste
+// disparaître le produit de la locale sans traduction).
+async function fetchTranslatedFields(
   supabase: ReturnType<typeof publicWigsClient>,
   wigIds: string[],
   lang: Locale,
-): Promise<Map<string, string>> {
+): Promise<Map<string, TranslatedFields>> {
   if (wigIds.length === 0) return new Map();
   const locales = lang === 'fr' ? ['fr'] : ['fr', 'en'];
   const { data } = await supabase
     .from('wig_translations')
-    .select('wig_id, locale, name')
+    .select('wig_id, locale, name, meta_description')
     .in('wig_id', wigIds)
     .in('locale', locales);
 
-  const names = new Map<string, string>();
-  for (const row of (data ?? []) as { wig_id: string; locale: string; name: string }[]) {
-    if (row.locale === 'fr') names.set(row.wig_id, row.name);
+  const fields = new Map<string, TranslatedFields>();
+  type Row = { wig_id: string; locale: string; name: string; meta_description: string | null };
+  for (const row of (data ?? []) as Row[]) {
+    if (row.locale === 'fr') fields.set(row.wig_id, { name: row.name, metaDescription: row.meta_description });
   }
   if (lang !== 'fr') {
-    for (const row of (data ?? []) as { wig_id: string; locale: string; name: string }[]) {
-      if (row.locale === lang) names.set(row.wig_id, row.name);
+    for (const row of (data ?? []) as Row[]) {
+      if (row.locale === lang) fields.set(row.wig_id, { name: row.name, metaDescription: row.meta_description });
     }
   }
-  return names;
+  return fields;
 }
 
 export async function getWigs(lang: Locale): Promise<Wig[]> {
@@ -118,8 +128,8 @@ export async function getWigs(lang: Locale): Promise<Wig[]> {
 
   if (error || !data) return [];
   const rows = data as unknown as WigRow[];
-  const names = await fetchTranslatedNames(supabase, rows.map((r) => r.id), lang);
-  return rows.map((row) => mapRow(row, names.get(row.id)));
+  const translated = await fetchTranslatedFields(supabase, rows.map((r) => r.id), lang);
+  return rows.map((row) => mapRow(row, translated.get(row.id)));
 }
 
 export async function getWigBySlug(slug: string, lang: Locale): Promise<Wig | null> {
@@ -133,8 +143,8 @@ export async function getWigBySlug(slug: string, lang: Locale): Promise<Wig | nu
 
   if (error || !data) return null;
   const row = data as unknown as WigRow;
-  const names = await fetchTranslatedNames(supabase, [row.id], lang);
-  const wig = mapRow(row, names.get(row.id));
+  const translated = await fetchTranslatedFields(supabase, [row.id], lang);
+  const wig = mapRow(row, translated.get(row.id));
 
   // Composition du pack (migration 015) — manifeste d'affichage seulement,
   // jamais utilisé par le checkout (qui ne connaît que le pack lui-même).
