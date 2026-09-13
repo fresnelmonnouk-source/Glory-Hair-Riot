@@ -154,7 +154,12 @@ export default function AdminPacksPage() {
 }
 
 interface PackRow { id: string; slug: string; name: string; base_price: number; stock_quantity: number; active: boolean }
-interface PackItemRow { wig_id: string; quantity: number; wigs: { name: string; slug: string }[] | null }
+// `wigs!pack_items_wig_id_fkey(...)` est une relation vers-un : PostgREST
+// l'embarque comme un objet, pas un tableau (vérifié en conditions réelles
+// — cf. le même correctif dans src/lib/wigs/service.ts). Champ non lu dans
+// ce formulaire aujourd'hui (seuls wig_id/quantity servent à préremplir la
+// sélection), mais un type juste évite qu'un futur usage reproduise le bug.
+interface PackItemRow { wig_id: string; quantity: number; wigs: { name: string; slug: string } | null }
 interface CandidateRow { id: string; slug: string; name: string }
 
 function PackForm({

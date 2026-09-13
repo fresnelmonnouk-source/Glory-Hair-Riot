@@ -145,8 +145,15 @@ export async function getWigBySlug(slug: string, lang: Locale): Promise<Wig | nu
       .eq('pack_id', row.id)
       .order('display_order', { ascending: true });
 
-    wig.packItems = ((packItems ?? []) as unknown as { quantity: number; wigs: { slug: string; name: string }[] | null }[])
-      .map((r) => ({ slug: r.wigs?.[0]?.slug ?? '', name: r.wigs?.[0]?.name ?? '', quantity: r.quantity }));
+    // `wigs!pack_items_wig_id_fkey(...)` est une relation vers-un (chaque
+    // pack_item référence UN SEUL wig) : PostgREST l'embarque comme un objet,
+    // pas un tableau — vérifié en conditions réelles (requête anon
+    // identique à celle-ci). Le `?.[0]` précédent indexait un objet comme un
+    // tableau : toujours `undefined`, donc slug/name toujours vides sur la
+    // fiche produit publique d'un pack (bug jamais détecté faute de pack
+    // réel en prod à ce jour).
+    wig.packItems = ((packItems ?? []) as unknown as { quantity: number; wigs: { slug: string; name: string } | null }[])
+      .map((r) => ({ slug: r.wigs?.slug ?? '', name: r.wigs?.name ?? '', quantity: r.quantity }));
   }
 
   return wig;
